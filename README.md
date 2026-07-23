@@ -3,7 +3,12 @@
 App di động của hệ thống quản lý giải đấu billiards (SEP490_G2), dùng chung backend
 Spring Boot với FE web.
 
-Xây bằng **Expo SDK 57** + **React Native 0.86** + **expo-router** + **NativeWind**.
+Xây bằng **Expo SDK 54** + **React Native 0.81** + **expo-router** + **NativeWind**.
+
+> **Đừng tự nâng SDK.** Expo Go trên App Store / Play Store chỉ chạy được đúng một
+> phiên bản SDK. Project phải khớp với bản Expo Go mà cả nhóm đang cài, nếu không sẽ
+> gặp lỗi *"Project is incompatible with this version of Expo Go"*. Khi nào muốn nâng
+> thì cả nhóm cùng cập nhật Expo Go rồi nâng SDK một lượt.
 
 ---
 
