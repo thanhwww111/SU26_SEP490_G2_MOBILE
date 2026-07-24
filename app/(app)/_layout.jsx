@@ -48,36 +48,35 @@ export default function AppLayout() {
   };
 
   return (
-    // View ngoài cùng là mốc cho drawer/menu định vị absolute, và nó nằm ngoài
-    // SafeAreaView để lớp phủ che được cả vùng tai thỏ như Modal vẫn làm.
-    <View className="flex-1 bg-white">
-      <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-        <AppHeader
-          showBack={!isRoot}
-          onPressMenu={() => setDrawerOpen(true)}
-          onPressBack={() => router.back()}
-          onPressProfile={() => setMenuOpen(true)}
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+      <AppHeader
+        showBack={!isRoot}
+        onPressMenu={() => setDrawerOpen(true)}
+        onPressBack={() => router.back()}
+        onPressLogo={() => goTo("/(app)/home")}
+        onPressProfile={() => setMenuOpen(true)}
+      />
+
+      {/* Drawer và menu hồ sơ nằm trong View này nên chỉ phủ phần body —
+          header vẫn bấm được, đóng lớp phủ bằng chính nút vừa mở nó. */}
+      <View className="flex-1">
+        <Stack screenOptions={{ headerShown: false }} />
+
+        <AppDrawer
+          visible={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          onNavigate={goTo}
+          activeKey={currentScreen}
         />
 
-        <View className="flex-1">
-          <Stack screenOptions={{ headerShown: false }} />
-        </View>
-      </SafeAreaView>
-
-      <AppDrawer
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onNavigate={goTo}
-        activeKey={currentScreen}
-      />
-
-      <ProfileMenu
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        user={user}
-        onProfile={() => goTo("/(app)/profile")}
-        onLogout={handleLogout}
-      />
-    </View>
+        <ProfileMenu
+          visible={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          user={user}
+          onNavigate={goTo}
+          onLogout={handleLogout}
+        />
+      </View>
+    </SafeAreaView>
   );
 }

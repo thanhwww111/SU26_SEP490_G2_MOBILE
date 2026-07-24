@@ -1,37 +1,59 @@
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LogOut, User } from "lucide-react-native";
+import { CreditCard, FileText, LogOut, User } from "lucide-react-native";
 
+import { ROLES } from "../../constants/auth";
+import { normalizeRole } from "../../utils/auth";
 import { useOverlay } from "./useOverlay";
 
-/** Chiều cao header trong AppHeader (h-14) */
-const HEADER_HEIGHT = 56;
+/**
+ * Ba mục riêng của player, khai đúng PLAYER_MENU của Header web.
+ * path null = màn chưa dựng trên mobile, xử lý y như bên navItems.js.
+ */
+const PLAYER_MENU = [
+  { key: "registrations", label: "Đăng ký của tôi", path: null, Icon: FileText },
+  { key: "matches", label: "Lịch thi đấu", path: null, Icon: FileText },
+  { key: "payments", label: "Lịch sử thanh toán", path: null, Icon: CreditCard },
+];
 
 /**
  * Menu xổ ra khi bấm icon hồ sơ ở góc phải header, bám dropdown của Header web.
  *
- * Là View absolute phủ cả màn chứ không phải View absolute đặt trong header:
- * header cao cố định nên dropdown đặt bên trong sẽ bị cắt. Không dùng <Modal>
- * vì lý do nêu ở useOverlay.js.
+ * Đặt trong phần body của layout nên mép trên của nó đã nằm ngay dưới header —
+ * không phải cộng chiều cao header với safe area inset như trước nữa.
  *
- * Lớp phủ nằm ngoài SafeAreaView của layout, còn header thì nằm sau safe area —
- * không cộng inset thì dropdown đè lên header trên máy có notch.
- *
- * Ba mục dành cho player (đăng ký của tôi, lịch thi đấu, lịch sử thanh toán)
- * chưa có màn trên mobile nên chưa đưa vào.
+ * Không dùng <Modal> vì lý do nêu ở useOverlay.js.
  */
-export default function ProfileMenu({ visible, onClose, user, onProfile, onLogout }) {
-  const insets = useSafeAreaInsets();
+export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogout }) {
   const { mounted, progress } = useOverlay(visible, 140);
 
   if (!mounted) return null;
+
+  // Web chỉ cho player thấy ba mục đăng ký / lịch thi đấu / thanh toán
+  const isPlayer = normalizeRole(user?.role) === ROLES.PLAYER;
 
   // Bung ra từ phía nút hồ sơ thay vì hiện đứng yên
   const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] });
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] });
 
+  const renderItem = ({ key, label, path, Icon }) => {
+    const disabled = !path;
+    return (
+      <Pressable
+        key={key}
+        disabled={disabled}
+        onPress={() => onNavigate(path)}
+        className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-slate-50"
+      >
+        <Icon size={15} color={disabled ? "#cbd5e1" : "#334155"} />
+        <Text className={`text-[13px] ${disabled ? "text-slate-300" : "text-slate-700"}`}>
+          {label}
+        </Text>
+      </Pressable>
+    );
+  };
+
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 50 }]}>
+    <View style={[StyleSheet.absoluteFill, { zIndex: 40 }]}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
         <Pressable className="flex-1 bg-black/20" onPress={onClose} />
       </Animated.View>
@@ -39,13 +61,15 @@ export default function ProfileMenu({ visible, onClose, user, onProfile, onLogou
       <Animated.View
         style={{
           position: "absolute",
-          top: insets.top + HEADER_HEIGHT + 4,
+          top: 6,
           right: 8,
           opacity: progress,
           transform: [{ translateY }, { scale }],
         }}
       >
-        <View className="w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <View className="w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+          {/* Header mobile chỉ có icon tròn, không hiện tên như web —
+              nên tên và email để ở đây, bằng không không biết đang là ai. */}
           <View className="border-b border-slate-100 px-3 py-2.5">
             <Text numberOfLines={1} className="text-[13px] font-semibold text-slate-900">
               {user?.fullName || user?.email || "Người dùng"}
@@ -57,17 +81,25 @@ export default function ProfileMenu({ visible, onClose, user, onProfile, onLogou
             ) : null}
           </View>
 
-          <Pressable
-            onPress={onProfile}
-            className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-slate-50"
-          >
-            <User size={15} color="#334155" />
-            <Text className="text-[13px] text-slate-700">Hồ sơ</Text>
-          </Pressable>
+          {renderItem({
+            key: "profile",
+            label: "Hồ sơ",
+            path: "/(app)/profile",
+            Icon: User,
+          })}
+
+          {isPlayer ? (
+            <>
+              <View className="h-px bg-slate-100" />
+              {PLAYER_MENU.map(renderItem)}
+            </>
+          ) : null}
+
+          <View className="h-px bg-slate-100" />
 
           <Pressable
             onPress={onLogout}
-            className="flex-row items-center gap-2.5 border-t border-slate-100 px-3 py-2.5 active:bg-red-50"
+            className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-red-50"
           >
             <LogOut size={15} color="#dc2626" />
             <Text className="text-[13px] text-red-600">Đăng xuất</Text>

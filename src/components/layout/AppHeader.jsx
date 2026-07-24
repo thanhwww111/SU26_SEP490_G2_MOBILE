@@ -7,11 +7,15 @@ import { ChevronLeft, Menu, User } from "lucide-react-native";
  * Nút trái đổi theo màn: ở trang chủ là hamburger mở drawer, các màn con là
  * mũi tên quay lại. Nhờ vậy màn con không phải tự dựng header riêng — nếu tự
  * dựng sẽ thành hai header chồng nhau.
+ *
+ * Logo giữa bấm được để về trang chủ, giống Header web — drawer bám đúng 6 mục
+ * của web nên không có mục "Trang chủ" nào cả.
  */
 export default function AppHeader({
   showBack = false,
   onPressMenu,
   onPressBack,
+  onPressLogo,
   onPressProfile,
 }) {
   return (
@@ -28,9 +32,11 @@ export default function AppHeader({
         )}
       </Pressable>
 
-      <Text className="text-xl font-black uppercase italic tracking-tighter text-navy-700">
-        capstone<Text className="text-accent">.</Text>
-      </Text>
+      <Pressable onPress={onPressLogo} className="px-2 py-1 active:opacity-60">
+        <Text className="text-xl font-black uppercase italic tracking-tighter text-navy-700">
+          capstone<Text className="text-accent">.</Text>
+        </Text>
+      </Pressable>
 
       <Pressable
         onPress={onPressProfile}

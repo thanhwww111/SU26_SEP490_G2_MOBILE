@@ -1,31 +1,22 @@
-import {
-  Home,
-  Newspaper,
-  Radio,
-  Trophy,
-  MapPin,
-  BarChart3,
-  Users,
-  User,
-} from "lucide-react-native";
+import { Newspaper, Radio, Trophy, MapPin, BarChart3, Users } from "lucide-react-native";
 
 /**
- * Mục điều hướng, khai theo NAV_ITEMS của Header web.
+ * Mục điều hướng của drawer — đúng 6 mục trong NAV_ITEMS của Header web,
+ * kể cả thứ tự. Trang chủ không nằm ở đây: bên web về trang chủ bằng cách bấm
+ * logo, mobile cũng vậy (logo giữa AppHeader).
  *
- * `ready: false` = màn chưa làm trên mobile. Drawer chỉ render mục ready,
- * nên khi thêm màn mới chỉ cần bật cờ ở đây, không phải sửa AppDrawer.
+ * `path: null` = màn chưa dựng trên mobile. Bên web ba mục cũng để null; ở đây
+ * còn nhiều hơn vì mobile mới có home với profile. Mục null vẫn hiện trong
+ * drawer nhưng làm mờ và bấm không ăn — bỏ hẳn thì người dùng không thấy được
+ * app sẽ có những gì, mà cho bấm thì expo-router văng lỗi không tìm thấy route.
  *
- * Lưu ý: chính web cũng để path null cho Tỷ số trực tiếp, Bảng xếp hạng và Cơ thủ.
+ * Khi thêm màn mới: dựng file trong app/(app)/ rồi điền path vào đây là xong.
  */
 export const NAV_ITEMS = [
-  { key: "home", label: "Trang chủ", path: "/(app)/home", Icon: Home, ready: true },
-  { key: "profile", label: "Hồ sơ", path: "/(app)/profile", Icon: User, ready: true },
-  { key: "news", label: "Tin mới nhất", path: "/(app)/news", Icon: Newspaper, ready: false },
-  { key: "live", label: "Tỷ số trực tiếp", path: null, Icon: Radio, ready: false },
-  { key: "event", label: "Giải đấu", path: "/(app)/event", Icon: Trophy, ready: false },
-  { key: "branches", label: "Cơ sở", path: "/(app)/branches", Icon: MapPin, ready: false },
-  { key: "ranking", label: "Bảng xếp hạng", path: null, Icon: BarChart3, ready: false },
-  { key: "players", label: "Cơ thủ", path: null, Icon: Users, ready: false },
+  { key: "news", label: "Tin Mới Nhất", path: null, Icon: Newspaper },
+  { key: "live", label: "Tỷ Số Trực Tiếp", path: null, Icon: Radio },
+  { key: "event", label: "Giải Đấu", path: null, Icon: Trophy },
+  { key: "branches", label: "Cơ Sở", path: null, Icon: MapPin },
+  { key: "ranking", label: "Bảng Xếp Hạng", path: null, Icon: BarChart3 },
+  { key: "players", label: "Cơ Thủ", path: null, Icon: Users },
 ];
-
-export const READY_NAV_ITEMS = NAV_ITEMS.filter((item) => item.ready);
