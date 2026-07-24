@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * CSS thuần bên dưới chỉ có tác dụng trên web (`npm run web`);
+ * bản native bỏ qua hoàn toàn.
+ *
+ * Ép html/body/#root chiếm đủ chiều cao để khung điện thoại của
+ * WebPhoneFrame căn giữa được, và tô nền quanh khung.
+ */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: #cbd5e1; /* slate-300, khớp nền của WebPhoneFrame */
+}

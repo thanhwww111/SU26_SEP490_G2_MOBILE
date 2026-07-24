@@ -120,12 +120,6 @@ export const buildSessionFromAuthPayload = (apiResponse, fallbackEmail) => {
   };
 };
 
-export const isAdminUser = (user) => normalizeRole(user?.role) === ROLES.ADMIN;
-export const isOwnerUser = (user) => normalizeRole(user?.role) === ROLES.OWNER;
-export const isManagerUser = (user) => normalizeRole(user?.role) === ROLES.MANAGER;
-export const isStaffUser = (user) => normalizeRole(user?.role) === ROLES.STAFF;
-export const isPlayerUser = (user) => normalizeRole(user?.role) === ROLES.PLAYER;
-
 /** Nhãn tiếng Việt của role, dùng để hiển thị */
 export const getRoleLabel = (role) => {
   const r = normalizeRole(role);
