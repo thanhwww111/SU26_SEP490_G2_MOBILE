@@ -13,6 +13,13 @@ module.exports = {
           600: "#2563eb",
           700: "#1d4ed8",
         },
+        // Nhận diện màn auth, lấy từ trang Auth của FE web
+        navy: {
+          900: "#0d1b3e", // nền hero
+          700: "#1a2a4a", // nút, tiêu đề
+          600: "#243660", // trạng thái nhấn
+        },
+        accent: "#e8471a", // dấu chấm cam sau logo
       },
     },
   },
