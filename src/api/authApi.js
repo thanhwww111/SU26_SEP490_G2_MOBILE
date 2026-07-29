@@ -15,3 +15,12 @@ export const forgotPassword = (body) =>
 /** POST /auth/reset-password — body: { email, otp, newPassword } */
 export const resetPassword = (body) =>
   axiosClient.post("/auth/reset-password", body);
+
+/**
+ * POST /auth/change-password — body: { oldPassword, newPassword }
+ *
+ * Dành cho người đã đăng nhập (khác reset-password vốn đi kèm OTP). Backend
+ * ràng buộc mật khẩu mới 6–100 ký tự.
+ */
+export const changePassword = (body) =>
+  axiosClient.post("/auth/change-password", body);

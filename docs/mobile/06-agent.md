@@ -1,6 +1,6 @@
 # Hướng dẫn cho AI Agent
 
-Cập nhật: 2026-07-28
+Cập nhật: 2026-07-29
 
 Tài liệu này dành cho AI agent (Claude Code, Copilot, Cursor…) làm việc trên repo mobile. Người thật đọc cũng được — phần "Sự thật về project" bên dưới đúng cho cả hai.
 
@@ -18,6 +18,7 @@ Tài liệu này dành cho AI agent (Claude Code, Copilot, Cursor…) làm việ
 | Không rõ thứ tự làm | [02-development-workflow.md](02-development-workflow.md) |
 | Tìm màn web tương ứng | [07-web-mapping.md](07-web-mapping.md) |
 | Cần snippet quen thuộc | [08-reusable-patterns.md](08-reusable-patterns.md) |
+| "Màn này đã ai làm chưa, quyết định gì rồi?" | [11-changelog.md](11-changelog.md) |
 
 **Trước khi tự viết một đoạn code lặp lại** (gọi API, phân trang, form, badge trạng thái, điều hướng), tra [08](08-reusable-patterns.md) — nhiều khả năng đã có sẵn.
 
@@ -59,9 +60,20 @@ Không dùng `localhost` (điện thoại sẽ hiểu là chính nó). Không d�
 
 `src/constants/config.js` tự nối `/api/v1`, nên biến env **không** được có sẵn phần đó.
 
-## Chưa có toast
+## Thư viện: có gì, chưa có gì
 
-Project không cài thư viện toast. Mọi thông báo hiển thị inline qua `FormError`, `FormSuccess`, `SectionState`. Đừng sinh code gọi `Toast.show()`.
+Kiểm chứng bằng `package.json`, đừng đoán. Tính tới 2026-07-29:
+
+| Việc | Tình trạng |
+|---|---|
+| Toast | **Chưa có.** Thông báo hiển thị inline qua `FormError`, `FormSuccess`, `SectionState`. Đừng sinh code gọi `Toast.show()` |
+| Chọn ảnh | Có `expo-image-picker` (thêm 2026-07-29, cho màn hồ sơ) |
+| Render HTML | **Không dùng thư viện.** Tự chuyển bằng `src/utils/html.js` — xem [11](11-changelog.md) |
+| WebSocket | **Chưa có.** Tab tỷ số trực tiếp đang tự làm mới mỗi 15 giây thay vì realtime |
+| Date picker | **Chưa có.** Ngày sinh trong hồ sơ dùng ô nhập `dd/mm/yyyy` tự validate |
+| Gradient | **Chưa có.** Chỗ nào web dùng gradient thì mobile dùng nền đặc |
+
+Thêm thư viện là đổi kiến trúc — xem quy tắc 3 bên dưới. Hỏi người dùng trước, đừng tự cài.
 
 ## Nativewind v4 + Tailwind v3
 

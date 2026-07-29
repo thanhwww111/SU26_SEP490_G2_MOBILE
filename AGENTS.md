@@ -24,6 +24,7 @@ Toàn bộ quy chuẩn nằm ở **[`docs/mobile/`](docs/mobile/README.md)**.
 | Response có field gì | `docs/mobile/10-data-contracts.md` |
 | Tìm màn web tương ứng | `docs/mobile/07-web-mapping.md` |
 | Snippet hay dùng | `docs/mobile/08-reusable-patterns.md` |
+| Màn nào đã làm, quyết định gì | `docs/mobile/11-changelog.md` |
 
 Dựng màn mới: gõ `/new-screen <tên màn>` — chạy đúng quy trình 5 bước.
 
@@ -41,6 +42,7 @@ Không dùng `localhost` (điện thoại hiểu là chính nó). Không có h�
 
 ## Lưu ý
 
-- Chưa cài thư viện toast — mọi thông báo hiển thị inline.
+- **`expo-image-picker` thêm ngày 2026-07-29** (màn hồ sơ cần chọn ảnh đại diện). Pull về nhớ chạy `npm install`.
+- Chưa cài toast, WebSocket, date picker, gradient, thư viện render HTML. Bảng đầy đủ kèm cách xử lý thay thế: `docs/mobile/06-agent.md`, mục "Thư viện: có gì, chưa có gì".
 - Mục "Cấu trúc thư mục" trong `README.md` đã lỗi thời; đọc cấu trúc thật từ thư mục.
 - Repo này là một trong ba repo git độc lập: `SU26_SEP490_G2_BE`, `SU26_SEP490_G2_FE`, `SU26_SEP490_G2_MOBILE`.

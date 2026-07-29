@@ -23,20 +23,37 @@ Cột **Mobile**:
 | Đăng nhập | `/login` | `pages/Auth/LoginPage.jsx` | ✅ | `app/(auth)/login.jsx` |
 | Đăng ký | `/register` | `pages/Auth/RegisterPage.jsx` | ✅ | `app/(auth)/register.jsx` |
 | Quên mật khẩu | `/forgot-password` | `pages/Auth/ForgotPasswordPage.jsx` | ✅ | `app/(auth)/forgot-password.jsx`, `reset-password.jsx` |
-| Hồ sơ | `/profile` | `pages/Profile/` | ✅ | `app/(app)/profile.jsx` |
-| Danh sách tin | `/news` | `pages/News/NewsListPage.jsx` | 🎯 | `app/(app)/news.jsx` |
-| Chi tiết tin | `/news/:slug` | `pages/News/ArticleDetailPage.jsx` | 🎯 | `app/(app)/news/[slug].jsx` |
-| Danh sách giải | `/event` | `pages/Event/index.jsx` | 🎯 | `app/(app)/tournaments.jsx` |
-| Chi tiết giải | `/event/:id` | `pages/Event/EventDetailPage.jsx` + `MatchesTab.jsx`, `RankingTab.jsx`, `eventTheme.css` | 🎯 | `app/(app)/tournaments/[id].jsx` |
+| Hồ sơ | `/profile` | `pages/Profile/` (`index.jsx`, `ProfileForm.jsx`, `ProfileAvatarPanel.jsx`, `ProfileChangePassword.jsx`) | ✅ | `app/(app)/profile.jsx` |
+| Danh sách tin | `/news` | `pages/News/NewsListPage.jsx` | ✅ | `app/(app)/news.jsx` |
+| Chi tiết tin | `/news/:slug` | `pages/News/ArticleDetailPage.jsx` | ✅ | `app/(app)/news/[slug].jsx` |
+| Danh sách giải | `/event` | `pages/Event/index.jsx` | ✅ | `app/(app)/event.jsx` |
+| Chi tiết giải | `/event/:id` | `pages/Event/EventDetailPage.jsx` + `MatchesTab.jsx`, `RankingTab.jsx`, `eventTheme.css` | ✅ | `app/(app)/event/[id].jsx` |
 | Hồ sơ cơ thủ | `/event/players/:participantId` | `pages/Event/PlayerProfilePage.jsx` | ⏳ | |
 | Đăng ký giải | `/player/tournaments/:id/register` | `pages/Player/TournamentRegisterPage.jsx` | 🎯 | `app/(app)/tournaments/[id]/register.jsx` |
-| Đăng ký của tôi | `/player/registrations` | `pages/Player/MyRegistrationsPage.jsx` | 🎯 | `app/(app)/my-registrations.jsx` |
+| Đăng ký của tôi | `/player/registrations` | `pages/Player/MyRegistrationsPage.jsx` | ✅ | `app/(app)/my-registrations.jsx` |
+| Chi tiết đăng ký | (modal trong `MyRegistrationsPage`) | `pages/Player/MyRegistrationsPage.jsx` | ✅ | `app/(app)/my-registrations/[id].jsx` |
 | Lịch thi đấu của tôi | `/player/matches` | `pages/Player/PlayerMatchSchedulePage.jsx` | 🎯 | `app/(app)/my-matches.jsx` |
 | Lịch sử thanh toán | `/player/payments` | `pages/Payment/MyPaymentsPage.jsx` | ⏳ | |
-| Chi nhánh | `/branches`, `/branches/:id` | `pages/Branch/` | ⏳ | |
+| Chi nhánh | `/branches`, `/branches/:id` | `pages/Branch/index.jsx`, `BranchDetailPage.jsx` | ✅ | `app/(app)/branches.jsx`, `app/(app)/branches/[id].jsx` |
 | Kết quả thanh toán | `/payment/success`, `/payment/cancel` | `pages/Payment/PaymentSuccessPage.jsx` | ⏳ | Cần deep link, xem ghi chú cuối trang |
 
-Bốn màn `🎯` đầu (tin tức + giải đấu) nên làm trước, vì trang chủ đang có nút "Tất cả" bị ẩn do chưa có màn đích.
+Sáu màn công khai (giải đấu, tin tức, cơ sở) đã xong ngày 2026-07-29. Route giữ đúng tên web (`/event`, `/news`, `/branches`) chứ không phải `tournaments` như bảng này từng dự kiến — nhờ vậy `key` trong `navItems.js` khớp thẳng `activeKey` mà layout truyền cho drawer.
+
+Trang chủ giờ nối được hết: cả nút "Tất cả" của khối Tin tức lẫn nút "Toàn bộ" và từng thẻ của khối Lịch thi đấu. Khối Top tay cơ vẫn chưa có màn đích.
+
+**Lưu ý về `/branches`:** web có hai nhóm màn chi nhánh khác hẳn nhau — `/branches` (công khai, `CommonLayout`) và `/owner/branches`, `/manager/branches` (quản trị, có tạo/sửa/xoá). Mobile chỉ làm nhóm công khai.
+
+**Nội dung bài viết là HTML.** Mobile không dùng WebView mà tự chuyển sang component gốc — xem `src/utils/html.js` và mục 11d trong [08-reusable-patterns.md](08-reusable-patterns.md). Bảng và video nhúng mất định dạng nhưng chữ vẫn giữ.
+
+Ba chỗ trong màn giải đấu còn chờ màn khác:
+
+| Chờ màn | Hiện đang |
+|---|---|
+| `/player/tournaments/:id/register` | Khối phí vẫn hiện, thay nút đăng ký bằng ghi chú |
+| `/event/players/:participantId` | Tên cơ thủ chỉ để đọc, không bấm được |
+| WebSocket realtime | Tab Trực tiếp tự làm mới mỗi 15 giây |
+
+Chi tiết thiết kế: `docs/superpowers/specs/2026-07-29-event-screens-design.md`.
 
 ## Menu điều hướng của web
 
@@ -45,6 +62,8 @@ Bốn màn `🎯` đầu (tin tức + giải đấu) nên làm trước, vì tra
 `src/components/layout/navItems.js` của mobile bám đúng 6 mục này. Thêm màn mới thì cập nhật file đó, **không** hardcode trong `AppDrawer`.
 
 Menu hồ sơ của web (PLAYER): Hồ sơ, Đăng ký của tôi, Lịch thi đấu, Lịch sử thanh toán, Đăng xuất.
+
+Mobile khai lại đúng menu này trong `PLAYER_MENU` của `src/components/layout/ProfileMenu.jsx` — **không** nằm trong `navItems.js`. Màn của PLAYER thì điền `path` ở đó, màn công khai thì điền ở `navItems.js`.
 
 ---
 

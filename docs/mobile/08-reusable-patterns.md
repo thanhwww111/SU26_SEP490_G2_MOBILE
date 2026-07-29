@@ -96,6 +96,50 @@ const handleLoadMore = () => {
 
 ---
 
+# 3b. Tải lại khi quay lại màn
+
+Bản gốc: `src/components/registration/MyRegistrationList.jsx`.
+
+`useEffect` chỉ chạy lúc gắn component. Màn danh sách mà người dùng có thể đi sang màn chi tiết rồi **thay đổi dữ liệu ở đó** (huỷ, sửa, thanh toán) thì phải tải lại khi quay về, nếu không danh sách hiện trạng thái cũ.
+
+```jsx
+import { useFocusEffect } from "expo-router";
+
+const alive = useRef(true);
+const loadedOnce = useRef(false);
+
+useFocusEffect(
+  useCallback(() => {
+    alive.current = true;
+
+    (async () => {
+      // Lần focus đầu mới hiện spinner; các lần sau tải ngầm cho đỡ nháy trắng
+      if (!loadedOnce.current) setLoading(true);
+      try {
+        await loadPage(0);
+        loadedOnce.current = true;
+      } catch (e) {
+        if (alive.current) setError(e.message);
+      } finally {
+        if (alive.current) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive.current = false;
+    };
+  }, [loadPage])
+);
+```
+
+Cờ `alive` để ở `useRef` chứ không phải biến cục bộ, vì `handleRefresh` và `handleLoadMore` ở ngoài effect cũng phải đọc chung một cờ.
+
+Đánh đổi: mỗi lần focus lại sẽ reset về trang 0, mất các trang đã tải thêm. Chấp nhận được — đúng còn hơn giữ được vị trí cuộn.
+
+Màn không có màn con sửa dữ liệu thì cứ dùng `useEffect` như mục 1, đừng dùng cái này cho mọi thứ.
+
+---
+
 # 4. Kéo để làm mới
 
 ```jsx
@@ -193,18 +237,37 @@ Thông báo giữ nguyên như FE web để hai nền tảng nói cùng một gi
 
 ---
 
+# 6b. Số liệu
+
+`src/utils/format.js`:
+
+```jsx
+import { fmtCurrency, initialsOf, splitName } from "../../utils/format";
+
+fmtCurrency(tournament.entryFee)    // "200.000 đ"; null hoặc 0 → "Miễn phí"
+initialsOf("Nguyễn Văn A")          // "NA" — avatar dự phòng
+splitName("Nguyễn Văn A")           // { first: "Nguyễn Văn", last: "A" }
+```
+
+`splitName` phục vụ kiểu hiển thị tên của web: phần đầu chữ thường, họ cuối IN HOA đậm. Đã gói sẵn trong `src/components/tournament/PlayerName.jsx`.
+
+---
+
 # 7. Ngày tháng
 
 `src/utils/date.js`:
 
 ```jsx
-import { fmtDateShort, fmtDateRange } from "../../utils/date";
+import { fmtDateShort, fmtDateTime, fmtDateRange } from "../../utils/date";
 
 fmtDateShort(post.publishedAt)                  // "28/07/2026", hoặc null nếu thiếu/sai
+fmtDateTime(registration.createdAt)             // "28/07/2026 14:30", hoặc null
 fmtDateRange(t.startDate, t.endDate)            // "01/06/2026 – 05/06/2026", hoặc "—"
 ```
 
-`fmtDateShort` trả `null` khi ngày rỗng hoặc không parse được — nhớ kiểm trước khi render:
+Dùng `fmtDateTime` cho mốc thao tác (ngày đăng ký, ngày thanh toán) — trong cùng một ngày có thể có nhiều bản ghi, chỉ hiện ngày thì không phân biệt được.
+
+`fmtDateShort` và `fmtDateTime` trả `null` khi ngày rỗng hoặc không parse được — nhớ kiểm trước khi render:
 
 ```jsx
 {fmtDateShort(post.publishedAt) ? (
@@ -282,6 +345,87 @@ import RemoteImage from "../home/RemoteImage";
 
 ---
 
+# 11b. Chọn ảnh và tải lên
+
+Bản gốc: `src/components/profile/ProfileContent.jsx` + `src/api/storageApi.js`.
+
+```jsx
+import * as ImagePicker from "expo-image-picker";
+
+const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+if (!permission.granted) { /* báo inline, đừng im lặng */ return; }
+
+const result = await ImagePicker.launchImageLibraryAsync({
+  mediaTypes: ["images"],
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.8,
+});
+if (result.canceled) return;
+
+const asset = result.assets[0];   // { uri, fileName, mimeType, fileSize }
+const { objectKey } = await storageApi.uploadImage({
+  uri: asset.uri,
+  name: asset.fileName || "upload.jpg",
+  type: asset.mimeType || "image/jpeg",
+});
+```
+
+Ba chỗ khác web, sai là hỏng:
+
+- **FormData nhận `{ uri, name, type }`**, không phải đối tượng `File` — React Native không có `File`.
+- **Đừng tự đặt header `Content-Type`** cho request multipart: để axios sinh kèm `boundary`, đặt tay sẽ thiếu boundary và backend không tách được file.
+- **Người dùng có thể từ chối quyền** — trình duyệt không có bước này. Từ chối thì báo inline kèm hướng dẫn bật lại trong Cài đặt.
+
+Kiểm `mimeType` và `fileSize` trước khi tải lên; cả hai đều có thể `undefined` nên chỉ kiểm khi có giá trị.
+
+---
+
+# 11c. Chọn một trong danh sách ngắn
+
+`src/components/OptionPicker.jsx` — thay `<select>` của web.
+
+```jsx
+<OptionPicker
+  label="Giới tính"
+  options={GENDER_OPTIONS}     // [{ value, label }]
+  value={form.gender}
+  onChange={(v) => onChange({ gender: v })}
+  disabled={saving}
+/>
+```
+
+React Native không có select gốc, `@react-native-picker/picker` thì mỗi hệ điều hành một kiểu. Với 3–5 mục thì bày hết thành chip: nhanh hơn một chạm và thấy ngay có những lựa chọn nào. Danh sách dài hơn thì đừng dùng cái này — cân nhắc màn chọn riêng.
+
+---
+
+# 11d. Nội dung HTML từ backend
+
+Bài viết (`NewsPostResponse.content`) là HTML. React Native không có DOM, nên project tự chuyển sang component gốc:
+
+```jsx
+import RichText from "../news/RichText";
+
+<RichText html={post.content} />
+```
+
+Phân tích nằm ở `src/utils/html.js` — hàm thuần, có test:
+
+```js
+parseHtmlBlocks(html)   // → [{ type: "paragraph" | "heading" | "list" | "image" | "quote" | "rule", ... }]
+htmlToPlainText(html)   // → chữ thuần, dùng khi cần đoạn tóm tắt
+decodeEntities(str)     // → giải mã &amp; &#39; &nbsp; ...
+```
+
+**Vì sao không dùng thư viện:** `react-native-webview` khiến chữ không theo design system và phải đo chiều cao thủ công khi nhúng vào trang cuộn; `react-native-render-html` ngừng bảo trì từ 2022. Phạm vi HTML mà một trình soạn thảo sinh ra đủ hẹp để tự xử lý.
+
+**Phủ:** `p`, `h1`–`h6`, `strong`/`b`, `em`/`i`, `a`, `ul`/`ol`/`li`, `img`, `blockquote`, `hr`, `br`, entity.
+**Không phủ:** bảng, `iframe`, video nhúng. Những thẻ này bị bỏ nhưng **chữ bên trong vẫn giữ** — mất định dạng chứ không mất nội dung.
+
+Parser dùng stack thật, không dùng regex cắt khối: nội dung soạn thảo hay lồng `div` trong `div` và regex lười sẽ khớp nhầm thẻ đóng của lớp trong. Nếu cần mở rộng (thêm thẻ, thêm kiểu khối) thì sửa `src/utils/html.js` **và bổ sung test** — file này đang có 34 ca, kể cả HTML hỏng và thẻ chưa đóng.
+
+---
+
 # 12. Chữ dài
 
 ```jsx
@@ -310,6 +454,86 @@ Tên giải, tiêu đề bài viết, tên người dùng đều có thể rất
 `keyExtractor` phải trả **chuỗi** — id từ backend là số, nhớ bọc `String()`.
 
 **Không lồng `FlatList` trong `ScrollView`.**
+
+---
+
+# 13b. Xác nhận hành động không hoàn tác được
+
+`src/components/ConfirmSheet.jsx` — thay `ConfirmModal` của web. Trượt lên từ đáy để hai nút nằm trong tầm ngón cái.
+
+```jsx
+<ConfirmSheet
+  visible={confirmOpen}
+  title="Xác nhận hủy đăng ký"
+  message="Hủy đăng ký này? Bạn sẽ phải đăng ký lại từ đầu nếu đổi ý."
+  confirmText="Hủy đăng ký"
+  cancelText="Giữ đăng ký"
+  confirmVariant="danger"
+  loading={submitting}
+  onConfirm={handleConfirm}
+  onCancel={() => setConfirmOpen(false)}
+/>
+```
+
+Trong lúc `loading`, cả lớp nền lẫn nút huỷ đều bị khoá — bằng không người dùng đóng sheet giữa lúc request đang chạy và không biết kết quả ra sao.
+
+Lỗi trả về **không** hiện trong sheet: đóng sheet rồi hiện `FormError` ngay trong màn, vì lỗi thường nói về trạng thái của cả bản ghi chứ không riêng thao tác xác nhận.
+
+`Button` có sẵn `variant="danger"` (nền đỏ) cho đúng nhóm này.
+
+---
+
+# 13c. Ô tìm kiếm
+
+`src/components/SearchField.jsx` — pill có icon kính lúp và nút xoá. Khác `Input`: đây là bộ lọc, không phải field của form (không nhãn, không validate).
+
+```jsx
+<SearchField
+  value={searchInput}
+  onChangeText={setSearchInput}
+  onSubmit={handleSubmitSearch}   // bỏ prop này nếu lọc tại chỗ
+  placeholder="Tìm giải đấu..."
+/>
+```
+
+**Lọc bằng API thì phải có `onSubmit`**, đừng gọi API trong `onChangeText` — mỗi ký tự một request là quá tốn trên mạng di động. `onSubmit` chạy khi bấm nút tìm trên bàn phím và khi bấm nút xoá, luôn nhận từ khoá dưới dạng chuỗi.
+
+**Lọc tại chỗ** (mảng đã tải sẵn, như tab Cơ thủ) thì chỉ cần `onChangeText` + `useMemo`.
+
+---
+
+# 13d. Màn nhiều tab
+
+Bản gốc: `src/components/tournament/TournamentDetail.jsx`.
+
+Chỉ mount tab đã được mở, và giữ lại tab đã mount bằng `display: none` — chuyển qua chuyển lại không gọi lại API:
+
+```jsx
+const [activeTab, setActiveTab] = useState("info");
+const [visited, setVisited] = useState({ info: true });
+
+const handleChangeTab = (tabId) => {
+  setActiveTab(tabId);
+  setVisited((prev) => (prev[tabId] ? prev : { ...prev, [tabId]: true }));
+  scrollRef.current?.scrollTo({ y: 0, animated: false });
+};
+
+{tabs.map((tab) =>
+  visited[tab.id] ? (
+    <View key={tab.id} style={tab.id === activeTab ? undefined : styles.hidden}>
+      {renderTab(tab.id)}
+    </View>
+  ) : null
+)}
+
+const styles = StyleSheet.create({ hidden: { display: "none" } });
+```
+
+Ba điểm bắt buộc:
+
+- **Cuộn về đầu khi đổi tab** — giữ nguyên vị trí cuộn thì nội dung mới hiện ra giữa chừng.
+- **Unmount thì mất dữ liệu**, nên đừng tháo tab ra khỏi cây chỉ vì nó đang ẩn.
+- Tab nào có bộ đếm hoặc polling thì truyền cờ `active` xuống để nó **dừng khi bị ẩn** — tab ẩn vẫn gọi API là bắt người dùng trả tiền 3G cho dữ liệu họ không xem.
 
 ---
 

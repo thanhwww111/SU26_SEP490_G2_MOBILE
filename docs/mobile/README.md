@@ -28,6 +28,7 @@ Bộ tài liệu chuẩn cho app mobile. Mục tiêu: mọi màn mới, dù ai l
 | [08-reusable-patterns.md](08-reusable-patterns.md) | Snippet hay dùng: gọi API, phân trang, form, badge, điều hướng. | Tiếng Việt |
 | [09-backend-reference.md](09-backend-reference.md) | Endpoint và enum trạng thái, trích từ controller thật. | Tiếng Việt |
 | [10-data-contracts.md](10-data-contracts.md) | Shape DTO thật: response có field gì, request cần gì. | Tiếng Việt |
+| [11-changelog.md](11-changelog.md) | Nhật ký: màn nào đã dựng, quyết định gì, còn nợ gì. | Tiếng Việt |
 
 Spec của từng tính năng nằm riêng ở `docs/superpowers/specs/`.
 
@@ -81,8 +82,25 @@ Màu trung tính (xám) **không định nghĩa lại** — web dùng đúng tha
 
 ## Trạng thái hiện tại
 
-App đang có: màn auth (login, register, forgot/reset password), trang chủ (banner, tin tức, lịch thi đấu, top tay cơ), hồ sơ.
+Cập nhật: 2026-07-29. Chi tiết từng đợt làm nằm ở [11-changelog.md](11-changelog.md).
 
-Ưu tiên tiếp theo: hoàn thiện luồng **PLAYER** — danh sách và chi tiết tin tức, danh sách và chi tiết giải đấu, đăng ký giải, lịch thi đấu cá nhân.
+**Đã có:**
+
+| Nhóm | Màn |
+|---|---|
+| Auth | Đăng nhập, đăng ký, quên/đặt lại mật khẩu |
+| Trang chủ | Banner, tin tức, lịch thi đấu, top tay cơ |
+| Giải đấu | Danh sách `/event`, chi tiết `/event/[id]` (5 tab) |
+| Tin tức | Danh sách `/news`, chi tiết `/news/[slug]` |
+| Cơ sở | Danh sách `/branches`, chi tiết `/branches/[id]` |
+| Cá nhân | Hồ sơ (sửa thông tin, đổi ảnh, đổi mật khẩu), đăng ký giải của tôi |
+
+**Ưu tiên tiếp theo** — vẫn là luồng PLAYER:
+
+1. Đăng ký giải `/player/tournaments/:id/register` — form động, đọc field từ API.
+2. Lịch thi đấu cá nhân `/player/matches`.
+3. Lịch sử thanh toán `/player/payments` — cần deep link PayOS, phải có spec riêng.
+
+**Chặn bởi web:** ba mục `Tỷ Số Trực Tiếp`, `Bảng Xếp Hạng`, `Cơ Thủ` trong drawer còn trống vì **web cũng chưa dựng**. Mobile không tự định nghĩa giao diện mới — cần nhóm chốt thiết kế trước.
 
 Các role còn lại (OWNER, MANAGER, STAFF, ADMIN) làm sau, và không phải màn nào của web cũng cần lên mobile.

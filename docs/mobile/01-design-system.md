@@ -295,6 +295,10 @@ Phần này quy định **hình thức**. Cách viết và tổ chức xem [03-c
 |---|---|
 | `Button` | `src/components/Button.jsx` |
 | `Input` | `src/components/Input.jsx` |
+| `SearchField` | `src/components/SearchField.jsx` |
+| `OptionPicker` | `src/components/OptionPicker.jsx` |
+| `ConfirmSheet` | `src/components/ConfirmSheet.jsx` |
+| `SectionCard` | `src/components/tournament/SectionCard.jsx` |
 | `AppHeader` | `src/components/layout/AppHeader.jsx` |
 | `AppFooter` | `src/components/layout/AppFooter.jsx` |
 | `AppDrawer` | `src/components/layout/AppDrawer.jsx` |
@@ -324,6 +328,8 @@ Trạng thái bắt buộc: default / pressed (`active:bg-navy-600`) / disabled 
 ## Input
 
 Gồm label, ô nhập, chữ lỗi. Cao 40 (`h-10`), bo `rounded-lg`, viền `slate-300`, nền `slate-50`.
+
+Có `multiline` cho ô mô tả nhiều dòng — cao 96 (`h-24`) và tự ép chữ lên đỉnh ô (Android mặc định canh giữa). Đừng truyền `style={{ height }}` để tự kéo cao.
 
 Lỗi **chỉ hiện sau khi field đã `touched`** — không để vừa mở màn đã đỏ lòm.
 

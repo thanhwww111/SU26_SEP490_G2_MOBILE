@@ -10,7 +10,7 @@ import { useOverlay } from "./useOverlay";
  * path null = màn chưa dựng trên mobile, xử lý y như bên navItems.js.
  */
 const PLAYER_MENU = [
-  { key: "registrations", label: "Đăng ký của tôi", path: null, Icon: FileText },
+  { key: "registrations", label: "Đăng ký của tôi", path: "/(app)/my-registrations", Icon: FileText },
   { key: "matches", label: "Lịch thi đấu", path: null, Icon: FileText },
   { key: "payments", label: "Lịch sử thanh toán", path: null, Icon: CreditCard },
 ];

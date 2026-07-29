@@ -118,6 +118,66 @@ POST /auth/reset-password    { email, otp, newPassword }
 
 ---
 
+# Hồ sơ người dùng
+
+## GET `/profile` — `UserProfileResponse`
+
+```jsonc
+{
+  "email": "a@b.com",
+  "phone": "0912345678",
+  "fullName": "Nguyễn Văn A",
+  "displayName": "Player A",
+  "avatarUrl": "https://minio.../avatars/abc.jpg?X-Amz-...",  // presigned URL
+  "dateOfBirth": "1998-05-15",     // LocalDate, dạng yyyy-MM-dd
+  "gender": "MALE",
+  "billiardRank": "AMATEUR",       // chỉ có với tài khoản PLAYER
+  "bio": "..."
+}
+```
+
+**404 kèm mã `PROFILE_002` khi tài khoản chưa tạo hồ sơ.** Đây là trạng thái bình thường của tài khoản mới, không được hiển thị như lỗi.
+
+`avatarUrl` trong response là **presigned URL sinh mới mỗi lần GET**, có hạn dùng — đừng đem lưu lại rồi gửi ngược lên.
+
+## PUT `/profile` và POST `/player/profile` — `UserProfileRequest`
+
+```jsonc
+{
+  "fullName": "Nguyễn Văn A",      // bắt buộc
+  "displayName": "Player A",
+  "phone": "0912345678",
+  "avatarUrl": "avatars/a1b2c3.jpg",  // objectKey của MinIO, KHÔNG phải URL
+  "dateOfBirth": "1998-05-15",
+  "gender": "MALE",
+  "billiardRank": "AMATEUR",
+  "bio": "..."
+}
+```
+
+Ba cái bẫy của DTO này:
+
+1. **`avatarUrl` nhận objectKey, không nhận URL.** Tên trường đọc như URL nhưng giá trị phải là `objectKey` lấy từ `POST /storage/images`. Gửi presigned URL vào đây thì lần đọc sau ảnh hỏng.
+2. **`billiardRank` chỉ dành cho PLAYER.** Role khác gửi kèm giá trị khác rỗng sẽ bị từ chối.
+3. **`phone` theo regex `^(0[3|5|7|8|9])[0-9]{8}$`** — đúng 10 số. Chặt hơn `validatePhone` của mobile.
+
+Trường trống thì bỏ hẳn khỏi body, đừng gửi chuỗi rỗng — `buildProfileBody` trong `src/components/profile/profileFormUtils.js` đã lo phần này.
+
+`gender`: `MALE` · `FEMALE` · `OTHER`.
+`billiardRank`: `UNRANKED` · `BEGINNER` · `AMATEUR` · `SEMI_PRO` · `PRO`.
+
+## POST `/storage/images` — `ImageUploadResponse`
+
+Request: multipart, hai phần `file` và `folder` (mobile dùng `"avatars"`).
+
+```jsonc
+{ "objectKey": "avatars/a1b2c3.jpg", "url": "https://minio.../..." }
+```
+
+`url` chỉ để xem trước ngay sau khi tải lên; thứ đem lưu vào hồ sơ là `objectKey`.
+
+---
+
 # Tin tức
 
 ## GET `/news` — trang của `NewsPostResponse`
@@ -142,15 +202,25 @@ POST /auth/reset-password    { email, otp, newPassword }
 }
 ```
 
-**`content` là HTML** (web dùng rich text editor). React Native không render HTML — màn chi tiết tin cần `react-native-render-html` hoặc `WebView`, **cả hai đều chưa cài**. Phải quyết định trước khi làm màn này.
+**`content` là HTML** (web dùng rich text editor và render bằng `dangerouslySetInnerHTML`). Đã giải quyết ngày 2026-07-29: mobile tự chuyển HTML sang component gốc bằng `parseHtmlBlocks` trong `src/utils/html.js`, không cài WebView cũng không cài `react-native-render-html`. Render ở `src/components/news/RichText.jsx`.
+
+Phủ: đoạn văn, h1–h6, đậm, nghiêng, link, danh sách, ảnh, trích dẫn, `<hr>`, `<br>`. Không phủ: bảng, iframe, video nhúng — mất định dạng nhưng **chữ bên trong vẫn giữ**, bài viết không bao giờ trống.
 
 Chi tiết bài lấy theo **`slug`**, không phải `id`.
+
+`tags` là mảng **chuỗi** (`["pool", "9-ball"]`), còn `tagIds` là mảng số — đừng nhầm khi render chip.
+
+## GET `/news` — tham số lọc
+
+`categoryId` (số), `search` (chuỗi), `page`, `size`. Không có tham số sắp xếp.
 
 ## GET `/news/categories` — `NewsCategoryResponse[]`
 
 ```jsonc
 { "id": 1, "name": "Giải đấu", "slug": "giai-dau", "status": "ACTIVE", "createdAt": "..." }
 ```
+
+Mảng trần, không phân trang. Trả về cả chuyên mục `INACTIVE` — lọc ở client trước khi dựng hàng chip.
 
 ---
 
@@ -279,17 +349,51 @@ Có cả `tableNo`, `tableName`, `tableNumber` — trùng lặp. Ưu tiên `tabl
 }
 ```
 
-## GET `/tournaments/{id}/rankings` — `TournamentRankingEntryResponse[]`
+## GET `/tournaments/{id}/rankings` — `TournamentRankingResponse`
+
+**Là object, không phải mảng.** Trước đây file này ghi sai thành mảng — sửa ngày 2026-07-29 sau khi đọc `MatchController.rankingsPublic` và `dto/response/TournamentRankingResponse.java`.
 
 ```jsonc
 {
-  "sortOrder": 1, "rankLabel": "Vô địch",
-  "rankFrom": 1, "rankTo": 1,
-  "participantId": 5, "displayName": "Nguyễn A", "note": null
+  "tournamentId": 1,
+  "tournamentStatus": "COMPLETED",
+  "isOfficial": true,          // true khi giải đã COMPLETED
+  "entries": [
+    {
+      "sortOrder": 1, "rankLabel": "#1",
+      "rankFrom": 1, "rankTo": 1,
+      "participantId": 5, "displayName": "Nguyễn A", "note": "Vô địch"
+    }
+  ]
 }
 ```
 
+`isOfficial` quyết định nhãn "Kết quả chính thức" hay "Xếp hạng tạm thời" — đừng bóc phẳng lấy mỗi `entries`.
+
 Hạng đồng vị dùng `rankFrom`–`rankTo` (ví dụ đồng hạng 5–8). Hiển thị `rankLabel`, đừng tự sinh chuỗi.
+
+> **Entry không có trường ảnh.** `RankingTab.jsx` bên web đọc `player.avatarUrl` nhưng DTO không có field đó, nên nhánh hiện ảnh ở web không bao giờ chạy. Mobile chỉ dựng avatar chữ cái đầu.
+
+## GET `/tournaments/{id}/participants` — `ParticipantResponse[]`
+
+```jsonc
+{
+  "id": 5, "tournamentId": 1, "tournamentName": "...",
+  "registrationId": 12, "userId": 30,
+  "participantType": "SINGLE",
+  "displayName": "Nguyễn Văn A",
+  "phone": "0901234567",
+  "seedNo": 3,
+  "status": "ACTIVE",
+  "source": "...",
+  "avtarUrl": "...",
+  "members": [ { "fullName": "...", "phone": "...", "role": "..." } ]
+}
+```
+
+> **`avtarUrl`, không phải `avatarUrl`.** Lỗi chính tả nằm ở DTO backend. Web viết `p.avatarUrl || p.avtarUrl` nên vẫn ra ảnh; đọc mỗi `avatarUrl` thì mọi cơ thủ đều rơi vào ảnh dự phòng.
+
+`members` chỉ có giá trị với participant đôi/đội. Mảng trần, không phân trang, không có tham số tìm kiếm — lọc theo tên phải làm tại client.
 
 ---
 
@@ -372,6 +476,12 @@ Request — `SubmitTournamentRegistrationRequest`
 
 Response có thêm `label` trong `fieldValues` (request thì không) — hiển thị được ngay mà không cần tải lại template.
 
+`GET /player/registrations/{id}` trả **đúng DTO này**, không phải một DTO chi tiết riêng — danh sách và chi tiết dùng chung shape. `DELETE /player/registrations/{id}` trả `data` rỗng, chỉ cần bắt lỗi.
+
+> **Cảnh báo — `rejectedReason` không có trong response.** `MyRegistrationsPage.jsx` bên web render `detail.rejectedReason` nhưng `TournamentRegistrationResponse.java` không có trường đó; nó chỉ tồn tại ở `entity/Registration.java`. Khối "Lý do không được tham dự" của web vì vậy không bao giờ hiện. Mobile cố ý bỏ khối này. Muốn có thì backend phải map thêm trường ra DTO.
+
+Đã nối trong `src/api/playerRegistrationApi.js`. Nhãn và màu badge: `src/constants/registration.js`.
+
 ---
 
 # Thanh toán
@@ -440,7 +550,7 @@ Ràng buộc: `fullName` bắt buộc; `phone` cùng regex như đăng ký; `dat
 
 # Chi nhánh
 
-## GET `/branches` — `BranchListItemResponse`
+## GET `/branches` — trang của `BranchListItemResponse`
 
 ```jsonc
 {
@@ -450,7 +560,27 @@ Ràng buộc: `fullName` bắt buộc; `phone` cùng regex như đăng ký; `dat
 }
 ```
 
-Chi tiết `/branches/{id}` trả `BranchResponse` (nhiều field hơn, có ảnh và bàn) — đọc DTO khi làm màn.
+Tham số: `search` (khớp tên hoặc địa chỉ), `page`, `size`.
+
+**Backend chỉ trả chi nhánh `ACTIVE`** ở cả danh sách lẫn chi tiết — không phải lọc theo `status` ở client. Chi nhánh đã đóng trả 404 ở màn chi tiết.
+
+## GET `/branches/{id}` — `BranchResponse`
+
+```jsonc
+{
+  "id": 1, "name": "CLB ABC", "address": "123 Nguyễn Trãi",
+  "phone": "0281234567", "description": "...",
+  "status": "ACTIVE",
+  "images": [ { "key": "branches/a1b2.jpg", "url": "https://minio/..." } ],
+  "createdAt": "...", "updatedAt": "..."
+}
+```
+
+> **Sửa ngày 2026-07-29:** file này từng ghi `BranchResponse` "có ảnh và bàn". Sai — DTO **không có danh sách bàn**, và không có endpoint công khai nào trả bàn của chi nhánh. Chỉ có `images`.
+
+Khác `BranchListItemResponse`: chi tiết có `images` + `createdAt`/`updatedAt` nhưng **không có `thumbnailUrl`** — ảnh bìa ở màn chi tiết lấy từ `images[0].url`.
+
+`key` của ảnh dùng để cập nhật lại danh sách (màn quản trị), `url` để hiển thị.
 
 ---
 

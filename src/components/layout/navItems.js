@@ -13,10 +13,10 @@ import { Newspaper, Radio, Trophy, MapPin, BarChart3, Users } from "lucide-react
  * Khi thêm màn mới: dựng file trong app/(app)/ rồi điền path vào đây là xong.
  */
 export const NAV_ITEMS = [
-  { key: "news", label: "Tin Mới Nhất", path: null, Icon: Newspaper },
+  { key: "news", label: "Tin Mới Nhất", path: "/(app)/news", Icon: Newspaper },
   { key: "live", label: "Tỷ Số Trực Tiếp", path: null, Icon: Radio },
-  { key: "event", label: "Giải Đấu", path: null, Icon: Trophy },
-  { key: "branches", label: "Cơ Sở", path: null, Icon: MapPin },
+  { key: "event", label: "Giải Đấu", path: "/(app)/event", Icon: Trophy },
+  { key: "branches", label: "Cơ Sở", path: "/(app)/branches", Icon: MapPin },
   { key: "ranking", label: "Bảng Xếp Hạng", path: null, Icon: BarChart3 },
   { key: "players", label: "Cơ Thủ", path: null, Icon: Users },
 ];

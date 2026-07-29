@@ -27,3 +27,71 @@ export const getTournamentBadge = (tournament) => {
     }
   );
 };
+
+/**
+ * Chip lọc trạng thái ở đầu màn danh sách — đúng 5 mục và đúng thứ tự của
+ * TIME_FILTERS trong pages/Event/index.jsx bên web.
+ *
+ * `value` rỗng nghĩa là không gửi tham số `status` lên backend.
+ */
+export const TOURNAMENT_STATUS_FILTERS = [
+  { value: "", label: "Tất cả" },
+  { value: "OPEN_FOR_REGISTRATION", label: "Mở đăng ký" },
+  { value: "REGISTRATION_CLOSED", label: "Đóng đăng ký" },
+  { value: "IN_PROGRESS", label: "Đang diễn ra" },
+  { value: "COMPLETED", label: "Hoàn thành" },
+];
+
+/** ParticipantType → nhãn tiếng Việt (đơn / đôi / đội) */
+export const participantTypeLabel = (type) =>
+  ({ SINGLE: "Đơn", DOUBLE: "Đôi", TEAM: "Đội" })[type] || type || "—";
+
+/**
+ * MatchStatus của backend gom về ba nhóm mà giao diện quan tâm.
+ *
+ * `BYE` và `WALKOVER` tính là đã có kết quả (backend: isResolved()), nên xếp
+ * chung nhóm "done" — người xem chỉ cần biết trận đã xong hay chưa.
+ */
+export const getMatchState = (status) => {
+  if (status === "IN_PROGRESS") return "live";
+  if (status === "COMPLETED" || status === "WALKOVER" || status === "BYE")
+    return "done";
+  return "upcoming";
+};
+
+/**
+ * Suy ra bên thắng: 1 nếu player1 thắng, 2 nếu player2 thắng, null nếu chưa rõ.
+ *
+ * Backend không phải lúc nào cũng gửi `winner` cho trận đã xong, nên khi thiếu
+ * thì so tỷ số — web cũng làm đúng vậy trong apiMatchToComp.
+ */
+export const getWinnerSide = (match) => {
+  if (match?.winner) return match.player1?.id === match.winner.id ? 1 : 2;
+
+  const done = getMatchState(match?.status) === "done";
+  const { player1Score: s1, player2Score: s2 } = match || {};
+  if (done && s1 != null && s2 != null && s1 !== s2) return s1 > s2 ? 1 : 2;
+
+  return null;
+};
+
+/**
+ * Đặt tên vòng đấu từ số vòng.
+ *
+ * Chỉ nhánh loại trực tiếp mới có tứ/bán/chung kết — tính ngược từ vòng cuối.
+ * Vòng bảng và vòng tròn loại dần thì chỉ "Vòng N", vì ở đó vòng cuối không
+ * phải trận chung kết.
+ */
+const LEAGUE_STAGE_TYPES = ["GROUP", "PROGRESSIVE_ROUND"];
+
+export const getRoundLabel = (roundNo, indexFromEnd, stageType) => {
+  if (LEAGUE_STAGE_TYPES.includes(stageType)) return `Vòng ${roundNo}`;
+  if (indexFromEnd === 0) return "Chung kết";
+  if (indexFromEnd === 1) return "Bán kết";
+  if (indexFromEnd === 2) return "Tứ kết";
+  return `Vòng ${roundNo}`;
+};
+
+/** Tiền tố nhánh của thể thức loại trực tiếp kép */
+export const getBracketPrefix = (stageType) =>
+  ({ WINNERS: "WB ", LOSERS: "LB ", GRAND_FINAL: "" })[stageType] || "";

@@ -1,4 +1,5 @@
 import { ScrollView } from "react-native";
+import { useRouter } from "expo-router";
 
 import HomeBanner from "../../src/components/home/HomeBanner";
 import NewsSection from "../../src/components/home/NewsSection";
@@ -16,13 +17,23 @@ import AppFooter from "../../src/components/layout/AppFooter";
  * không kéo sập khối kia.
  */
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <ScrollView className="flex-1 bg-white">
       <HomeBanner />
 
-      {/* Các màn danh sách và chi tiết chưa làm — nối điều hướng khi có màn */}
-      <NewsSection />
-      <ScheduleSection />
+      {/* Bảng xếp hạng chưa có màn đích — nối điều hướng khi có màn */}
+      <NewsSection
+        onPressAll={() => router.push("/(app)/news")}
+        onPressPost={(post) => router.push(`/(app)/news/${post.slug}`)}
+      />
+      <ScheduleSection
+        onPressAll={() => router.push("/(app)/event")}
+        onPressTournament={(tournament) =>
+          router.push(`/(app)/event/${tournament.id}`)
+        }
+      />
       <RankedSection />
 
       <AppFooter />

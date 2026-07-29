@@ -43,6 +43,22 @@ export const useAuthStore = create((set, get) => ({
     return session.user;
   },
 
+  /**
+   * Vá thông tin người dùng đang lưu trong phiên, không đụng token.
+   *
+   * Dùng sau khi lưu hồ sơ: tên hiển thị nằm ở menu hồ sơ trên header, không
+   * cập nhật ở đây thì người dùng đổi tên xong vẫn thấy tên cũ cho tới lần mở
+   * app sau. Ghi cả xuống SecureStore để lần mở sau đọc ra đúng.
+   */
+  patchUser: async (patch) => {
+    const { user, token } = get();
+    if (!user) return;
+
+    const next = { ...user, ...patch };
+    if (token) await persistAuth({ token, user: next });
+    set({ user: next });
+  },
+
   logout: async () => {
     await clearStoredAuth();
     set({

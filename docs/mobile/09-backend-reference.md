@@ -48,9 +48,9 @@ Backend: `D:\HocTap\SEP490_G2_BiliardsManager\SU26_SEP490_G2_BE\src\main\java\co
 | POST | `/auth/forgot-password` | Gửi OTP về email |
 | POST | `/auth/verify-otp` | Xác thực OTP |
 | POST | `/auth/reset-password` | Đặt lại mật khẩu sau khi xác thực OTP |
-| POST | `/auth/change-password` | Đổi mật khẩu (đã đăng nhập) |
+| POST | `/auth/change-password` | Đổi mật khẩu (đã đăng nhập) — body `{ oldPassword, newPassword }`, mật khẩu mới 6–100 ký tự |
 
-Đã nối trong `src/api/authApi.js`.
+Đã nối trong `src/api/authApi.js` (còn thiếu `verify-otp`).
 
 Phản hồi đăng nhập được xử lý bởi `buildSessionFromAuthPayload` trong `src/utils/auth.js` — hàm này chấp nhận cả `accessToken` lẫn `token`, và nếu payload thiếu role thì đọc role từ chính JWT.
 
@@ -85,20 +85,23 @@ Các endpoint `/owner/news/**`, `/manager/news/**` là CMS, không dùng trên m
 | GET | `/tournaments` | Danh sách giải công khai, phân trang |
 | GET | `/tournaments/{id}` | Chi tiết giải |
 
-Đã nối trong `src/api/publicTournamentApi.js`.
+`controller/MatchController.java` và `controller/ParticipantController.java` — phần công khai (không cần role):
 
-`controller/MatchController.java` — phần công khai (không cần role):
+| Method | Đường dẫn | Dùng cho | Mobile |
+|---|---|---|---|
+| GET | `/tournaments/{id}/participants` | Cơ thủ tham gia giải | ✅ tab Cơ thủ |
+| GET | `/tournaments/{id}/matches` | Danh sách trận | ✅ tab Trận đấu + Trực tiếp |
+| GET | `/tournaments/{id}/rankings` | Xếp hạng chung cuộc | ✅ tab Xếp hạng |
+| GET | `/tournaments/{id}/stages` | Các vòng của giải | chưa dùng |
+| GET | `/tournaments/{id}/standings` | Bảng xếp hạng vòng bảng | chưa dùng |
+| GET | `/tournaments/{id}/stage-standings` | Xếp hạng theo vòng | chưa dùng |
+| GET | `/matches/{matchId}` | Chi tiết một trận | chưa dùng |
 
-| Method | Đường dẫn | Dùng cho |
-|---|---|---|
-| GET | `/tournaments/{id}/stages` | Các vòng của giải |
-| GET | `/tournaments/{id}/matches` | Danh sách trận |
-| GET | `/tournaments/{id}/standings` | Bảng xếp hạng vòng bảng |
-| GET | `/tournaments/{id}/rankings` | Xếp hạng chung cuộc |
-| GET | `/tournaments/{id}/stage-standings` | Xếp hạng theo vòng |
-| GET | `/matches/{matchId}` | Chi tiết một trận |
+Năm endpoint có dấu ✅ đã nối trong `src/api/publicTournamentApi.js` (kể cả hai endpoint `/tournaments` ở bảng trên).
 
-Đây là nhóm cần cho màn chi tiết giải trên mobile.
+Mobile gom nhóm trận theo vòng từ `/matches` (mảng phẳng, mỗi trận có sẵn `stageId` / `stageType` / `roundNo`) thay vì đọc `/stages` như web — tab Trực tiếp cũng cần đúng endpoint đó, một nguồn cho hai tab thì ít chỗ sai hơn.
+
+**Chưa có WebSocket trên mobile.** Web cập nhật tỷ số trực tiếp qua STOMP (`useTournamentSocket`); `package.json` của mobile không có `@stomp/stompjs` lẫn `sockjs-client`, nên tab Trực tiếp đang gọi lại `/matches` mỗi 15 giây. Cài thư viện socket là quyết định của cả nhóm.
 
 ---
 
@@ -111,7 +114,7 @@ Các endpoint `/owner/news/**`, `/manager/news/**` là CMS, không dùng trên m
 | GET | `/player/tournaments` | Giải đấu dưới góc nhìn player |
 | GET | `/player/tournaments/{id}` | Chi tiết giải |
 | GET | `/player/tournaments/{id}/registration-form` | **Form đăng ký động** của giải |
-| GET | `/player/tournaments/{id}/my-registration` | Đăng ký của tôi cho giải này |
+| GET | `/player/tournaments/{id}/my-registration` | Đăng ký của tôi cho giải này — trả `null` kèm 200 khi chưa đăng ký, không phải 404 |
 | POST | `/player/tournaments/{id}/registrations` | Nộp đăng ký |
 | GET | `/player/registrations` | Tất cả đăng ký của tôi |
 | GET | `/player/registrations/{id}` | Chi tiết một đăng ký |
@@ -119,11 +122,40 @@ Các endpoint `/owner/news/**`, `/manager/news/**` là CMS, không dùng trên m
 
 **Form đăng ký là động.** Admin định nghĩa template (xem `/admin/registration-form/templates` trên web), nên màn đăng ký giải phải render field theo dữ liệu trả về từ `/registration-form`, **không** hardcode danh sách trường. Tham khảo cách web làm: `SU26_SEP490_G2_FE/src/components/registration-form/RegistrationDynamicForm.jsx`.
 
-`controller/PlayerController.java` — `/api/v1/player`: GET và POST `/player/profile`.
+---
 
-`controller/ProfileController.java` — `/api/v1/profile`: GET và PUT.
+# Hồ sơ người dùng
 
-> Có hai chỗ đụng tới hồ sơ (`/player/profile` và `/profile`). Trước khi làm màn hồ sơ, đọc cả hai controller để biết cái nào là chuẩn.
+Có hai controller đụng tới hồ sơ và chúng **không thay thế cho nhau** — đọc kỹ trước khi nối:
+
+| Method | Đường dẫn | Controller | Role | Dùng cho |
+|---|---|---|---|---|
+| GET | `/profile` | `ProfileController` | Mọi role | Đọc hồ sơ của tôi. **404 + mã `PROFILE_002` khi chưa có hồ sơ** — đây là trạng thái bình thường của tài khoản mới, không phải lỗi |
+| PUT | `/profile` | `ProfileController` | Mọi role | **Sửa hồ sơ — kể cả PLAYER** |
+| POST | `/player/profile` | `PlayerController` | PLAYER | **Chỉ tạo lần đầu.** 409 nếu đã có |
+| GET | `/player/profile` | `PlayerController` | PLAYER | Hồ sơ dưới góc nhìn player, mobile chưa dùng |
+
+Nói gọn: **tạo** đi qua `/player/profile`, **đọc và sửa** đi qua `/profile`.
+
+Đã nối trong `src/api/profileApi.js`.
+
+Hai ràng buộc của backend hay làm request bị từ chối:
+
+- `billiardRank` **chỉ được gửi khi tài khoản là PLAYER**. Role khác gửi kèm giá trị khác rỗng thì báo lỗi.
+- `phone` phải khớp `^(0[3|5|7|8|9])[0-9]{8}$` — chặt hơn `validatePhone` trong `src/utils/validators.js` (10–11 số bất kỳ). Mobile dùng `VN_PHONE_PATTERN` trong `src/constants/profile.js` cho đúng.
+
+## Ảnh đại diện
+
+`controller/StorageController.java` — `/api/v1/storage`:
+
+| Method | Đường dẫn | Dùng cho |
+|---|---|---|
+| POST | `/storage/images` | Tải ảnh lên MinIO, multipart `file` + `folder`. Trả `{ objectKey, url }` |
+| GET | `/storage/images/url?objectKey=` | Sinh lại presigned URL |
+
+Luồng đổi ảnh: upload lấy `objectKey` → gửi `objectKey` vào body hồ sơ **dưới tên trường `avatarUrl`**. Gửi presigned URL vào đó thì ảnh hỏng ở lần đọc sau, vì `GET /profile` sinh URL mới từ object key lưu trong DB.
+
+Trên mobile phần tử file của FormData phải là `{ uri, name, type }` chứ không phải đối tượng `File` như trình duyệt — xem `src/api/storageApi.js`. Chọn ảnh dùng `expo-image-picker` (thêm vào project ngày 2026-07-29).
 
 ---
 
@@ -144,7 +176,16 @@ Luồng trên mobile cần deep link để quay lại app sau khi thanh toán tr
 
 # Chi nhánh và cơ thủ
 
-`controller/PublicBranchController.java` — `/api/v1/branches`: GET danh sách, GET `/{id}`.
+`controller/PublicBranchController.java` — `/api/v1/branches`:
+
+| Method | Đường dẫn | Dùng cho |
+|---|---|---|
+| GET | `/branches` | Danh sách chi nhánh, tham số `search` / `page` / `size` |
+| GET | `/branches/{id}` | Chi tiết, kèm danh sách ảnh |
+
+Đã nối trong `src/api/publicBranchApi.js`. **Cả hai chỉ trả chi nhánh `ACTIVE`** — client không phải lọc lại.
+
+Đừng nhầm với `/owner/branches` và `/manager/branches`: đó là nhóm quản trị (tạo, sửa, đổi trạng thái), mobile không dùng.
 
 `controller/PublicParticipantController.java` — `/api/v1/participants`:
 

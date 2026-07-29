@@ -1,0 +1,77 @@
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Camera } from "lucide-react-native";
+
+import RemoteImage from "../home/RemoteImage";
+import { initialsOf } from "../../utils/format";
+import { getRoleLabel } from "../../utils/auth";
+import { colors, iconSize } from "../../theme/tokens";
+
+/**
+ * Khối ảnh đại diện đầu màn hồ sơ.
+ *
+ * Web xếp panel ảnh thành một cột riêng bên trái form; mobile đưa lên trên cùng
+ * theo đúng thứ tự đọc của web (trái sang phải → trên xuống dưới).
+ *
+ * Nút đổi ảnh nằm đè lên góc ảnh như web, cỡ 44 để đủ vùng chạm.
+ */
+export default function ProfileAvatarCard({
+  avatarUrl,
+  displayName,
+  email,
+  role,
+  uploading = false,
+  disabled = false,
+  onPickAvatar,
+}) {
+  return (
+    <View className="items-center gap-3 rounded-xl border border-slate-200 bg-white p-5">
+      <View>
+        {avatarUrl ? (
+          <RemoteImage
+            uri={avatarUrl}
+            className="h-24 w-24 rounded-full border border-slate-200"
+          />
+        ) : (
+          <View className="h-24 w-24 items-center justify-center rounded-full border border-slate-200 bg-slate-100">
+            <Text className="text-2xl font-bold text-slate-400">
+              {initialsOf(displayName || email)}
+            </Text>
+          </View>
+        )}
+
+        <Pressable
+          onPress={onPickAvatar}
+          disabled={uploading || disabled}
+          accessibilityLabel="Đổi ảnh đại diện"
+          className={`absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full border-2 border-white ${
+            uploading || disabled ? "bg-slate-400" : "bg-navy-700 active:bg-navy-600"
+          }`}
+        >
+          {uploading ? (
+            <ActivityIndicator size="small" color={colors.textInverse} />
+          ) : (
+            <Camera size={iconSize.md} color={colors.textInverse} />
+          )}
+        </Pressable>
+      </View>
+
+      <View className="items-center gap-1">
+        <Text numberOfLines={1} className="text-base font-bold text-slate-900">
+          {displayName || email || "Người dùng"}
+        </Text>
+        {email ? (
+          <Text numberOfLines={1} className="text-sm text-slate-500">
+            {email}
+          </Text>
+        ) : null}
+        <Text className="text-overline font-bold uppercase text-slate-400">
+          {getRoleLabel(role)}
+        </Text>
+      </View>
+
+      <Text className="text-center text-xs text-slate-400">
+        Ảnh vuông · JPEG, PNG, WebP, GIF · tối đa 5MB
+      </Text>
+    </View>
+  );
+}

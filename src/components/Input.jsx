@@ -19,6 +19,7 @@ export default function Input({
   error,
   touched = false,
   secure = false,
+  multiline = false,
   tone = "light",
   className = "",
   ...inputProps
@@ -53,9 +54,14 @@ export default function Input({
           placeholder={placeholder}
           placeholderTextColor={isDark ? "rgba(255,255,255,0.45)" : "#94a3b8"}
           secureTextEntry={secure && !visible}
-          className={`h-10 rounded border px-3 text-sm ${
-            isDark ? "text-white" : "text-slate-900"
-          } ${stateClass} ${secure ? "pr-10" : ""}`}
+          multiline={multiline}
+          // Android canh chữ giữa ô khi multiline nếu không ép lên đỉnh
+          textAlignVertical={multiline ? "top" : undefined}
+          className={`rounded border px-3 text-sm ${
+            multiline ? "h-24 py-2" : "h-10"
+          } ${isDark ? "text-white" : "text-slate-900"} ${stateClass} ${
+            secure ? "pr-10" : ""
+          }`}
           {...inputProps}
         />
 
