@@ -7,7 +7,7 @@ import SectionState from "../home/SectionState";
 import AppFooter from "../layout/AppFooter";
 import * as publicBranchApi from "../../api/publicBranchApi";
 import { DEFAULT_PAGE_SIZE } from "../../utils/pagination";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Danh sách chi nhánh, bám trang /branches của FE web.
@@ -22,6 +22,8 @@ import { colors } from "../../theme/tokens";
  * Tổng số chi nhánh vẫn hiện, lấy thẳng từ `totalElements` của trang đầu.
  */
 export default function BranchList({ onPressItem }) {
+  const colors = useThemeColors();
+
   const [searchInput, setSearchInput] = useState("");
   const [searchApplied, setSearchApplied] = useState("");
 
@@ -121,7 +123,7 @@ export default function BranchList({ onPressItem }) {
 
   return (
     <FlatList
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-canvas"
       data={items}
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
@@ -131,21 +133,21 @@ export default function BranchList({ onPressItem }) {
       )}
       ItemSeparatorComponent={() => <View className="h-3" />}
       ListHeaderComponent={
-        <View className="bg-white">
+        <View className="bg-surface">
           <View className="px-4 pb-4 pt-6">
-            <Text className="text-overline font-bold uppercase text-slate-400">
+            <Text className="text-overline font-bold uppercase text-faint">
               Hệ thống cơ sở
             </Text>
-            <Text className="mt-1 text-2xl font-black text-slate-900">
+            <Text className="mt-1 text-2xl font-black text-content">
               Tìm cơ sở gần bạn
             </Text>
-            <Text className="mt-2 text-sm leading-6 text-slate-500">
+            <Text className="mt-2 text-sm leading-6 text-muted">
               Chọn cơ sở gần bạn để xem địa chỉ, số điện thoại và hình ảnh không
               gian club.
             </Text>
           </View>
 
-          <View className="border-b border-slate-200 px-4 pb-4">
+          <View className="border-b border-line px-4 pb-4">
             <SearchField
               value={searchInput}
               onChangeText={setSearchInput}
@@ -154,12 +156,12 @@ export default function BranchList({ onPressItem }) {
             />
           </View>
 
-          <View className="flex-row items-center justify-between bg-slate-50 px-4 pb-4 pt-6">
-            <Text className="text-base font-bold text-slate-900">
+          <View className="flex-row items-center justify-between bg-canvas px-4 pb-4 pt-6">
+            <Text className="text-base font-bold text-content">
               Tất cả cơ sở
             </Text>
             {!loading && !error ? (
-              <Text className="text-sm text-slate-500">{total} cơ sở</Text>
+              <Text className="text-sm text-muted">{total} cơ sở</Text>
             ) : null}
           </View>
         </View>
@@ -179,9 +181,9 @@ export default function BranchList({ onPressItem }) {
           {!loading && error ? (
             <Pressable
               onPress={handleRefresh}
-              className="self-center rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+              className="self-center rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
             >
-              <Text className="text-sm font-semibold text-slate-700">Thử lại</Text>
+              <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
             </Pressable>
           ) : null}
 

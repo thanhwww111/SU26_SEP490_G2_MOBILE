@@ -9,11 +9,11 @@ import { Text, View } from "react-native";
  */
 export default function SectionCard({ title, children, className = "" }) {
   return (
-    <View className={`rounded-xl border border-slate-200 bg-white p-4 ${className}`}>
+    <View className={`rounded-xl border border-line bg-surface p-4 ${className}`}>
       {title ? (
         <View className="mb-4 flex-row items-center gap-2">
           <View className="h-4 w-[3px] rounded-full bg-accent" />
-          <Text className="text-overline font-bold uppercase text-slate-500">
+          <Text className="text-overline font-bold uppercase text-muted">
             {title}
           </Text>
         </View>

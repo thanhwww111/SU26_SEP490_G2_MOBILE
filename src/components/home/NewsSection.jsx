@@ -11,7 +11,7 @@ const PAGE_SIZE = 5;
 
 /** Bài đầu tiên hiển thị dạng card lớn, các bài sau xếp thành hàng ngang nhỏ */
 const FeaturedPost = ({ post, onPress }) => (
-  <Pressable onPress={onPress} className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white active:opacity-80">
+  <Pressable onPress={onPress} className="mt-3 overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80">
     <RemoteImage uri={post.thumbnailUrl} className="h-48 w-full" />
     <View className="p-4">
       {post.categoryName ? (
@@ -19,11 +19,11 @@ const FeaturedPost = ({ post, onPress }) => (
           {post.categoryName}
         </Text>
       ) : null}
-      <Text className="text-base font-black uppercase leading-5 text-slate-900">
+      <Text className="text-base font-black uppercase leading-5 text-content">
         {post.title}
       </Text>
       {fmtDateShort(post.publishedAt) ? (
-        <Text className="mt-2 text-xs text-slate-400">
+        <Text className="mt-2 text-xs text-faint">
           {fmtDateShort(post.publishedAt)}
         </Text>
       ) : null}
@@ -34,18 +34,18 @@ const FeaturedPost = ({ post, onPress }) => (
 const PostRow = ({ post, onPress }) => (
   <Pressable
     onPress={onPress}
-    className="mt-3 flex-row overflow-hidden rounded-2xl border border-slate-200 bg-white active:opacity-80"
+    className="mt-3 flex-row overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80"
   >
     <RemoteImage uri={post.thumbnailUrl} className="h-24 w-24" />
     <View className="flex-1 justify-center p-3">
       <Text
         numberOfLines={3}
-        className="text-xs font-extrabold uppercase leading-4 text-slate-900"
+        className="text-xs font-extrabold uppercase leading-4 text-content"
       >
         {post.title}
       </Text>
       {fmtDateShort(post.publishedAt) ? (
-        <Text className="mt-1.5 text-[11px] text-slate-400">
+        <Text className="mt-1.5 text-[11px] text-faint">
           {fmtDateShort(post.publishedAt)}
         </Text>
       ) : null}

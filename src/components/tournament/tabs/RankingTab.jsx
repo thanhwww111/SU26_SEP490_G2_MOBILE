@@ -76,8 +76,8 @@ export default function RankingTab({ tournamentId }) {
         <View
           className={`rounded-full border px-3 py-1 ${
             isOfficial
-              ? "border-emerald-200 bg-emerald-50"
-              : "border-amber-200 bg-amber-50"
+              ? "border-emerald-200 bg-tint-success"
+              : "border-amber-200 bg-tint-warning"
           }`}
         >
           <Text
@@ -89,7 +89,7 @@ export default function RankingTab({ tournamentId }) {
           </Text>
         </View>
 
-        <Text className="text-xs text-slate-400">{filtered.length} cơ thủ</Text>
+        <Text className="text-xs text-faint">{filtered.length} cơ thủ</Text>
       </View>
 
       <SearchField
@@ -117,13 +117,13 @@ export default function RankingTab({ tournamentId }) {
       ) : null}
 
       {rest.length > 0 ? (
-        <View className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <View className="overflow-hidden rounded-xl border border-line bg-surface">
           {rest.map((entry, index) => (
             <View
               key={`${entry.participantId}-${index}`}
-              className="flex-row items-center gap-3 border-b border-slate-100 px-4 py-3"
+              className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3"
             >
-              <Text className="w-14 text-base font-bold italic text-slate-500">
+              <Text className="w-14 text-base font-bold italic text-muted">
                 {entry.rankLabel}
               </Text>
 
@@ -132,7 +132,7 @@ export default function RankingTab({ tournamentId }) {
               <View className="flex-1">
                 <PlayerName name={entry.displayName} />
                 {entry.note ? (
-                  <Text className="mt-0.5 text-xs text-slate-400">{entry.note}</Text>
+                  <Text className="mt-0.5 text-xs text-faint">{entry.note}</Text>
                 ) : null}
               </View>
             </View>
@@ -141,8 +141,8 @@ export default function RankingTab({ tournamentId }) {
       ) : null}
 
       {filtered.length === 0 ? (
-        <View className="rounded-xl border border-slate-200 bg-white py-8">
-          <Text className="text-center text-sm text-slate-400">
+        <View className="rounded-xl border border-line bg-surface py-8">
+          <Text className="text-center text-sm text-faint">
             Không tìm thấy cơ thủ.
           </Text>
         </View>

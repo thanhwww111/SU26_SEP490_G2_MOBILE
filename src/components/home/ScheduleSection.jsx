@@ -27,7 +27,7 @@ const StatusBadge = ({ tournament }) => {
 const FeaturedTournament = ({ tournament, onPress }) => (
   <Pressable
     onPress={onPress}
-    className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white active:opacity-80"
+    className="mt-3 overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80"
   >
     <RemoteImage uri={tournament.thumbnailUrl} className="h-44 w-full" />
     <View className="gap-2 p-4">
@@ -37,11 +37,11 @@ const FeaturedTournament = ({ tournament, onPress }) => (
         </Text>
         <StatusBadge tournament={tournament} />
       </View>
-      <Text className="text-base font-bold text-slate-900">
+      <Text className="text-base font-bold text-content">
         {tournament.name}
       </Text>
       {tournament.gameType ? (
-        <Text className="text-sm font-semibold text-slate-500">
+        <Text className="text-sm font-semibold text-muted">
           {tournament.gameType}
         </Text>
       ) : null}
@@ -52,14 +52,14 @@ const FeaturedTournament = ({ tournament, onPress }) => (
 const TournamentRow = ({ tournament, onPress }) => (
   <Pressable
     onPress={onPress}
-    className="mt-3 flex-row overflow-hidden rounded-2xl border border-slate-200 bg-white active:opacity-80"
+    className="mt-3 flex-row overflow-hidden rounded-2xl border border-line bg-surface active:opacity-80"
   >
     <RemoteImage uri={tournament.thumbnailUrl} className="h-28 w-24" />
     <View className="flex-1 justify-center gap-1.5 p-3">
       <Text className="text-[11px] font-bold text-accent">
         {fmtDateRange(tournament.startAt, tournament.endAt)}
       </Text>
-      <Text numberOfLines={2} className="text-sm font-bold text-slate-900">
+      <Text numberOfLines={2} className="text-sm font-bold text-content">
         {tournament.name}
       </Text>
       <StatusBadge tournament={tournament} />

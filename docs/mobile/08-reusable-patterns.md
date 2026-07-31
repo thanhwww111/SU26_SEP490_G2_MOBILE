@@ -556,15 +556,85 @@ Vùng chạm tối thiểu 44×44. Icon nhỏ hơn thì bù bằng `hitSlop`. Lu
 # 15. Màu qua prop JS
 
 ```jsx
-import { colors, iconSize, shadow } from "../../theme/tokens";
+import { iconSize, shadow } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
+
+const colors = useThemeColors();
 
 <ActivityIndicator color={colors.brand} />
-<TextInput placeholderTextColor={colors.textPlaceholder} />
+<TextInput placeholderTextColor={colors.faint} />
 <ChevronLeft size={iconSize.lg} color={colors.brand} />
-<View style={shadow.overlay} className="rounded-2xl bg-white" />
+<View style={shadow.overlay} className="rounded-2xl bg-surface" />
 ```
 
-Không gõ hex thẳng vào prop. Danh sách token đầy đủ: [01-design-system.md](01-design-system.md).
+Không gõ hex thẳng vào prop, và **không import `lightColors` / `darkColors` thẳng** — làm vậy là khoá cứng một chế độ. Hàm thuần không gọi được hook thì nhận màu qua prop từ component cha.
+
+Danh sách token đầy đủ: [01-design-system.md](01-design-system.md), Phần 9.
+
+---
+
+# 16. Màu theo chế độ sáng/tối
+
+App có dark mode cho toàn bộ nhóm `(app)`; nhóm `(auth)` khoá ở chế độ Sáng.
+
+**Dùng token vai trò thay cho tên màu.** Đây là toàn bộ việc phải nhớ khi dựng màn mới — không cần viết `dark:` ở đâu cả:
+
+```jsx
+// Sai — trắng cả ở chế độ tối
+<View className="bg-white border-slate-200">
+  <Text className="text-slate-900">Tiêu đề</Text>
+  <Text className="text-slate-500">Chú thích</Text>
+</View>
+
+// Đúng — tự đổi theo chế độ
+<View className="bg-surface border-line">
+  <Text className="text-content">Tiêu đề</Text>
+  <Text className="text-muted">Chú thích</Text>
+</View>
+```
+
+Bảng đối chiếu `slate-*` → token nằm ở [01, Phần 2](01-design-system.md).
+
+**Khối cố ý tối thì giữ màu tuyệt đối.** Hero, footer, thanh tab, badge, lớp nền mờ sau menu, nút trên nền tối đã tối sẵn ở cả hai chế độ:
+
+```jsx
+<View className="bg-navy-900">
+  <Text className="text-white">Vẫn trắng ở cả hai chế độ</Text>
+  <Pressable className="border border-white/40 active:bg-white/10" />
+</View>
+```
+
+Đổi những chỗ này sang token là sai — nút trắng trên nền tối mà đổi theo chế độ sẽ tan vào nền.
+
+**Đọc chế độ hiện tại** khi cần rẽ nhánh (StatusBar, chọn ảnh minh hoạ):
+
+```jsx
+import { useIsDarkMode } from "../../theme/useThemeColors";
+
+const isDark = useIsDarkMode();
+<StatusBar style={isDark ? "light" : "dark"} />
+```
+
+**Khoá một vùng ở chế độ Sáng:**
+
+```jsx
+import LightThemeScope from "../../src/theme/LightThemeScope";
+
+<LightThemeScope>{children}</LightThemeScope>
+```
+
+Nó khoá cả `className` (qua `vars()`) lẫn prop JS (qua context). Thiếu vế thứ hai thì icon vẫn lấy màu tối trong khi nền quanh nó đã sáng.
+
+**Đổi chế độ:**
+
+```jsx
+import { useThemeStore } from "../../store/themeStore";
+
+const mode = useThemeStore((s) => s.mode);       // "system" | "light" | "dark"
+const setMode = useThemeStore((s) => s.setMode);
+```
+
+Chỉ `themeStore` được gọi `colorScheme.set()`; nơi khác chỉ đọc.
 
 ---
 
@@ -576,7 +646,10 @@ Không gõ hex thẳng vào prop. Danh sách token đầy đủ: [01-design-syst
 | `useAuthStore()` không selector | Render lại thừa |
 | `<Image source={{ uri }} />` trần | Vỡ khi URL null hoặc hỏng |
 | `FlatList` trong `ScrollView` | Cuộn giật, mất ảo hoá |
-| `color="#1a2a4a"` | Không đổi được khi làm Dark Mode |
+| `color="#1a2a4a"` | Không đổi theo chế độ sáng/tối |
+| `bg-white`, `text-slate-900` cho nền/chữ thường | Trắng cả ở chế độ tối — dùng `bg-surface`, `text-content` |
+| `import { lightColors }` trong màn | Khoá cứng một chế độ — dùng `useThemeColors()` |
+| Viết `dark:` thủ công | Không cần: token đã tự đổi. Viết thêm chỉ tổ lệch |
 | `className="shadow-md"` | Không chạy đúng trên native |
 | `className="hover:bg-slate-100"` | Native không có hover, dùng `active:` |
 | `router.push` sau khi đăng nhập | Back về được màn đăng nhập |

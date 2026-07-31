@@ -8,7 +8,8 @@ import FormError from "../auth/FormError";
 import FormSuccess from "../auth/FormSuccess";
 import * as authApi from "../../api/authApi";
 import { MIN_PASSWORD_LENGTH } from "../../utils/validators";
-import { colors, iconSize } from "../../theme/tokens";
+import { iconSize } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 const EMPTY_FORM = { oldPassword: "", newPassword: "", confirmPassword: "" };
 
@@ -56,6 +57,8 @@ const validate = (form) => {
  * thư viện toast.
  */
 export default function ChangePasswordCard({ disabled = false }) {
+  const colors = useThemeColors();
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -110,31 +113,31 @@ export default function ChangePasswordCard({ disabled = false }) {
   };
 
   return (
-    <View className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <View className="overflow-hidden rounded-xl border border-line bg-surface">
       <Pressable
         onPress={toggle}
         disabled={disabled}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        className="flex-row items-center gap-3 p-4 active:bg-slate-50"
+        className="flex-row items-center gap-3 p-4 active:bg-sunken"
       >
-        <View className="h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+        <View className="h-10 w-10 items-center justify-center rounded-lg bg-sunken">
           <Shield size={iconSize.md} color={colors.brand} />
         </View>
 
         <View className="flex-1">
-          <Text className="text-sm font-semibold text-slate-900">
+          <Text className="text-sm font-semibold text-content">
             Bảo mật tài khoản
           </Text>
-          <Text className="mt-0.5 text-xs text-slate-500">
+          <Text className="mt-0.5 text-xs text-muted">
             Đổi mật khẩu đăng nhập
           </Text>
         </View>
 
         {open ? (
-          <ChevronUp size={iconSize.md} color={colors.textMuted} />
+          <ChevronUp size={iconSize.md} color={colors.muted} />
         ) : (
-          <ChevronDown size={iconSize.md} color={colors.textMuted} />
+          <ChevronDown size={iconSize.md} color={colors.muted} />
         )}
       </Pressable>
 
@@ -146,7 +149,7 @@ export default function ChangePasswordCard({ disabled = false }) {
       ) : null}
 
       {open ? (
-        <View className="gap-4 border-t border-slate-100 p-4">
+        <View className="gap-4 border-t border-line-soft p-4">
           <FormError message={formError} className="" />
 
           <Input

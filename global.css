@@ -3,6 +3,72 @@
 @tailwind utilities;
 
 /*
+ * Token màu theo VAI TRÒ, không theo tên màu.
+ *
+ * Đây là nơi duy nhất định nghĩa giá trị sáng/tối. Màn hình chỉ gõ tên vai trò
+ * (`bg-surface`, `text-content`...) nên không phải viết `dark:` ở từng chỗ —
+ * và màn mới tự động đúng ở cả hai chế độ mà không phải nhớ gì thêm.
+ *
+ * `.dark:root` là selector mà NativeWind bật khi colorScheme = dark
+ * (tailwind.config.js đặt darkMode: "class").
+ *
+ * Giá trị tối bám bảng màu dark của web ở pages/Event/eventTheme.css:
+ * nền trang #0a1220, nền thẻ #0d1b2e. Web dùng trắng-pha-alpha cho viền và chữ
+ * phụ; ở đây quy về màu đặc tương đương vì trên React Native màu có alpha chồng
+ * lên nhau qua nhiều lớp View sẽ ra sắc khác nhau tuỳ nền phía sau.
+ *
+ * Bảng đối chiếu đầy đủ: docs/mobile/01-design-system.md, Phần 9.
+ */
+@layer base {
+  :root {
+    /* Nền */
+    --c-canvas: #f8fafc; /* nền màn, thay bg-slate-50 */
+    --c-surface: #ffffff; /* nền thẻ và khối, thay bg-white */
+    --c-sunken: #f1f5f9; /* khối chìm trong thẻ, thay bg-slate-100 */
+    --c-sunken-strong: #e2e8f0; /* nền chờ ảnh, thay bg-slate-200 */
+
+    /* Đường kẻ */
+    --c-line-soft: #f1f5f9; /* kẻ giữa các dòng, thay border-slate-100 */
+    --c-line: #e2e8f0; /* viền thẻ, thay border-slate-200 */
+    --c-line-strong: #cbd5e1; /* viền ô nhập, thay border-slate-300 */
+
+    /* Chữ trên nền sáng */
+    --c-content: #0f172a; /* chữ chính, thay text-slate-900 */
+    --c-content-2: #334155; /* chữ phụ, thay text-slate-700 và slate-600 */
+    --c-muted: #64748b; /* chú thích, thay text-slate-500 */
+    --c-faint: #94a3b8; /* mờ nhất, thay text-slate-400 */
+    --c-disabled: #cbd5e1; /* chữ bị vô hiệu, thay text-slate-300 */
+
+    /* Nền tint của trạng thái — bản sáng dùng thang 50 của Tailwind */
+    --c-tint-danger: #fef2f2;
+    --c-tint-success: #ecfdf5;
+    --c-tint-warning: #fffbeb;
+  }
+
+  .dark:root {
+    --c-canvas: #0a1220;
+    --c-surface: #0d1b2e;
+    --c-sunken: #14202f;
+    --c-sunken-strong: #1b2a3d;
+
+    --c-line-soft: #172433;
+    --c-line: #1f2e42;
+    --c-line-strong: #2a3b52;
+
+    --c-content: #f1f5f9;
+    --c-content-2: #c7d2de;
+    --c-muted: #94a3b8;
+    --c-faint: #6b7a8f;
+    --c-disabled: #3a4a60;
+
+    /* Tint tối hơn hẳn bản sáng: nền #fef2f2 đặt trên trang #0a1220 sẽ chói */
+    --c-tint-danger: #2a1416;
+    --c-tint-success: #0e2a1f;
+    --c-tint-warning: #2b2110;
+  }
+}
+
+/*
  * CSS thuần bên dưới chỉ có tác dụng trên web (`npm run web`);
  * bản native bỏ qua hoàn toàn.
  *

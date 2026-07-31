@@ -83,6 +83,41 @@ Thêm thư viện là đổi kiến trúc — xem quy tắc 3 bên dưới. Hỏ
 - `shadow-*` không cho kết quả đúng trên native — dùng `shadow` từ `src/theme/tokens.js`.
 - Gradient cần thư viện riêng, hiện chưa cài — đừng dùng.
 
+## App có dark mode — đừng gõ `bg-white` nữa
+
+Từ 2026-07-29, nhóm `(app)` chạy dark mode; nhóm `(auth)` khoá sáng.
+
+Hệ quả với mọi màn mới: **dùng token vai trò thay cho tên màu**, và **không cần viết `dark:` ở đâu cả**.
+
+| Đừng viết | Viết |
+|---|---|
+| `bg-white` | `bg-surface` |
+| `bg-slate-50` | `bg-canvas` |
+| `text-slate-900` | `text-content` |
+| `text-slate-500` | `text-muted` |
+| `border-slate-200` | `border-line` |
+| `import { colors }` | `useThemeColors()` |
+
+Bảng đầy đủ ở [01, Phần 9](01-design-system.md); ví dụ dùng ở [08, mục 16](08-reusable-patterns.md).
+
+Ngoại lệ: khối **cố ý tối** (hero, footer, drawer, thanh tab, badge, nút trên nền tối) vẫn dùng `bg-navy-900`, `text-white`, `border-white/40`. Đổi chúng sang token là sai.
+
+### `app.json` phải để `userInterfaceStyle: "automatic"`
+
+Để `"light"` là bảo hệ điều hành rằng app chỉ hỗ trợ chế độ sáng — `Appearance.getColorScheme()` sẽ luôn trả `"light"` trên máy thật và **dark mode không bao giờ chạy trên native**, dù `tailwind.config.js` lẫn code đều đúng.
+
+### Sửa `tailwind.config.js` thì phải xoá cache
+
+NativeWind nhét kiểu dark mode vào CSS đã biên dịch dưới dạng biến `--css-interop-darkMode`, và runtime đọc biến đó **đúng một lần lúc nạp module**. Metro cache bản CSS cũ nên đổi `tailwind.config.js` xong mà chạy tiếp sẽ dùng giá trị cũ.
+
+Triệu chứng trên bản web: `Cannot manually set color scheme, as dark mode is type 'media'`.
+
+```
+npx expo start --clear
+```
+
+Bản native không dính lỗi này — nó gọi thẳng `Appearance.setColorScheme()`, không đọc flag.
+
 ---
 
 # Ba quy tắc không được vi phạm

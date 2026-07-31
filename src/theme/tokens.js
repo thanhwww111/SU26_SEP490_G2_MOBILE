@@ -3,16 +3,20 @@
  *
  * NativeWind lo phần `className`, nhưng React Native có những prop chỉ nhận
  * chuỗi màu thật chứ không nhận class: `placeholderTextColor` của TextInput,
- * `color` của icon lucide, `color` của ActivityIndicator, `barStyle` của
- * StatusBar... Những chỗ đó dùng file này thay vì gõ hex thẳng vào màn.
+ * `color` của icon lucide, `color` của ActivityIndicator... Những chỗ đó dùng
+ * file này thay vì gõ hex thẳng vào màn.
  *
- * Giá trị ở đây PHẢI khớp `tailwind.config.js`. Sửa một bên thì sửa cả bên kia,
- * nếu không màu icon sẽ lệch màu chữ ngay cạnh nó.
+ * TỪ 2026-07-29 CÓ HAI BẢNG: sáng và tối. Đừng import `lightColors` /
+ * `darkColors` thẳng vào màn — dùng `useThemeColors()` ở `src/theme/useThemeColors.js`,
+ * nó tự trả đúng bảng theo chế độ đang bật.
  *
- * Nguồn gốc màu và lý do chọn: docs/mobile/01-design-system.md
+ * Giá trị ở đây PHẢI khớp biến CSS trong `global.css`. Sửa một bên thì sửa cả
+ * bên kia, nếu không màu icon sẽ lệch màu chữ ngay cạnh nó.
+ *
+ * Nguồn gốc màu và quy tắc dùng: docs/mobile/01-design-system.md
  */
 
-/** Màu gốc — không dùng trực tiếp trong màn, hãy dùng `colors` bên dưới. */
+/** Màu gốc — không dùng trực tiếp trong màn, hãy dùng token vai trò bên dưới. */
 const palette = {
   navy900: "#0D1B2E",
   navy800: "#1E2D4A",
@@ -45,48 +49,83 @@ const palette = {
 };
 
 /**
- * Token theo vai trò.
+ * Màu không đổi giữa hai chế độ.
  *
- * Màn hình chỉ được dùng nhóm này, không đọc `palette`. Nhờ vậy khi làm Dark
- * Mode chỉ cần đổi giá trị ở đây, không phải đi sửa từng màn.
+ * Thương hiệu và trạng thái giữ nguyên để người dùng nhận ra ngay dù đang ở chế
+ * độ nào — đỏ vẫn là lỗi, xanh vẫn là thành công.
  */
-export const colors = {
-  /** Nền màn và nền khối */
-  surface: palette.white,
-  surfaceAlt: palette.slate50,
-  surfaceSunken: palette.slate100,
-  surfaceInverse: palette.navy900,
-
-  /** Đường kẻ, viền ô nhập, viền card */
-  border: palette.slate200,
-  borderStrong: palette.slate300,
-  borderInverse: "rgba(255,255,255,0.30)",
-
-  /** Chữ trên nền sáng */
-  textPrimary: palette.slate900,
-  textSecondary: palette.slate600,
-  textMuted: palette.slate500,
-  textPlaceholder: palette.slate400,
-  textDisabled: palette.slate300,
-
-  /** Chữ trên nền tối (hero, footer, section tối) */
-  textInverse: palette.white,
-  textInverseMuted: palette.navy500,
-  placeholderInverse: "rgba(255,255,255,0.45)",
-
-  /** Thương hiệu */
-  brand: palette.navy700,
-  brandPressed: palette.navy600,
+const constantColors = {
   accent: palette.accent,
   accentPressed: palette.accentPressed,
   gold: palette.gold,
 
-  /** Trạng thái */
   success: palette.success,
   warning: palette.warning,
   danger: palette.danger,
   info: palette.info,
+
+  /** Chữ đặt trên khối cố ý tối (hero, footer, drawer) — tối hay sáng đều trắng */
+  textInverse: palette.white,
+  textInverseMuted: palette.navy500,
+  placeholderInverse: "rgba(255,255,255,0.45)",
+  borderInverse: "rgba(255,255,255,0.30)",
 };
+
+/** Bảng màu chế độ Sáng. Khớp nhánh `:root` trong global.css. */
+export const lightColors = {
+  ...constantColors,
+
+  canvas: palette.slate50,
+  surface: palette.white,
+  sunken: palette.slate100,
+  sunkenStrong: palette.slate200,
+  surfaceInverse: palette.navy900,
+
+  lineSoft: palette.slate100,
+  line: palette.slate200,
+  lineStrong: palette.slate300,
+
+  content: palette.slate900,
+  content2: palette.slate700,
+  muted: palette.slate500,
+  faint: palette.slate400,
+  disabled: palette.slate300,
+
+  /** Màu thương hiệu dùng cho nút chính và icon nổi bật */
+  brand: palette.navy700,
+  brandPressed: palette.navy600,
+};
+
+/**
+ * Bảng màu chế độ Tối. Khớp nhánh `.dark:root` trong global.css.
+ *
+ * `brand` phải sáng lên chứ không giữ navy-700: navy đặt trên nền #0A1220 gần
+ * như chìm hẳn, icon và spinner sẽ không nhìn ra.
+ */
+export const darkColors = {
+  ...constantColors,
+
+  canvas: "#0A1220",
+  surface: "#0D1B2E",
+  sunken: "#14202F",
+  sunkenStrong: "#1B2A3D",
+  surfaceInverse: "#060D18",
+
+  lineSoft: "#172433",
+  line: "#1F2E42",
+  lineStrong: "#2A3B52",
+
+  content: "#F1F5F9",
+  content2: "#C7D2DE",
+  muted: "#94A3B8",
+  faint: "#6B7A8F",
+  disabled: "#3A4A60",
+
+  brand: "#8FB0DC",
+  brandPressed: "#A9C4E6",
+};
+
+export const themePalettes = { light: lightColors, dark: darkColors };
 
 /**
  * Kích thước icon lucide. Dùng số rời rạc để icon giữa các màn không so le
@@ -106,7 +145,10 @@ export const iconSize = {
  * được class `shadow-*` của Tailwind.
  *
  * Chỉ hai cấp, và chỉ dùng cho lớp NỔI trên nội dung. Card thường tách khối
- * bằng viền `border-slate-200` — xem lý do ở docs/mobile/01-design-system.md.
+ * bằng viền `border-line` — xem lý do ở docs/mobile/01-design-system.md.
+ *
+ * Ở chế độ tối bóng gần như không thấy (đen trên đen); lớp nổi lúc đó nhận biết
+ * bằng nền sáng hơn nền trang, không phải bằng bóng.
  */
 export const shadow = {
   /** Lớp dính mép màn: header khi cuộn, thanh hành động dưới đáy */
@@ -130,4 +172,4 @@ export const shadow = {
 /** Màu nền lớp mờ phía sau drawer / modal. */
 export const scrim = "rgba(15,23,42,0.45)";
 
-export default { colors, iconSize, shadow, scrim };
+export default { lightColors, darkColors, themePalettes, iconSize, shadow, scrim };

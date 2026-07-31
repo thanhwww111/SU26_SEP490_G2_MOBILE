@@ -4,7 +4,8 @@ import { Camera } from "lucide-react-native";
 import RemoteImage from "../home/RemoteImage";
 import { initialsOf } from "../../utils/format";
 import { getRoleLabel } from "../../utils/auth";
-import { colors, iconSize } from "../../theme/tokens";
+import { iconSize } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Khối ảnh đại diện đầu màn hồ sơ.
@@ -23,17 +24,19 @@ export default function ProfileAvatarCard({
   disabled = false,
   onPickAvatar,
 }) {
+  const colors = useThemeColors();
+
   return (
-    <View className="items-center gap-3 rounded-xl border border-slate-200 bg-white p-5">
+    <View className="items-center gap-3 rounded-xl border border-line bg-surface p-5">
       <View>
         {avatarUrl ? (
           <RemoteImage
             uri={avatarUrl}
-            className="h-24 w-24 rounded-full border border-slate-200"
+            className="h-24 w-24 rounded-full border border-line"
           />
         ) : (
-          <View className="h-24 w-24 items-center justify-center rounded-full border border-slate-200 bg-slate-100">
-            <Text className="text-2xl font-bold text-slate-400">
+          <View className="h-24 w-24 items-center justify-center rounded-full border border-line bg-sunken">
+            <Text className="text-2xl font-bold text-faint">
               {initialsOf(displayName || email)}
             </Text>
           </View>
@@ -43,8 +46,10 @@ export default function ProfileAvatarCard({
           onPress={onPickAvatar}
           disabled={uploading || disabled}
           accessibilityLabel="Đổi ảnh đại diện"
-          className={`absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full border-2 border-white ${
-            uploading || disabled ? "bg-slate-400" : "bg-navy-700 active:bg-navy-600"
+          // Viền cùng màu nền thẻ để nút tách khỏi ảnh; để trắng cứng thì ở chế
+          // độ tối nó thành một vòng sáng chói quanh nút
+          className={`absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full border-2 border-surface ${
+            uploading || disabled ? "bg-disabled" : "bg-navy-700 active:bg-navy-600"
           }`}
         >
           {uploading ? (
@@ -56,20 +61,20 @@ export default function ProfileAvatarCard({
       </View>
 
       <View className="items-center gap-1">
-        <Text numberOfLines={1} className="text-base font-bold text-slate-900">
+        <Text numberOfLines={1} className="text-base font-bold text-content">
           {displayName || email || "Người dùng"}
         </Text>
         {email ? (
-          <Text numberOfLines={1} className="text-sm text-slate-500">
+          <Text numberOfLines={1} className="text-sm text-muted">
             {email}
           </Text>
         ) : null}
-        <Text className="text-overline font-bold uppercase text-slate-400">
+        <Text className="text-overline font-bold uppercase text-faint">
           {getRoleLabel(role)}
         </Text>
       </View>
 
-      <Text className="text-center text-xs text-slate-400">
+      <Text className="text-center text-xs text-faint">
         Ảnh vuông · JPEG, PNG, WebP, GIF · tối đa 5MB
       </Text>
     </View>

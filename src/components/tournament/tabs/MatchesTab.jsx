@@ -112,7 +112,7 @@ export default function MatchesTab({ tournamentId, locked }) {
       {rounds.map((round) => (
         <View
           key={round.key}
-          className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+          className="overflow-hidden rounded-xl border border-line bg-surface"
         >
           {/* Web tô gradient đỏ cho thanh tiêu đề vòng; RN chưa có thư viện
               gradient trong project nên dùng nền navy đặc như các khối tối khác */}

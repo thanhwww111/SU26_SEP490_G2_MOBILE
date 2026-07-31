@@ -94,6 +94,7 @@ Cập nhật: 2026-07-29. Chi tiết từng đợt làm nằm ở [11-changelog.
 | Tin tức | Danh sách `/news`, chi tiết `/news/[slug]` |
 | Cơ sở | Danh sách `/branches`, chi tiết `/branches/[id]` |
 | Cá nhân | Hồ sơ (sửa thông tin, đổi ảnh, đổi mật khẩu), đăng ký giải của tôi |
+| Giao diện | Dark mode cho toàn nhóm `(app)` — Tự động / Sáng / Tối trong menu hồ sơ |
 
 **Ưu tiên tiếp theo** — vẫn là luồng PLAYER:
 

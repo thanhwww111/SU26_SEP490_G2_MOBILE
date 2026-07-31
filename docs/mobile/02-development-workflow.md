@@ -499,7 +499,7 @@ Every implementation should consider future expansion.
 
 Examples include:
 
-- Dark Mode
+- ~~Dark Mode~~ — **shipped 2026-07-29** for the `(app)` group. Use role tokens (`bg-surface`, `text-content`), never `bg-white` / `text-slate-*`. See [01, Part 9](01-design-system.md).
 - Tablet Layout
 - Additional Roles
 - Localization

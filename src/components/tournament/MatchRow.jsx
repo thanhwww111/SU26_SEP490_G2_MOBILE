@@ -25,24 +25,24 @@ export default function MatchRow({ match }) {
 
   const nameClass = (side) => {
     if (winner === side) return "font-bold text-info";
-    if (isDone) return "text-slate-400";
-    return "text-slate-700";
+    if (isDone) return "text-faint";
+    return "text-content-2";
   };
 
   const scoreClass = (side) => {
     if (winner === side) return "text-info";
-    if (isDone) return "text-slate-400";
-    return "text-slate-900";
+    if (isDone) return "text-faint";
+    return "text-content";
   };
 
   return (
     <View
-      className={`border-b border-slate-100 px-4 py-3 ${
+      className={`border-b border-line-soft px-4 py-3 ${
         isLive ? "bg-accent/5" : ""
       }`}
     >
       <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-overline font-bold uppercase text-slate-500">
+        <Text className="text-overline font-bold uppercase text-muted">
           {match.matchCode || `#${match.id}`}
         </Text>
 
@@ -55,11 +55,11 @@ export default function MatchRow({ match }) {
               </Text>
             </View>
           ) : scheduled ? (
-            <Text className="text-xs text-slate-400">{scheduled}</Text>
+            <Text className="text-xs text-faint">{scheduled}</Text>
           ) : null}
 
           {match.tableName || match.tableNo != null ? (
-            <Text className="text-xs font-semibold text-slate-500">
+            <Text className="text-xs font-semibold text-muted">
               {match.tableName || `Bàn ${match.tableNo}`}
             </Text>
           ) : null}
@@ -78,7 +78,7 @@ export default function MatchRow({ match }) {
           <Text className={`text-base font-black ${scoreClass(1)}`}>
             {scoreText(match.player1Score)}
           </Text>
-          <Text className="text-xs text-slate-300">-</Text>
+          <Text className="text-xs text-disabled">-</Text>
           <Text className={`text-base font-black ${scoreClass(2)}`}>
             {scoreText(match.player2Score)}
           </Text>

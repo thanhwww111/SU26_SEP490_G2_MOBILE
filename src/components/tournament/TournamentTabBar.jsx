@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
-import { colors, shadow } from "../../theme/tokens";
+import { shadow } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Thanh tab nổi ở đáy màn chi tiết giải, bám đúng thanh tab của web.
@@ -11,6 +12,8 @@ import { colors, shadow } from "../../theme/tokens";
  * Mỗi tab cao 48 nên vùng chạm đã vượt 44 mà không cần hitSlop.
  */
 export default function TournamentTabBar({ tabs, activeId, onChange }) {
+  const colors = useThemeColors();
+
   return (
     <View className="absolute inset-x-4 bottom-4">
       <View

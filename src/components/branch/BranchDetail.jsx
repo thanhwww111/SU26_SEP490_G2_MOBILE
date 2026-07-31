@@ -14,7 +14,8 @@ import SectionCard from "../tournament/SectionCard";
 import AppFooter from "../layout/AppFooter";
 import * as publicBranchApi from "../../api/publicBranchApi";
 import { fmtDateShort } from "../../utils/date";
-import { colors, iconSize } from "../../theme/tokens";
+import { iconSize } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * "140 Cầu Giấy, phường Dịch Vọng, thành phố Hà Nội" → "phường Dịch Vọng, thành phố Hà Nội"
@@ -45,11 +46,11 @@ const mapsUrl = (address) =>
 
 /** Ô thông tin ngắn trong lưới hai cột */
 const Fact = ({ label, value }) => (
-  <View className="flex-1 rounded-lg border border-slate-200 bg-slate-50 p-3">
-    <Text className="text-overline font-bold uppercase text-slate-400">
+  <View className="flex-1 rounded-lg border border-line bg-canvas p-3">
+    <Text className="text-overline font-bold uppercase text-faint">
       {label}
     </Text>
-    <Text numberOfLines={1} className="mt-1 text-sm font-bold text-slate-900">
+    <Text numberOfLines={1} className="mt-1 text-sm font-bold text-content">
       {value}
     </Text>
   </View>
@@ -68,6 +69,8 @@ const Fact = ({ label, value }) => (
  * màn vì nút nổi sẽ che mất ảnh khi cuộn thư viện.
  */
 export default function BranchDetail({ id }) {
+  const colors = useThemeColors();
+
   const [branch, setBranch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -97,7 +100,7 @@ export default function BranchDetail({ id }) {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
+      <View className="flex-1 items-center justify-center bg-canvas">
         <ActivityIndicator size="small" color={colors.brand} />
       </View>
     );
@@ -105,15 +108,15 @@ export default function BranchDetail({ id }) {
 
   if (error || !branch) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-slate-50 px-4">
-        <Text className="text-center text-sm text-slate-500">
+      <View className="flex-1 items-center justify-center gap-4 bg-canvas px-4">
+        <Text className="text-center text-sm text-muted">
           {error || "Không tìm thấy cơ sở."}
         </Text>
         <Pressable
           onPress={load}
-          className="rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+          className="rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
         >
-          <Text className="text-sm font-semibold text-slate-700">Thử lại</Text>
+          <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
         </Pressable>
       </View>
     );
@@ -125,21 +128,21 @@ export default function BranchDetail({ id }) {
   const openedAt = fmtDateShort(branch.createdAt);
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
+    <ScrollView className="flex-1 bg-canvas">
       <RemoteImage uri={heroImage} className="h-52 w-full" />
 
       <View className="gap-4 p-4">
         <View className="gap-1">
           {region ? (
-            <Text className="text-overline font-bold uppercase text-slate-400">
+            <Text className="text-overline font-bold uppercase text-faint">
               {region}
             </Text>
           ) : null}
-          <Text className="text-2xl font-black leading-8 text-slate-900">
+          <Text className="text-2xl font-black leading-8 text-content">
             {branch.name}
           </Text>
           {branch.description ? (
-            <Text className="mt-1 text-sm leading-6 text-slate-600">
+            <Text className="mt-1 text-sm leading-6 text-content-2">
               {branch.description}
             </Text>
           ) : null}
@@ -158,20 +161,20 @@ export default function BranchDetail({ id }) {
 
           <Pressable
             onPress={() => openExternal(mapsUrl(branch.address))}
-            className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-full border border-slate-300 bg-white active:bg-slate-50"
+            className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-full border border-line-strong bg-surface active:bg-sunken"
           >
-            <Navigation size={iconSize.sm} color={colors.textSecondary} />
-            <Text className="text-sm font-semibold text-slate-700">Chỉ đường</Text>
+            <Navigation size={iconSize.sm} color={colors.content2} />
+            <Text className="text-sm font-semibold text-content-2">Chỉ đường</Text>
           </Pressable>
         </View>
 
         <SectionCard title="Địa chỉ">
           <View className="flex-row items-start gap-3">
-            <View className="h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-sunken">
               <MapPin size={iconSize.sm} color={colors.brand} />
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-semibold leading-6 text-slate-800">
+              <Text className="text-sm font-semibold leading-6 text-content">
                 {branch.address || "—"}
               </Text>
               <Pressable
@@ -197,11 +200,11 @@ export default function BranchDetail({ id }) {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
                 <ImageIcon size={iconSize.md} color={colors.brand} />
-                <Text className="text-base font-bold text-slate-900">
+                <Text className="text-base font-bold text-content">
                   Không gian quán
                 </Text>
               </View>
-              <Text className="text-sm text-slate-400">{images.length} ảnh</Text>
+              <Text className="text-sm text-faint">{images.length} ảnh</Text>
             </View>
 
             {/* Ảnh xếp dọc, mỗi ảnh chiếm trọn bề ngang: lưới ô nhỏ như web thì

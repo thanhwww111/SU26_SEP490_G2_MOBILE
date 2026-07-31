@@ -56,7 +56,7 @@ export default function TournamentsScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView className="flex-1 bg-canvas">
       <TournamentListSection
         onPressItem={(item) => router.push(`/(app)/tournaments/${item.id}`)}
       />
@@ -229,6 +229,8 @@ Chạy `npm start`, mở trên máy thật, kiểm:
 - [ ] Ảnh hỏng / `null` → hiện fallback.
 - [ ] Chữ dài, tên dài → không tràn, không vỡ layout (`numberOfLines`).
 - [ ] Không có màu hardcode trong file màn.
+- [ ] **Không còn `bg-white` / `text-slate-*` / `border-slate-*`** — dùng token vai trò (`bg-surface`, `text-content`, `border-line`). Xem [01, Phần 2](01-design-system.md).
+- [ ] **Xem lại màn ở chế độ Tối** (menu hồ sơ → Giao diện). Chữ có đọc được không, thẻ có tách khỏi nền không, ảnh có bị chói không.
 - [ ] Cỡ chữ nằm trong thang ở [01, Phần 3](01-design-system.md).
 - [ ] Vùng chạm ≥ 44×44.
 - [ ] Đối chiếu cạnh màn tương ứng trên web — bố cục và màu có khớp không.

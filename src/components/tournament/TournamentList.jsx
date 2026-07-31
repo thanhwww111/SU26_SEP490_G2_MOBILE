@@ -9,7 +9,7 @@ import AppFooter from "../layout/AppFooter";
 import * as publicTournamentApi from "../../api/publicTournamentApi";
 import { TOURNAMENT_STATUS_FILTERS } from "../../constants/tournament";
 import { DEFAULT_PAGE_SIZE } from "../../utils/pagination";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Danh sách giải đấu công khai, bám trang /event của FE web.
@@ -22,6 +22,8 @@ import { colors } from "../../theme/tokens";
  * AppFooter vẫn chạy hết bề ngang màn hình.
  */
 export default function TournamentList({ onPressItem }) {
+  const colors = useThemeColors();
+
   const [status, setStatus] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [searchApplied, setSearchApplied] = useState("");
@@ -142,7 +144,7 @@ export default function TournamentList({ onPressItem }) {
 
   return (
     <FlatList
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-canvas"
       data={items}
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
@@ -152,7 +154,7 @@ export default function TournamentList({ onPressItem }) {
       )}
       ItemSeparatorComponent={() => <View className="h-3" />}
       ListHeaderComponent={
-        <View className="bg-white">
+        <View className="bg-surface">
           <TournamentHero />
 
           <TournamentFilterBar
@@ -163,12 +165,12 @@ export default function TournamentList({ onPressItem }) {
             onSubmitSearch={handleSubmitSearch}
           />
 
-          <View className="flex-row items-center justify-between bg-slate-50 px-4 pb-4 pt-6">
-            <Text className="text-base font-bold text-slate-900">
+          <View className="flex-row items-center justify-between bg-canvas px-4 pb-4 pt-6">
+            <Text className="text-base font-bold text-content">
               {activeLabel}
             </Text>
             {!loading && !error ? (
-              <Text className="text-sm text-slate-500">{total} giải</Text>
+              <Text className="text-sm text-muted">{total} giải</Text>
             ) : null}
           </View>
         </View>
@@ -190,9 +192,9 @@ export default function TournamentList({ onPressItem }) {
           {!loading && error ? (
             <Pressable
               onPress={handleRefresh}
-              className="self-center rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+              className="self-center rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
             >
-              <Text className="text-sm font-semibold text-slate-700">
+              <Text className="text-sm font-semibold text-content-2">
                 Thử lại
               </Text>
             </Pressable>

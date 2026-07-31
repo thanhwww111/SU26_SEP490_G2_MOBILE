@@ -6,7 +6,8 @@ import MatchRow from "../MatchRow";
 import SectionState from "../../home/SectionState";
 import * as publicTournamentApi from "../../../api/publicTournamentApi";
 import { getMatchState } from "../../../constants/tournament";
-import { colors, iconSize } from "../../../theme/tokens";
+import { iconSize } from "../../../theme/tokens";
+import { useThemeColors } from "../../../theme/useThemeColors";
 
 /**
  * Nhịp tự làm mới. 15 giây là mức thoả hiệp: đủ nhanh để tỷ số không quá cũ,
@@ -27,6 +28,8 @@ const REFRESH_MS = 15000;
  * người dùng ở tab khác cũng phải trả tiền 3G cho dữ liệu họ không xem.
  */
 export default function LiveTab({ tournamentId, active }) {
+  const colors = useThemeColors();
+
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -100,10 +103,10 @@ export default function LiveTab({ tournamentId, active }) {
           <Pressable
             onPress={handleManualRefresh}
             disabled={refreshing}
-            className="flex-row items-center justify-center gap-2 self-center rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+            className="flex-row items-center justify-center gap-2 self-center rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
           >
-            <RefreshCw size={iconSize.sm} color={colors.textSecondary} />
-            <Text className="text-sm font-semibold text-slate-700">
+            <RefreshCw size={iconSize.sm} color={colors.content2} />
+            <Text className="text-sm font-semibold text-content-2">
               {refreshing ? "Đang tải..." : "Làm mới"}
             </Text>
           </Pressable>
@@ -113,7 +116,7 @@ export default function LiveTab({ tournamentId, active }) {
   }
 
   return (
-    <View className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <View className="overflow-hidden rounded-xl border border-line bg-surface">
       <View className="flex-row items-center justify-between bg-navy-900 px-4 py-2.5">
         <View className="flex-row items-center gap-2">
           <View className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -129,10 +132,10 @@ export default function LiveTab({ tournamentId, active }) {
       <Pressable
         onPress={handleManualRefresh}
         disabled={refreshing}
-        className="flex-row items-center justify-center gap-2 border-t border-slate-100 bg-slate-50 py-3 active:bg-slate-100"
+        className="flex-row items-center justify-center gap-2 border-t border-line-soft bg-canvas py-3 active:bg-sunken-strong"
       >
-        <RefreshCw size={iconSize.sm} color={colors.textSecondary} />
-        <Text className="text-xs font-semibold text-slate-600">
+        <RefreshCw size={iconSize.sm} color={colors.content2} />
+        <Text className="text-xs font-semibold text-content-2">
           {refreshing ? "Đang tải..." : "Tự làm mới mỗi 15 giây · Chạm để làm mới ngay"}
         </Text>
       </Pressable>

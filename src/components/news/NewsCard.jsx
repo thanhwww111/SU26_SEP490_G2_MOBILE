@@ -18,7 +18,7 @@ export default function NewsCard({ post, onPress }) {
   return (
     <Pressable
       onPress={onPress}
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white active:bg-slate-50"
+      className="overflow-hidden rounded-xl border border-line bg-surface active:bg-sunken"
     >
       <RemoteImage uri={post.thumbnailUrl} className="h-44 w-full" />
 
@@ -31,13 +31,13 @@ export default function NewsCard({ post, onPress }) {
 
         <Text
           numberOfLines={2}
-          className="text-base font-bold leading-snug text-slate-900"
+          className="text-base font-bold leading-snug text-content"
         >
           {post.title}
         </Text>
 
         {publishedAt ? (
-          <Text className="mt-1 text-xs text-slate-400">{publishedAt}</Text>
+          <Text className="mt-1 text-xs text-faint">{publishedAt}</Text>
         ) : null}
       </View>
     </Pressable>

@@ -86,7 +86,7 @@ export default function RichText({ html }) {
             <Inlines
               key={index}
               inlines={block.inlines}
-              className={`${HEADING_CLASS[block.level] || HEADING_CLASS[3]} leading-snug text-slate-900`}
+              className={`${HEADING_CLASS[block.level] || HEADING_CLASS[3]} leading-snug text-content`}
             />
           );
         }
@@ -95,11 +95,11 @@ export default function RichText({ html }) {
           return (
             <View
               key={index}
-              className="border-l-[3px] border-accent bg-slate-50 px-4 py-3"
+              className="border-l-[3px] border-accent bg-canvas px-4 py-3"
             >
               <Inlines
                 inlines={block.inlines}
-                className="text-base italic leading-7 text-slate-600"
+                className="text-base italic leading-7 text-content-2"
               />
             </View>
           );
@@ -110,12 +110,12 @@ export default function RichText({ html }) {
             <View key={index} className="gap-2">
               {block.items.map((item, itemIndex) => (
                 <View key={itemIndex} className="flex-row gap-2">
-                  <Text className="text-base leading-7 text-slate-500">
+                  <Text className="text-base leading-7 text-muted">
                     {block.ordered ? `${itemIndex + 1}.` : "•"}
                   </Text>
                   <Inlines
                     inlines={item}
-                    className="flex-1 text-base leading-7 text-slate-700"
+                    className="flex-1 text-base leading-7 text-content-2"
                   />
                 </View>
               ))}
@@ -132,7 +132,7 @@ export default function RichText({ html }) {
                 resizeMode="cover"
               />
               {block.alt ? (
-                <Text className="text-center text-xs text-slate-400">
+                <Text className="text-center text-xs text-faint">
                   {block.alt}
                 </Text>
               ) : null}
@@ -141,14 +141,14 @@ export default function RichText({ html }) {
         }
 
         if (block.type === "rule") {
-          return <View key={index} className="h-px bg-slate-200" />;
+          return <View key={index} className="h-px bg-sunken-strong" />;
         }
 
         return (
           <Inlines
             key={index}
             inlines={block.inlines}
-            className="text-base leading-7 text-slate-700"
+            className="text-base leading-7 text-content-2"
           />
         );
       })}

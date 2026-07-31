@@ -18,7 +18,7 @@ const RankBadge = ({ rank, country, size = "md" }) => (
       {country}
     </Text>
     <Text
-      className={`absolute right-2 top-2 font-black text-slate-900 ${
+      className={`absolute right-2 top-2 font-black text-content ${
         size === "lg" ? "text-4xl" : "text-xl"
       }`}
     >
@@ -32,11 +32,11 @@ const TopPlayerCard = ({ player }) => {
   const { first, last } = splitName(player.name);
 
   return (
-    <View className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <View className="mt-3 overflow-hidden rounded-2xl border border-line bg-surface">
       <View className="relative">
         <RemoteImage
           uri={player.image}
-          className="h-64 w-full bg-slate-100"
+          className="h-64 w-full bg-sunken"
           resizeMode="contain"
         />
         <View
@@ -47,8 +47,8 @@ const TopPlayerCard = ({ player }) => {
       </View>
 
       <View className="p-4">
-        <Text className="text-lg text-slate-700">{first}</Text>
-        <Text className="text-3xl font-black uppercase leading-8 text-slate-900">
+        <Text className="text-lg text-content-2">{first}</Text>
+        <Text className="text-3xl font-black uppercase leading-8 text-content">
           {last}
         </Text>
       </View>
@@ -60,11 +60,11 @@ const PlayerTile = ({ player }) => {
   const { first, last } = splitName(player.name);
 
   return (
-    <View className="w-[48%] overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <View className="w-[48%] overflow-hidden rounded-xl border border-line bg-surface">
       <View className="relative">
         <RemoteImage
           uri={player.image}
-          className="h-28 w-full bg-slate-100"
+          className="h-28 w-full bg-sunken"
           resizeMode="contain"
         />
         <View
@@ -75,12 +75,12 @@ const PlayerTile = ({ player }) => {
       </View>
 
       <View className="h-16 p-2.5">
-        <Text className="text-xs font-black uppercase leading-4 text-slate-900">
+        <Text className="text-xs font-black uppercase leading-4 text-content">
           {first}
         </Text>
         <Text
           numberOfLines={1}
-          className="text-xs font-black uppercase leading-4 text-slate-900"
+          className="text-xs font-black uppercase leading-4 text-content"
         >
           {last}
         </Text>

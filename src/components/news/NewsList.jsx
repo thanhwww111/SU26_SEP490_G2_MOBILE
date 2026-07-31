@@ -7,7 +7,7 @@ import SectionState from "../home/SectionState";
 import AppFooter from "../layout/AppFooter";
 import * as newsApi from "../../api/newsApi";
 import { DEFAULT_PAGE_SIZE } from "../../utils/pagination";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Danh sách bài viết, bám trang /news của FE web.
@@ -19,6 +19,8 @@ import { colors } from "../../theme/tokens";
  * thì vẫn đọc được tin, chặn cả màn vì mỗi cái chip là quá đáng.
  */
 export default function NewsList({ onPressItem }) {
+  const colors = useThemeColors();
+
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -138,7 +140,7 @@ export default function NewsList({ onPressItem }) {
 
   return (
     <FlatList
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-canvas"
       data={items}
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
@@ -148,12 +150,12 @@ export default function NewsList({ onPressItem }) {
       )}
       ItemSeparatorComponent={() => <View className="h-3" />}
       ListHeaderComponent={
-        <View className="bg-white">
+        <View className="bg-surface">
           <View className="px-4 pb-2 pt-6">
-            <Text className="text-2xl font-black uppercase text-navy-900">
+            <Text className="text-2xl font-black uppercase text-content">
               Tin Tức & Bài Viết
             </Text>
-            <Text className="mt-1 text-sm text-slate-500">
+            <Text className="mt-1 text-sm text-muted">
               Cập nhật mới nhất từ thế giới bi-a
             </Text>
           </View>
@@ -168,11 +170,11 @@ export default function NewsList({ onPressItem }) {
           />
 
           {!loading && !error && items.length > 0 ? (
-            <View className="bg-slate-50 px-4 pb-4 pt-6">
-              <Text className="text-sm text-slate-500">{total} bài viết</Text>
+            <View className="bg-canvas px-4 pb-4 pt-6">
+              <Text className="text-sm text-muted">{total} bài viết</Text>
             </View>
           ) : (
-            <View className="h-4 bg-slate-50" />
+            <View className="h-4 bg-canvas" />
           )}
         </View>
       }
@@ -191,9 +193,9 @@ export default function NewsList({ onPressItem }) {
           {!loading && error ? (
             <Pressable
               onPress={handleRefresh}
-              className="self-center rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+              className="self-center rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
             >
-              <Text className="text-sm font-semibold text-slate-700">Thử lại</Text>
+              <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
             </Pressable>
           ) : null}
 

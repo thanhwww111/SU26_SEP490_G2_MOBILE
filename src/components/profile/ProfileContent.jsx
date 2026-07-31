@@ -19,7 +19,7 @@ import {
   MAX_AVATAR_BYTES,
 } from "../../constants/profile";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Hồ sơ chưa tồn tại thì backend trả 404 kèm mã PROFILE_002. Đây là trạng thái
@@ -42,6 +42,8 @@ const isProfileMissing = (err) =>
  * vẫn thấy tên cũ.
  */
 export default function ProfileContent() {
+  const colors = useThemeColors();
+
   const user = useAuthStore((s) => s.user);
   const patchUser = useAuthStore((s) => s.patchUser);
   const isPlayer = user?.role === ROLES.PLAYER;
@@ -249,7 +251,7 @@ export default function ProfileContent() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
+      <View className="flex-1 items-center justify-center bg-canvas">
         <ActivityIndicator size="small" color={colors.brand} />
       </View>
     );
@@ -257,15 +259,15 @@ export default function ProfileContent() {
 
   if (mode === "error") {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-slate-50 px-4">
-        <Text className="text-center text-sm text-slate-500">
+      <View className="flex-1 items-center justify-center gap-4 bg-canvas px-4">
+        <Text className="text-center text-sm text-muted">
           {formError || "Không thể tải hồ sơ."}
         </Text>
         <Pressable
           onPress={load}
-          className="rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+          className="rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
         >
-          <Text className="text-sm font-semibold text-slate-700">Thử lại</Text>
+          <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
         </Pressable>
       </View>
     );
@@ -274,7 +276,7 @@ export default function ProfileContent() {
   const showForm = mode === "edit" || mode === "create";
 
   return (
-    <ScrollView className="flex-1 bg-slate-50" keyboardShouldPersistTaps="handled">
+    <ScrollView className="flex-1 bg-canvas" keyboardShouldPersistTaps="handled">
       <View className="gap-4 p-4">
         <ProfileAvatarCard
           avatarUrl={form.avatarPreviewUrl}
@@ -290,14 +292,14 @@ export default function ProfileContent() {
         <FormSuccess message={success} className="" />
 
         {mode === "create" ? (
-          <Text className="text-sm text-slate-500">
+          <Text className="text-sm text-muted">
             Điền thông tin bên dưới và bấm lưu để hoàn tất hồ sơ của bạn.
           </Text>
         ) : null}
 
         {mode === "empty" ? (
-          <View className="rounded-xl border border-slate-200 bg-white p-4">
-            <Text className="text-sm text-slate-500">
+          <View className="rounded-xl border border-line bg-surface p-4">
+            <Text className="text-sm text-muted">
               Tài khoản này chưa có hồ sơ và không thuộc nhóm cơ thủ, nên không
               tự tạo hồ sơ được. Liên hệ quản trị viên nếu cần bổ sung.
             </Text>

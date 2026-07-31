@@ -11,7 +11,7 @@ import { splitName } from "../../utils/format";
  */
 export default function PlayerName({ name, dimmed = false, className = "" }) {
   const { first, last } = splitName(name);
-  const color = dimmed ? "text-slate-400" : "text-slate-900";
+  const color = dimmed ? "text-faint" : "text-content";
 
   return (
     <Text numberOfLines={1} className={`text-sm ${color} ${className}`}>

@@ -59,20 +59,26 @@ Không hardcode màu, font, spacing, border radius, shadow.
 // Sai
 <View style={{ marginTop: 17 }}>
 <Text style={{ color: "#1a2a4a" }}>
+<Text className="text-navy-700">   // navy cứng → chìm hẳn ở chế độ tối
 
 // Đúng
 <View className="mt-4">
-<Text className="text-navy-700">
+<Text className="text-content">
 ```
 
-Khi RN bắt buộc dùng giá trị JS (màu icon, `placeholderTextColor`, `ActivityIndicator`), lấy từ `src/theme/tokens.js`:
+Khi RN bắt buộc dùng giá trị JS (màu icon, `placeholderTextColor`, `ActivityIndicator`), lấy từ hook `useThemeColors()`:
 
 ```jsx
-import { colors, iconSize } from "../../theme/tokens";
+import { iconSize } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
+
+const colors = useThemeColors();
 
 <ChevronLeft size={iconSize.lg} color={colors.brand} />
-<TextInput placeholderTextColor={colors.textPlaceholder} />
+<TextInput placeholderTextColor={colors.faint} />
 ```
+
+**Đừng import bảng màu thẳng** (`lightColors` / `darkColors`) — làm vậy là khoá cứng một chế độ. Hàm thuần không gọi được hook thì nhận màu qua prop từ component cha.
 
 ## Ưu tiên đơn giản
 
@@ -122,24 +128,28 @@ Toàn app chỉ có **một màu accent duy nhất**.
 
 > Web hiện có hai sắc đỏ: `#EF342A` ở trang public (Header, Home, News, Event) và `#e8471a` ở trang Auth. Nhóm đã chốt lấy `#EF342A` vì đó là màu người dùng nhìn thấy ở hầu hết giao diện.
 
-## Trung tính
+## Trung tính — dùng token vai trò, không dùng `slate-*`
 
-Web dùng đúng thang `slate` mặc định của Tailwind, nên **mobile không định nghĩa lại màu xám**. Dùng thẳng `slate-*`:
+> **Đổi từ 2026-07-29.** Trước đây mục này bảo dùng thẳng `slate-*`. Từ khi có dark mode thì **không được nữa**: `bg-white` sẽ trắng cả ở chế độ tối. Dùng token vai trò để màu tự đổi.
 
-| Vai trò | Class | Hex |
-|---|---|---|
-| Nền màn | `bg-white` | `#FFFFFF` |
-| Nền phụ | `bg-slate-50` | `#F8FAFC` |
-| Nền chìm (khối trong card) | `bg-slate-100` | `#F1F5F9` |
-| Viền | `border-slate-200` | `#E2E8F0` |
-| Viền đậm (ô nhập) | `border-slate-300` | `#CBD5E1` |
-| Chữ chính | `text-slate-900` | `#0F172A` |
-| Chữ phụ | `text-slate-600` | `#475569` |
-| Chữ mờ | `text-slate-500` | `#64748B` |
-| Placeholder | `text-slate-400` | `#94A3B8` |
-| Chữ bị vô hiệu | `text-slate-300` | `#CBD5E1` |
+| Vai trò | Class | Sáng | Tối |
+|---|---|---|---|
+| Nền màn | `bg-canvas` | `#F8FAFC` | `#0A1220` |
+| Nền thẻ, khối | `bg-surface` | `#FFFFFF` | `#0D1B2E` |
+| Nền chìm (khối trong card) | `bg-sunken` | `#F1F5F9` | `#14202F` |
+| Nền chờ ảnh | `bg-sunken-strong` | `#E2E8F0` | `#1B2A3D` |
+| Kẻ giữa các dòng | `border-line-soft` | `#F1F5F9` | `#172433` |
+| Viền thẻ | `border-line` | `#E2E8F0` | `#1F2E42` |
+| Viền ô nhập | `border-line-strong` | `#CBD5E1` | `#2A3B52` |
+| Chữ chính | `text-content` | `#0F172A` | `#F1F5F9` |
+| Chữ phụ | `text-content-2` | `#334155` | `#C7D2DE` |
+| Chữ mờ | `text-muted` | `#64748B` | `#94A3B8` |
+| Mờ nhất | `text-faint` | `#94A3B8` | `#6B7A8F` |
+| Bị vô hiệu | `text-disabled` | `#CBD5E1` | `#3A4A60` |
 
-Không dùng thang `gray-*`, `zinc-*`, `neutral-*` — chúng lệch sắc so với web.
+Giá trị định nghĩa ở `global.css`. Chi tiết và các trường hợp ngoại lệ: Phần 9.
+
+Không dùng thang `gray-*`, `zinc-*`, `neutral-*` — chúng lệch sắc so với web. Cũng đừng quay lại `slate-*` cho những vai trò ở bảng trên.
 
 ## Trạng thái
 
@@ -431,9 +441,70 @@ Hiển thị bằng `FormSuccess` hoặc điều hướng sang màn tiếp theo.
 
 # Phần 9 — Dark Mode
 
-Chưa triển khai. Nhưng token đã đặt tên theo **vai trò** (`surface`, `textSecondary`, `border`) chứ không theo tên màu, nên khi làm chỉ cần bổ sung bảng giá trị thứ hai trong `tokens.js`, không phải sửa từng màn.
+**Đã triển khai** ngày 2026-07-29 cho toàn bộ nhóm `(app)`. Nhóm `(auth)` bị khoá ở chế độ Sáng.
 
-Điều kiện để chuyện đó khả thi: **màn không được hardcode màu**. Đây là lý do thật sự của quy tắc "không hardcode" ở Phần 1.
+> Bản trước của mục này viết "chỉ cần bổ sung bảng giá trị thứ hai trong `tokens.js`, không phải sửa từng màn". **Sai một nửa.** Điều đó đúng với màu truyền qua prop JS, nhưng phía `className` thì mọi màn đang gõ thẳng `bg-white`, `text-slate-900` — không có gì để đổi. Thực tế phải chuyển 442 chỗ ở 51 file sang token vai trò. Ghi lại đây để lần sau đừng ước lượng nhầm.
+
+## Hai đường dẫn màu
+
+| Dùng qua | Lấy từ | Ví dụ |
+|---|---|---|
+| `className` | Biến CSS ở `global.css` | `bg-surface`, `text-content` |
+| Prop JS | Hook `useThemeColors()` | `color={colors.brand}` |
+
+Cả hai phải khớp nhau. Sửa `global.css` thì sửa `src/theme/tokens.js`, và ngược lại.
+
+## Bảng token — dùng cái này, đừng dùng `slate-*` nữa
+
+| Token | Sáng | Tối | Thay cho |
+|---|---|---|---|
+| `canvas` | `#F8FAFC` | `#0A1220` | `bg-slate-50` — nền màn |
+| `surface` | `#FFFFFF` | `#0D1B2E` | `bg-white` — nền thẻ, khối |
+| `sunken` | `#F1F5F9` | `#14202F` | `bg-slate-100` — khối chìm trong thẻ |
+| `sunken-strong` | `#E2E8F0` | `#1B2A3D` | `bg-slate-200` — nền chờ ảnh |
+| `line-soft` | `#F1F5F9` | `#172433` | `border-slate-100` |
+| `line` | `#E2E8F0` | `#1F2E42` | `border-slate-200` — viền thẻ |
+| `line-strong` | `#CBD5E1` | `#2A3B52` | `border-slate-300` — viền ô nhập |
+| `content` | `#0F172A` | `#F1F5F9` | `text-slate-900` — chữ chính |
+| `content-2` | `#334155` | `#C7D2DE` | `text-slate-700`, `slate-600` — chữ phụ |
+| `muted` | `#64748B` | `#94A3B8` | `text-slate-500` — chú thích |
+| `faint` | `#94A3B8` | `#6B7A8F` | `text-slate-400` — mờ nhất |
+| `disabled` | `#CBD5E1` | `#3A4A60` | `text-slate-300` — bị vô hiệu |
+| `tint-danger/success/warning` | thang `50` | nền sẫm | `bg-red-50`, `bg-green-50`… |
+
+Bên JS, tên viết kiểu camelCase: `colors.sunkenStrong`, `colors.lineStrong`, `colors.content2`.
+
+## Màu KHÔNG đổi theo chế độ
+
+Thương hiệu và trạng thái giữ nguyên ở cả hai chế độ — đỏ vẫn là lỗi, xanh vẫn là thành công:
+
+`accent` · `gold` · `success` · `warning` · `danger` · `info` · `navy-*`
+
+**Riêng `brand` thì có đổi**: navy-700 đặt trên nền `#0A1220` gần như chìm hẳn, nên ở chế độ tối nó sáng lên thành `#8FB0DC`. Đây là màu của icon và spinner, không phải màu nền nút.
+
+## Khối cố ý tối
+
+Hero, footer, thanh tab, badge trạng thái, lớp nền mờ sau menu, nút `light`/`ghost` — những chỗ này **đã tối sẵn ở cả hai chế độ**, nên vẫn dùng màu tuyệt đối (`bg-navy-900`, `text-white`, `border-white/40`). Đổi chúng sang token là sai: nút trắng trên nền tối mà đổi theo chế độ sẽ tự tan vào nền.
+
+## Ba chế độ người dùng chọn được
+
+`Tự động` (theo hệ điều hành, mặc định) · `Sáng` · `Tối`.
+
+Nằm trong menu hồ sơ ở header, dạng **một dòng chạm để xoay vòng** (Tự động → Sáng → Tối → Tự động), trạng thái hiện tại hiện bên phải. Không tách thành khối ba nút riêng: menu này toàn dòng chạm-để-làm-gì-đó, một khối lựa chọn chen vào giữa làm gãy nhịp đọc và chiếm chỗ gấp ba.
+
+Chạm xong menu **không đóng** — người dùng thường chạm vài lần để so sánh.
+
+Khác web: `themeStore.js` bên đó cố ý luôn mặc định Sáng và bỏ qua cài đặt hệ thống. Trên trình duyệt điều đó hợp lý; trên điện thoại thì người dùng đã bật dark mode toàn máy sẽ mong app theo.
+
+## Vì sao không viết `dark:` ở từng class
+
+Cách phổ biến của Tailwind là `bg-white dark:bg-navy-900`. Không chọn cách đó vì dự án còn nhiều màn chưa làm — mỗi màn mới sẽ là một cơ hội quên `dark:`, và app nửa sáng nửa tối còn tệ hơn không có dark mode. Với token vai trò, màn mới tự động đúng ở cả hai chế độ mà không phải nhớ gì thêm.
+
+## Khoá một vùng ở chế độ Sáng
+
+`src/theme/LightThemeScope.jsx`. Nhóm `(auth)` dùng nó vì `Input`/`Button`/`FormError` là component dùng chung với `(app)`.
+
+Nó khoá **cả hai** đường màu: `vars()` cho `className`, và `ThemeLockContext` cho prop JS. Thiếu vế thứ hai thì icon vẫn lấy màu tối trong khi nền quanh nó đã sáng.
 
 Web đã làm sẵn mẫu để tham khảo: `SU26_SEP490_G2_FE/src/pages/Event/eventTheme.css`.
 
@@ -464,14 +535,18 @@ Những chỗ dưới đây có sẵn từ trước khi có tài liệu này. Ch
 
 | File | Vấn đề |
 |---|---|
-| `src/components/Button.jsx` | `spinnerColor` hardcode `#1a2a4a` → nên dùng `colors.brand` |
-| `src/components/Input.jsx` | `placeholderTextColor` và màu icon hardcode → nên dùng `colors.textPlaceholder`, `colors.textInverseMuted` |
-| `src/components/layout/AppHeader.jsx` | Màu icon hardcode `#1a2a4a` → `colors.brand` |
-| `src/components/home/SectionState.jsx` | Màu `ActivityIndicator` hardcode → `colors.brand` |
-| `app/(app)/profile.jsx` | Dùng `bg-brand-100` (nhóm màu cũ) |
-| `app/_layout.jsx` | Màu `ActivityIndicator` hardcode `#2563eb` → nên dùng `colors.brand` |
-| `src/constants/tournament.js` | Màu badge hardcode hex → nên chuyển sang token |
-| `src/components/home/SectionHeader.jsx` | Tiêu đề dùng `text-base font-bold` — khớp thang, giữ nguyên |
+| `src/constants/tournament.js` | Màu badge hardcode hex → nên chuyển sang token. Badge nền đặc chữ trắng nên vẫn đọc được ở cả hai chế độ, chưa gấp |
+| `app/(app)/profile.jsx` | Đã dựng lại 2026-07-29, không còn dùng `bg-brand-100` |
+| `src/components/icons/BrandIcons.jsx` | `color` mặc định `#000` — mọi nơi gọi đều truyền màu vào nên không lộ, nhưng giá trị mặc định vẫn nên là token |
+
+Các mục hardcode màu ở `Button`, `Input`, `AppHeader`, `SectionState`, `app/_layout.jsx` **đã dọn xong** khi làm dark mode (2026-07-29).
+
+Nợ còn lại của dark mode:
+
+| Chỗ | Vấn đề |
+|---|---|
+| `shadow` trong `tokens.js` | Bóng đen trên nền tối gần như không thấy. Lớp nổi hiện nhận biết bằng nền sáng hơn nền trang, chưa có bóng riêng cho chế độ tối |
+| Ảnh hero | `HomeBanner` và `TournamentHero` phủ lớp tối cố định lên ảnh — hợp cả hai chế độ, nhưng ở chế độ tối có thể muốn phủ đậm hơn |
 
 ---
 

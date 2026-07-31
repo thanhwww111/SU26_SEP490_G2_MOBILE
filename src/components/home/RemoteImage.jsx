@@ -19,7 +19,7 @@ export default function RemoteImage({
   const useFallback = !uri || failed;
 
   return (
-    <View className={`overflow-hidden bg-slate-200 ${className}`}>
+    <View className={`overflow-hidden bg-sunken-strong ${className}`}>
       <Image
         source={useFallback ? fallbackImage : { uri }}
         resizeMode={resizeMode}

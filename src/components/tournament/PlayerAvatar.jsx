@@ -21,16 +21,16 @@ export default function PlayerAvatar({ uri, name, size = "md" }) {
     return (
       <RemoteImage
         uri={uri}
-        className={`${sizeClass} rounded-full border border-slate-200`}
+        className={`${sizeClass} rounded-full border border-line`}
       />
     );
   }
 
   return (
     <View
-      className={`${sizeClass} items-center justify-center rounded-full border border-slate-200 bg-slate-200`}
+      className={`${sizeClass} items-center justify-center rounded-full border border-line bg-sunken-strong`}
     >
-      <Text className={`${textClass} font-bold text-slate-500`}>
+      <Text className={`${textClass} font-bold text-muted`}>
         {initialsOf(name)}
       </Text>
     </View>

@@ -20,7 +20,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView className="flex-1 bg-surface">
       <HomeBanner />
 
       {/* Bảng xếp hạng chưa có màn đích — nối điều hướng khi có màn */}

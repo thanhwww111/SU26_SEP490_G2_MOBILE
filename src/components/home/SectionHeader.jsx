@@ -16,12 +16,12 @@ export default function SectionHeader({
   return (
     <View
       className={`flex-row items-center justify-between rounded-md px-4 py-3 ${
-        dark ? "bg-navy-900" : "bg-slate-100"
+        dark ? "bg-navy-900" : "bg-sunken"
       } ${className}`}
     >
       <Text
         className={`flex-1 text-base font-bold ${
-          dark ? "text-white" : "text-slate-900"
+          dark ? "text-white" : "text-content"
         }`}
       >
         {title}
@@ -33,11 +33,11 @@ export default function SectionHeader({
           onPress={onPressAction}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           className={`ml-3 rounded-md border px-3 py-1.5 ${
-            dark ? "border-white/30" : "border-slate-300"
+            dark ? "border-white/30" : "border-line-strong"
           }`}
         >
           <Text
-            className={`text-xs italic ${dark ? "text-white" : "text-slate-700"}`}
+            className={`text-xs italic ${dark ? "text-white" : "text-content-2"}`}
           >
             {actionLabel}
           </Text>

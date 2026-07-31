@@ -1,9 +1,19 @@
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { CreditCard, FileText, LogOut, User } from "lucide-react-native";
+import {
+  CreditCard,
+  FileText,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  User,
+} from "lucide-react-native";
 
 import { ROLES } from "../../constants/auth";
 import { normalizeRole } from "../../utils/auth";
 import { useOverlay } from "./useOverlay";
+import { useThemeStore } from "../../store/themeStore";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Ba mục riêng của player, khai đúng PLAYER_MENU của Header web.
@@ -23,7 +33,27 @@ const PLAYER_MENU = [
  *
  * Không dùng <Modal> vì lý do nêu ở useOverlay.js.
  */
+/**
+ * Ba chế độ giao diện, xếp theo đúng thứ tự chạm để xoay vòng:
+ * Tự động → Sáng → Tối → Tự động.
+ *
+ * Web chỉ có hai trạng thái bật/tắt; mobile thêm "Tự động" vì trên điện thoại
+ * người dùng hay bật dark mode toàn máy theo giờ.
+ *
+ * Gộp thành MỘT dòng trong menu chứ không tách thành khối ba nút riêng: menu
+ * này toàn là dòng chạm-để-làm-gì-đó, một khối lựa chọn nằm chen vào giữa làm
+ * gãy nhịp đọc và chiếm chỗ gấp ba.
+ */
+const THEME_CYCLE = [
+  { mode: "system", label: "Tự động", Icon: Monitor },
+  { mode: "light", label: "Sáng", Icon: Sun },
+  { mode: "dark", label: "Tối", Icon: Moon },
+];
+
 export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogout }) {
+  const colors = useThemeColors();
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
   const { mounted, progress } = useOverlay(visible, 140);
 
   if (!mounted) return null;
@@ -42,15 +72,26 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
         key={key}
         disabled={disabled}
         onPress={() => onNavigate(path)}
-        className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-slate-50"
+        className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-sunken"
       >
-        <Icon size={15} color={disabled ? "#cbd5e1" : "#334155"} />
-        <Text className={`text-[13px] ${disabled ? "text-slate-300" : "text-slate-700"}`}>
+        <Icon size={15} color={disabled ? colors.disabled : colors.content2} />
+        <Text className={`text-[13px] ${disabled ? "text-disabled" : "text-content-2"}`}>
           {label}
         </Text>
       </Pressable>
     );
   };
+
+  const themeIndex = Math.max(
+    0,
+    THEME_CYCLE.findIndex((choice) => choice.mode === themeMode)
+  );
+  const theme = THEME_CYCLE[themeIndex];
+  const nextTheme = THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length];
+
+  // Không đóng menu sau khi đổi: người dùng thường chạm vài lần để so sánh
+  // sáng/tối, đóng lại mỗi lần thì phải mở menu ba lượt mới xem hết
+  const cycleTheme = () => setThemeMode(nextTheme.mode);
 
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 40 }]}>
@@ -67,15 +108,15 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
           transform: [{ translateY }, { scale }],
         }}
       >
-        <View className="w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <View className="w-56 overflow-hidden rounded-xl border border-line bg-surface shadow-lg">
           {/* Header mobile chỉ có icon tròn, không hiện tên như web —
               nên tên và email để ở đây, bằng không không biết đang là ai. */}
-          <View className="border-b border-slate-100 px-3 py-2.5">
-            <Text numberOfLines={1} className="text-[13px] font-semibold text-slate-900">
+          <View className="border-b border-line-soft px-3 py-2.5">
+            <Text numberOfLines={1} className="text-[13px] font-semibold text-content">
               {user?.fullName || user?.email || "Người dùng"}
             </Text>
             {user?.email ? (
-              <Text numberOfLines={1} className="mt-0.5 text-[11px] text-slate-500">
+              <Text numberOfLines={1} className="mt-0.5 text-[11px] text-muted">
                 {user.email}
               </Text>
             ) : null}
@@ -90,19 +131,37 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
 
           {isPlayer ? (
             <>
-              <View className="h-px bg-slate-100" />
+              <View className="h-px bg-sunken" />
               {PLAYER_MENU.map(renderItem)}
             </>
           ) : null}
 
-          <View className="h-px bg-slate-100" />
+          <View className="h-px bg-sunken" />
+
+          {/* Giao diện: một dòng như mọi mục khác, chạm để xoay vòng trạng thái.
+              Trạng thái hiện tại nằm bên phải để biết đang ở chế độ nào mà
+              không phải mở thêm gì. */}
+          <Pressable
+            onPress={cycleTheme}
+            accessibilityRole="button"
+            accessibilityLabel={`Giao diện: ${theme.label}. Chạm để chuyển sang ${nextTheme.label}`}
+            className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-sunken"
+          >
+            <theme.Icon size={15} color={colors.content2} />
+            <Text className="flex-1 text-[13px] text-content-2">Giao diện</Text>
+            <Text className="text-[13px] font-semibold text-accent">
+              {theme.label}
+            </Text>
+          </Pressable>
+
+          <View className="h-px bg-sunken" />
 
           <Pressable
             onPress={onLogout}
-            className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-red-50"
+            className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-tint-danger"
           >
-            <LogOut size={15} color="#dc2626" />
-            <Text className="text-[13px] text-red-600">Đăng xuất</Text>
+            <LogOut size={15} color={colors.danger} />
+            <Text className="text-[13px] text-danger">Đăng xuất</Text>
           </Pressable>
         </View>
       </Animated.View>

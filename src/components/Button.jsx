@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, Text } from "react-native";
 
-import { colors } from "../theme/tokens";
+import { useThemeColors } from "../theme/useThemeColors";
 
 /**
  * Nút bấm dùng chung. Kiểu pill navy bám theo nút của trang Auth trên FE web.
@@ -17,21 +17,25 @@ export default function Button({
   variant = "primary",
   className = "",
 }) {
+  const colors = useThemeColors();
+
   const isDisabled = disabled || loading;
 
   const base = "h-12 flex-row items-center justify-center gap-2 rounded-full px-6";
   const styles = {
-    primary: isDisabled ? "bg-slate-400" : "bg-navy-700 active:bg-navy-600",
-    outline: "border border-slate-300 bg-white active:bg-slate-50",
+    primary: isDisabled ? "bg-disabled" : "bg-navy-700 active:bg-navy-600",
+    outline: "border border-line-strong bg-surface active:bg-sunken",
     // Hành động không hoàn tác được (huỷ đăng ký) — web cũng tô đỏ chỗ này
-    danger: isDisabled ? "bg-slate-400" : "bg-danger active:opacity-80",
-    // Hai variant dưới dành cho form đặt thẳng trên nền tối
+    danger: isDisabled ? "bg-disabled" : "bg-danger active:opacity-80",
+    // Hai variant dưới dành cho form đặt thẳng trên nền tối. Chúng dùng màu
+    // tuyệt đối chứ không dùng token vai trò: nền phía sau đã tối sẵn ở cả hai
+    // chế độ, nút mà đổi theo chế độ sáng/tối sẽ tự tan vào nền.
     light: isDisabled ? "bg-white/40" : "bg-white active:bg-slate-200",
     ghost: "border border-white/40 active:bg-white/10",
   };
   const textStyles = {
     primary: "text-white",
-    outline: "text-slate-700",
+    outline: "text-content-2",
     danger: "text-white",
     light: "text-navy-700",
     ghost: "text-white",

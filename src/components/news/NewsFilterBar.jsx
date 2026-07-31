@@ -22,7 +22,7 @@ export default function NewsFilterBar({
   const showChips = categories.length > 0;
 
   return (
-    <View className="gap-3 border-b border-slate-200 bg-white pb-4 pt-4">
+    <View className="gap-3 border-b border-line bg-surface pb-4 pt-4">
       {showChips ? (
         <ScrollView
           horizontal
@@ -41,13 +41,13 @@ export default function NewsFilterBar({
                 className={`h-9 items-center justify-center rounded-full px-4 ${
                   active
                     ? "bg-navy-900"
-                    : "border border-slate-300 bg-white active:bg-slate-50"
+                    : "border border-line-strong bg-surface active:bg-sunken"
                 }`}
               >
                 <Text
                   numberOfLines={1}
                   className={`text-sm font-semibold ${
-                    active ? "text-white" : "text-slate-700"
+                    active ? "text-white" : "text-content-2"
                   }`}
                 >
                   {chip.name}

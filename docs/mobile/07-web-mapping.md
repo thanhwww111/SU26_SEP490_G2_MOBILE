@@ -139,9 +139,13 @@ Web dùng `hover:` cho nhiều gợi ý thị giác. Native không có hover —
 
 Modal giữa màn hình khó thao tác một tay. Form ngắn → bottom sheet; form dài → màn riêng.
 
-## Sidebar → drawer
+## Thanh điều hướng → menu xổ
 
-`AdminSidebar` của web đổi thành `AppDrawer` trượt từ trái.
+Thanh ngang 6 mục của web (`Header.jsx`) đổi thành `AppDrawer` — menu xổ ra từ nút hamburger bên trái.
+
+**Dùng chung khuôn với `ProfileMenu` bên phải**: cùng thẻ nổi bo góc `w-56`, cùng cỡ chữ `text-[13px]`, cùng khoảng đệm `px-3 py-2.5`, cùng kiểu bung ra. Hai lớp phủ mở từ cùng một thanh header nên phải trông như một bộ; sửa cái này thì sửa cả cái kia.
+
+Mục đang mở đánh dấu bằng chữ + icon màu accent và một chấm tròn cuối dòng — không dùng vạch dọc bên trái, vì vạch đó làm chữ nhích ngang mỗi lần đổi mục.
 
 ---
 

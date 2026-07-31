@@ -14,7 +14,7 @@ import * as publicTournamentApi from "../../api/publicTournamentApi";
 import { participantTypeLabel } from "../../constants/tournament";
 import { fmtCurrency } from "../../utils/format";
 import { fmtDateRange } from "../../utils/date";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 const TABS = [
   { id: "info", label: "Thông tin", Icon: Info },
@@ -30,8 +30,8 @@ const RATIO_TABS = ["matches", "live", "ranking"];
 /** Một ô trong hàng thông tin nhanh dưới tên giải */
 const InfoCell = ({ label, value }) => (
   <View className="flex-1 gap-1 px-3 py-3">
-    <Text className="text-overline font-bold uppercase text-slate-400">{label}</Text>
-    <Text numberOfLines={2} className="text-sm font-semibold text-slate-900">
+    <Text className="text-overline font-bold uppercase text-faint">{label}</Text>
+    <Text numberOfLines={2} className="text-sm font-semibold text-content">
       {value || "—"}
     </Text>
   </View>
@@ -52,6 +52,8 @@ const InfoCell = ({ label, value }) => (
  * không gọi lại API.
  */
 export default function TournamentDetail({ id, onOpenMyRegistrations }) {
+  const colors = useThemeColors();
+
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -106,7 +108,7 @@ export default function TournamentDetail({ id, onOpenMyRegistrations }) {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
+      <View className="flex-1 items-center justify-center bg-canvas">
         <ActivityIndicator size="small" color={colors.brand} />
       </View>
     );
@@ -114,15 +116,15 @@ export default function TournamentDetail({ id, onOpenMyRegistrations }) {
 
   if (error || !tournament) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-slate-50 px-4">
-        <Text className="text-center text-sm text-slate-500">
+      <View className="flex-1 items-center justify-center gap-4 bg-canvas px-4">
+        <Text className="text-center text-sm text-muted">
           {error || "Không tìm thấy giải đấu."}
         </Text>
         <Pressable
           onPress={load}
-          className="rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+          className="rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
         >
-          <Text className="text-sm font-semibold text-slate-700">Thử lại</Text>
+          <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
         </Pressable>
       </View>
     );
@@ -155,7 +157,7 @@ export default function TournamentDetail({ id, onOpenMyRegistrations }) {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-canvas">
       <ScrollView
         ref={scrollRef}
         className="flex-1"
@@ -177,12 +179,12 @@ export default function TournamentDetail({ id, onOpenMyRegistrations }) {
               </View>
             </View>
 
-            <View className="border-b border-slate-200 bg-white px-4 pb-2 pt-4">
-              <Text className="text-xl font-black uppercase italic leading-7 text-slate-900">
+            <View className="border-b border-line bg-surface px-4 pb-2 pt-4">
+              <Text className="text-xl font-black uppercase italic leading-7 text-content">
                 {tournament.name}
               </Text>
 
-              <View className="mt-3 flex-row flex-wrap border-t border-slate-100">
+              <View className="mt-3 flex-row flex-wrap border-t border-line-soft">
                 <InfoCell
                   label="Ngày diễn ra"
                   value={fmtDateRange(tournament.startAt, tournament.endAt)}
@@ -206,8 +208,8 @@ export default function TournamentDetail({ id, onOpenMyRegistrations }) {
         ) : (
           /* Tab danh sách bỏ hero để nhường chiều cao cho dữ liệu, nhưng vẫn
              phải nhắc người dùng đang xem giải nào */
-          <View className="border-b border-slate-200 bg-white px-4 py-3">
-            <Text numberOfLines={1} className="text-sm font-bold text-slate-900">
+          <View className="border-b border-line bg-surface px-4 py-3">
+            <Text numberOfLines={1} className="text-sm font-bold text-content">
               {tournament.name}
             </Text>
           </View>

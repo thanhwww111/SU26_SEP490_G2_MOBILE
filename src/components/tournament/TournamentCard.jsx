@@ -4,7 +4,8 @@ import { ChevronRight } from "lucide-react-native";
 import RemoteImage from "../home/RemoteImage";
 import TournamentStatusBadge from "./TournamentStatusBadge";
 import { fmtDateRange } from "../../utils/date";
-import { colors, iconSize } from "../../theme/tokens";
+import { iconSize } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /** Giải đã xong thì nút dẫn tới kết quả chứ không còn là "xem giải sắp tới" */
 const isFinished = (status) => status === "COMPLETED" || status === "DRAW_DONE";
@@ -21,12 +22,14 @@ const isFinished = (status) => status === "COMPLETED" || status === "DRAW_DONE";
  * hai đích bấm nhỏ cạnh nhau rất dễ bấm nhầm bằng ngón tay.
  */
 export default function TournamentCard({ item, onPress }) {
+  const colors = useThemeColors();
+
   const dateRange = fmtDateRange(item.startAt, item.endAt);
 
   return (
     <Pressable
       onPress={onPress}
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white active:bg-slate-50"
+      className="overflow-hidden rounded-xl border border-line bg-surface active:bg-sunken"
     >
       <View>
         <RemoteImage uri={item.thumbnailUrl} className="h-44 w-full" />
@@ -41,7 +44,7 @@ export default function TournamentCard({ item, onPress }) {
       <View className="gap-2 p-4">
         <Text
           numberOfLines={2}
-          className="text-base font-bold leading-snug text-slate-900"
+          className="text-base font-bold leading-snug text-content"
         >
           {item.name}
         </Text>
@@ -49,15 +52,15 @@ export default function TournamentCard({ item, onPress }) {
         {item.gameType || item.formatName ? (
           <View className="flex-row flex-wrap items-center gap-x-2">
             {item.gameType ? (
-              <Text className="text-sm font-semibold text-slate-600">
+              <Text className="text-sm font-semibold text-content-2">
                 {item.gameType}
               </Text>
             ) : null}
             {item.gameType && item.formatName ? (
-              <Text className="text-sm text-slate-300">·</Text>
+              <Text className="text-sm text-disabled">·</Text>
             ) : null}
             {item.formatName ? (
-              <Text numberOfLines={1} className="flex-shrink text-sm text-slate-500">
+              <Text numberOfLines={1} className="flex-shrink text-sm text-muted">
                 {item.formatName}
               </Text>
             ) : null}
@@ -65,16 +68,16 @@ export default function TournamentCard({ item, onPress }) {
         ) : null}
       </View>
 
-      <View className="flex-row items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-2.5">
-        <Text numberOfLines={1} className="flex-1 text-xs text-slate-500">
+      <View className="flex-row items-center justify-between border-t border-line-soft bg-canvas px-4 py-2.5">
+        <Text numberOfLines={1} className="flex-1 text-xs text-muted">
           {dateRange}
         </Text>
 
         <View className="flex-row items-center">
-          <Text className="text-overline font-bold uppercase text-slate-700">
+          <Text className="text-overline font-bold uppercase text-content-2">
             {isFinished(item.status) ? "Kết quả" : "Xem"}
           </Text>
-          <ChevronRight size={iconSize.sm} color={colors.textSecondary} />
+          <ChevronRight size={iconSize.sm} color={colors.content2} />
         </View>
       </View>
     </Pressable>

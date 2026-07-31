@@ -39,14 +39,14 @@ export default function ProfileForm({
       <SectionCard title={isCreate ? "Tạo hồ sơ" : "Thông tin hồ sơ"}>
         <View className="gap-4">
           <View>
-            <Text className="mb-1 text-xs text-slate-500">Email</Text>
+            <Text className="mb-1 text-xs text-muted">Email</Text>
             {/* Bo góc `rounded` cho khớp ô nhập thật ngay dưới, không phải rounded-lg */}
-            <View className="h-10 justify-center rounded border border-slate-200 bg-slate-100 px-3">
-              <Text numberOfLines={1} className="text-sm text-slate-500">
+            <View className="h-10 justify-center rounded border border-line bg-sunken px-3">
+              <Text numberOfLines={1} className="text-sm text-muted">
                 {email || "—"}
               </Text>
             </View>
-            <Text className="mt-1 text-xs text-slate-400">Không thể thay đổi</Text>
+            <Text className="mt-1 text-xs text-faint">Không thể thay đổi</Text>
           </View>
 
           <Input
@@ -82,7 +82,7 @@ export default function ProfileForm({
                 editable={!saving}
               />
               {!errors.phone ? (
-                <Text className="mt-1 text-xs text-slate-400">
+                <Text className="mt-1 text-xs text-faint">
                   03/05/07/08/09 + 8 số
                 </Text>
               ) : null}
@@ -101,7 +101,7 @@ export default function ProfileForm({
               editable={!saving}
             />
             {!errors.dateOfBirth ? (
-              <Text className="mt-1 text-xs text-slate-400">
+              <Text className="mt-1 text-xs text-faint">
                 Ví dụ: 15/05/1998
               </Text>
             ) : null}
@@ -128,7 +128,7 @@ export default function ProfileForm({
       </SectionCard>
 
       <SectionCard title="Giới thiệu">
-        <Text className="mb-3 text-sm text-slate-500">
+        <Text className="mb-3 text-sm text-muted">
           Mô tả ngắn về bản thân, kinh nghiệm chơi bi-a hoặc thành tích của bạn.
         </Text>
 

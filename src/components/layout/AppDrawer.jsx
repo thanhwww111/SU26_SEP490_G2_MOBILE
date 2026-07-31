@@ -1,79 +1,92 @@
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { NAV_ITEMS } from "./navItems";
 import { useOverlay } from "./useOverlay";
-
-/** Đủ chỗ cho nhãn dài nhất ("Tỷ Số Trực Tiếp") mà vẫn chừa nền tối để bấm đóng */
-const PANEL_WIDTH = 232;
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
- * Navbar dạng drawer trượt từ trái, thay cho thanh ngang 6 mục của web
- * (màn hình điện thoại không đủ chỗ nằm ngang).
+ * Navbar dạng menu xổ từ nút hamburger bên trái, thay cho thanh ngang 6 mục của
+ * web (màn hình điện thoại không đủ chỗ nằm ngang).
  *
- * Đặt trong phần body của layout chứ không phủ cả màn: header vẫn hiện, nên
- * bấm lại hamburger là đóng được và người dùng không mất phương hướng. Cũng vì
- * thế panel không cần thanh tiêu đề logo + nút X riêng nữa.
+ * Dùng CHUNG khuôn với ProfileMenu bên phải: cùng thẻ nổi bo góc, cùng cỡ chữ,
+ * cùng khoảng đệm, cùng kiểu bung ra. Trước đây đây là panel cao hết màn hình
+ * trượt từ mép trái — hai lớp phủ mở ra từ cùng một thanh header mà trông như
+ * hai thành phần của hai app khác nhau.
+ *
+ * Đặt trong phần body của layout chứ không phủ cả màn: header vẫn hiện, nên bấm
+ * lại hamburger là đóng được và người dùng không mất phương hướng.
  *
  * Là View absolute chứ không phải <Modal> — lý do xem useOverlay.js.
  */
 export default function AppDrawer({ visible, onClose, onNavigate, activeKey }) {
-  const { mounted, progress } = useOverlay(visible);
+  const colors = useThemeColors();
+  const { mounted, progress } = useOverlay(visible, 140);
 
   if (!mounted) return null;
 
-  const translateX = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-PANEL_WIDTH, 0],
-  });
+  // Bung ra từ phía nút hamburger thay vì hiện đứng yên — giống ProfileMenu
+  const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] });
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] });
 
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 40 }]}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
         {/* Chạm ra ngoài để đóng */}
-        <Pressable className="flex-1 bg-black/40" onPress={onClose} />
+        <Pressable className="flex-1 bg-black/20" onPress={onClose} />
       </Animated.View>
 
       <Animated.View
-        style={{ width: PANEL_WIDTH, height: "100%", transform: [{ translateX }] }}
+        style={{
+          position: "absolute",
+          top: 6,
+          left: 8,
+          opacity: progress,
+          transform: [{ translateY }, { scale }],
+        }}
       >
-        <View className="h-full border-r border-slate-200 bg-white">
-          <ScrollView contentContainerClassName="py-1.5">
-            {NAV_ITEMS.map(({ key, label, path, Icon }) => {
-              const active = key === activeKey;
-              const disabled = !path;
+        <View className="w-56 overflow-hidden rounded-xl border border-line bg-surface shadow-lg">
+          {NAV_ITEMS.map(({ key, label, path, Icon }, index) => {
+            const active = key === activeKey;
+            const disabled = !path;
 
-              return (
+            const textClass = active
+              ? "font-semibold text-accent"
+              : disabled
+                ? "text-disabled"
+                : "text-content-2";
+
+            const iconColor = active
+              ? colors.accent
+              : disabled
+                ? colors.disabled
+                : colors.content2;
+
+            return (
+              <View key={key}>
+                {/* Kẻ mảnh giữa các dòng, đúng kiểu ProfileMenu dùng để tách nhóm */}
+                {index > 0 ? <View className="h-px bg-sunken" /> : null}
+
                 <Pressable
-                  key={key}
                   disabled={disabled}
                   onPress={() => onNavigate(path)}
-                  // Viền trái luôn có mặt, chỉ đổi màu — để chữ không nhích
-                  // ngang mỗi lần đổi mục đang chọn.
-                  className={`flex-row items-center gap-2.5 border-l-[3px] px-3 py-2.5 ${
-                    active
-                      ? "border-accent bg-accent/10"
-                      : "border-transparent active:bg-slate-50"
-                  }`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active, disabled }}
+                  className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-sunken"
                 >
-                  <Icon
-                    size={16}
-                    color={active ? "#e8471a" : disabled ? "#cbd5e1" : "#64748b"}
-                  />
-                  <Text
-                    className={`text-[11px] font-semibold uppercase tracking-wider ${
-                      active
-                        ? "text-accent"
-                        : disabled
-                          ? "text-slate-300"
-                          : "text-slate-700"
-                    }`}
-                  >
+                  <Icon size={15} color={iconColor} />
+                  <Text numberOfLines={1} className={`flex-1 text-[13px] ${textClass}`}>
                     {label}
                   </Text>
+
+                  {/* Chấm accent thay cho vạch dọc bên trái: nó nằm gọn trong
+                      dòng nên không làm chữ nhích ngang khi đổi mục đang chọn */}
+                  {active ? (
+                    <View className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  ) : null}
                 </Pressable>
-              );
-            })}
-          </ScrollView>
+              </View>
+            );
+          })}
         </View>
       </Animated.View>
     </View>

@@ -1,7 +1,8 @@
 import { Pressable, TextInput, View } from "react-native";
 import { Search, X } from "lucide-react-native";
 
-import { colors, iconSize } from "../theme/tokens";
+import { iconSize } from "../theme/tokens";
+import { useThemeColors } from "../theme/useThemeColors";
 
 /**
  * Ô tìm kiếm dạng pill, bám ô "Tìm giải đấu..." của trang /event trên web.
@@ -23,22 +24,24 @@ export default function SearchField({
   placeholder = "Tìm kiếm...",
   className = "",
 }) {
+  const colors = useThemeColors();
+
   return (
     <View
-      className={`h-10 flex-row items-center gap-2 rounded-full border border-slate-300 bg-white px-3 ${className}`}
+      className={`h-10 flex-row items-center gap-2 rounded-full border border-line-strong bg-surface px-3 ${className}`}
     >
-      <Search size={iconSize.sm} color={colors.textPlaceholder} />
+      <Search size={iconSize.sm} color={colors.faint} />
 
       <TextInput
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={() => onSubmit?.(value)}
         placeholder={placeholder}
-        placeholderTextColor={colors.textPlaceholder}
+        placeholderTextColor={colors.faint}
         returnKeyType="search"
         autoCapitalize="none"
         autoCorrect={false}
-        className="flex-1 text-sm text-slate-900"
+        className="flex-1 text-sm text-content"
       />
 
       {value ? (
@@ -52,7 +55,7 @@ export default function SearchField({
           hitSlop={12}
           accessibilityLabel="Xoá từ khoá"
         >
-          <X size={iconSize.sm} color={colors.textMuted} />
+          <X size={iconSize.sm} color={colors.muted} />
         </Pressable>
       ) : null}
     </View>

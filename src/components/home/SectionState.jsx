@@ -1,5 +1,7 @@
 import { ActivityIndicator, Text, View } from "react-native";
 
+import { useThemeColors } from "../../theme/useThemeColors";
+
 /**
  * Trạng thái tải / lỗi / rỗng của một khối trên trang chủ.
  *
@@ -7,10 +9,12 @@ import { ActivityIndicator, Text, View } from "react-native";
  * không nên chặn cả màn hình.
  */
 export default function SectionState({ loading, error, emptyMessage }) {
+  const colors = useThemeColors();
+
   if (loading) {
     return (
       <View className="items-center py-8">
-        <ActivityIndicator size="small" color="#1a2a4a" />
+        <ActivityIndicator size="small" color={colors.brand} />
       </View>
     );
   }
@@ -20,7 +24,7 @@ export default function SectionState({ loading, error, emptyMessage }) {
 
   return (
     <View className="py-8">
-      <Text className="text-center text-sm text-slate-400">{message}</Text>
+      <Text className="text-center text-sm text-faint">{message}</Text>
     </View>
   );
 }

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { Redirect, Stack, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AppHeader from "../../src/components/layout/AppHeader";
 import AppDrawer from "../../src/components/layout/AppDrawer";
 import ProfileMenu from "../../src/components/layout/ProfileMenu";
 import { useAuthStore } from "../../src/store/authStore";
+import { useIsDarkMode } from "../../src/theme/useThemeColors";
 
 /** Màn gốc của nhóm — nút trái là hamburger, các màn khác là mũi tên quay lại */
 const ROOT_SCREEN = "home";
@@ -24,6 +26,8 @@ export default function AppLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+
+  const isDark = useIsDarkMode();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -48,7 +52,10 @@ export default function AppLayout() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-surface" edges={["top"]}>
+      {/* Nền header đổi theo chế độ nên chữ trạng thái phải đổi theo */}
+      <StatusBar style={isDark ? "light" : "dark"} />
+
       <AppHeader
         showBack={!isRoot}
         onPressMenu={() => setDrawerOpen(true)}

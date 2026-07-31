@@ -31,7 +31,7 @@ Dựng màn mới: gõ `/new-screen <tên màn>` — chạy đúng quy trình 5 
 ## Ba luật
 
 1. **Web FE là chuẩn giao diện.** Mobile không tự thiết kế. Không có màn tương ứng trên web → hỏi người dùng.
-2. **Không hardcode màu / spacing / cỡ chữ.** Dùng class Tailwind, hoặc `src/theme/tokens.js` khi React Native đòi giá trị JS.
+2. **Không hardcode màu / spacing / cỡ chữ.** Dùng token vai trò (`bg-surface`, `text-content`) thay cho `bg-white`, `text-slate-900` — app có dark mode nên tên màu cứng sẽ sai ở chế độ tối. Màu qua prop JS lấy từ `useThemeColors()`.
 3. **Mỗi màn có dữ liệu phải xử lý đủ 4 trạng thái**: loading, data, empty, error. Một khối lỗi không được kéo sập cả màn.
 
 ## Env

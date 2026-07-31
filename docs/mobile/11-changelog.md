@@ -6,6 +6,136 @@ Không ghi ở đây: chi tiết cách dùng component (xem [08](08-reusable-pat
 
 ---
 
+# 2026-07-29 — Dark mode
+
+Bật dark mode cho toàn bộ nhóm `(app)`. Nhóm `(auth)` khoá ở chế độ Sáng theo yêu cầu.
+
+## Cơ chế
+
+Ba lựa chọn: **Tự động** (theo hệ điều hành, mặc định) · Sáng · Tối. Lưu vào SecureStore.
+
+Giao diện điều khiển là **một dòng trong menu hồ sơ, chạm để xoay vòng** trạng thái. Bản đầu tách thành khối ba nút riêng, nhưng khối đó chen giữa danh sách toàn dòng-chạm-để-điều-hướng làm gãy nhịp đọc và chiếm chỗ gấp ba — đã gộp lại theo góp ý.
+
+Khác web: `themeStore.js` bên đó cố ý luôn mặc định Sáng và bỏ qua cài đặt hệ thống. Trên điện thoại thì ngược lại — người dùng bật dark mode toàn máy sẽ mong app theo.
+
+## Quyết định lớn — token vai trò, không phải `dark:`
+
+Cách phổ biến của Tailwind là `bg-white dark:bg-navy-900`. **Không chọn cách đó.** Thay vào đó định nghĩa biến CSS trong `global.css` và ánh xạ sang tên vai trò trong `tailwind.config.js`:
+
+```
+bg-white      → bg-surface
+bg-slate-50   → bg-canvas
+text-slate-900 → text-content
+border-slate-200 → border-line
+```
+
+Lý do quyết định: dự án còn nhiều màn chưa làm. Với cách `dark:`, mỗi màn mới là một cơ hội quên — và app nửa sáng nửa tối còn tệ hơn không có dark mode. Với token, màn mới tự động đúng.
+
+Bảng token đầy đủ: [01-design-system.md](01-design-system.md), Phần 9.
+
+## Phạm vi thật so với ước lượng của tài liệu
+
+`01-design-system.md` Phần 9 từng viết "khi làm dark mode chỉ cần bổ sung bảng giá trị thứ hai trong `tokens.js`, không phải sửa từng màn". **Sai một nửa** — điều đó chỉ đúng với màu truyền qua prop JS. Phía `className`, mọi màn gõ thẳng `bg-white` / `text-slate-900`, không có gì để đổi.
+
+Thực tế: **442 chỗ ở 51 file**. Đã sửa lại đoạn tài liệu đó.
+
+## Đã xác minh trước khi chuyển hàng loạt
+
+Không chuyển 442 chỗ rồi mới thử. Dựng spike nhỏ trước, bundle, soi CSS output:
+
+- `--c-surface:#fff` ở nhánh sáng
+- `.dark:root{--c-canvas:#0a1220;--c-surface:#0d1b2e}` ở nhánh tối
+- `.bg-surface{background-color:var(--c-surface)}` trỏ đúng biến
+
+Spike xong mới chuyển. Nếu NativeWind 4.2.6 không hỗ trợ biến CSS thì đã phải đổi hướng ngay từ đầu.
+
+## Bẫy đã gặp và cách xử lý
+
+**1. `Input`/`Button` dùng chung giữa auth và app.** Auth khoá sáng nhưng dùng chung component với app — nếu component đổi theo chế độ thì màn đăng nhập thành nửa sáng nửa tối.
+
+Giải: `src/theme/LightThemeScope.jsx` khoá cả cây con. Phải khoá **hai đường**:
+- `vars()` của NativeWind cho `className`;
+- `ThemeLockContext` cho màu truyền qua prop JS — `vars()` không với tới được chúng.
+
+Thiếu vế thứ hai thì icon lấy màu tối trong khi nền quanh nó đã sáng.
+
+**2. StatusBar ở gốc là sai.** Nhóm auth luôn sáng nên chữ trạng thái phải luôn tối; nhóm app thì đổi theo chế độ. Để chung một cái ở gốc sẽ ra chữ trắng trên nền trắng ở màn đăng nhập khi app đang tối. Đã tách xuống từng nhóm layout.
+
+**3. `brand` phải sáng lên ở chế độ tối.** Navy-700 đặt trên nền `#0A1220` gần như chìm hẳn — icon và spinner sẽ không nhìn ra. Chế độ tối dùng `#8FB0DC`.
+
+**4. Nút `light`/`ghost` không được dùng token.** Chúng nằm trên nền đã tối sẵn ở cả hai chế độ; đổi theo chế độ thì nút trắng sẽ tan vào nền. Đã hoàn nguyên `active:bg-slate-200` cho variant `light` sau khi script đổi nhầm.
+
+## Kiểm chứng đã chạy
+
+- Bundle web sạch; CSS output có đủ cả hai nhánh biến và 16 class token.
+- Quét: không còn `slate-*` ngoài nhóm auth; không còn `import { colors }` tĩnh.
+- Quét: mọi `colors.` đều nằm sau một lời gọi `useThemeColors()`, kể cả trong component con định nghĩa ở cấp module (`InfoTab` có ba component như vậy).
+- Auth vẫn giữ class gốc — xác nhận script không đụng nhầm.
+
+## Chưa chạy trên máy thật
+
+Ba thứ chỉ kiểm được trên thiết bị:
+
+- **Chế độ "Tự động" có thật sự bám hệ điều hành không** — `colorScheme.set("system")` là API đúng theo type của NativeWind, nhưng chưa thấy nó phản ứng khi đổi cài đặt máy.
+- **Đổi chế độ có mượt không**, hay có nháy một nhịp khi hàng loạt màn re-render.
+- **Độ tương phản thật của bảng màu tối** trên màn hình OLED ngoài nắng.
+
+## Lỗi đã gặp khi chạy thử: "dark mode is type 'media'"
+
+Lần chạy đầu trên bản web ném lỗi:
+
+```
+Cannot manually set color scheme, as dark mode is type 'media'.
+Please use StyleSheet.setFlag('darkMode', 'class')
+```
+
+**Nguyên nhân:** NativeWind nhét kiểu dark mode vào CSS đã biên dịch dưới dạng biến `--css-interop-darkMode`, và `runtime/web/color-scheme.js` đọc biến đó **đúng một lần lúc nạp module**. Metro còn cache bản CSS dựng trước khi `tailwind.config.js` có `darkMode: "class"`, nên runtime vẫn thấy `media`.
+
+**Chữa gốc:** `npx expo start --clear`. Bản build kiểm lại cho ra `--css-interop-darkMode:class dark` — cấu hình đúng, chỉ là chưa tới được runtime.
+
+**Chữa thêm ở code:** bọc `colorScheme.set` trong try/catch. Đổi màu là việc trang trí, không được phép làm sập app. `themeReady` cũng phải bật kể cả khi đặt chế độ thất bại, nếu không người dùng kẹt vĩnh viễn ở màn loading.
+
+Bản native không dính lỗi này — `native/appearance-observables.js` gọi thẳng `Appearance.setColorScheme()`, không đọc flag.
+
+**Bài học:** sửa `tailwind.config.js` thì phải xoá cache Metro. Đã ghi vào [06-agent.md](06-agent.md).
+
+## Lỗi thứ hai, nghiêm trọng hơn: `userInterfaceStyle` khoá cứng ở "light"
+
+`app.json` có `"userInterfaceStyle": "light"` từ trước. Nó bảo hệ điều hành rằng app **chỉ hỗ trợ chế độ sáng**, nên `Appearance.getColorScheme()` trên máy thật luôn trả `"light"` bất kể cài đặt của người dùng.
+
+Hệ quả nếu không sửa: **dark mode không bao giờ chạy trên native**, kể cả khi mọi thứ khác đã đúng. Chế độ "Tự động" luôn ra sáng, và `colorScheme.set("dark")` cũng bị hệ điều hành ghi đè.
+
+Đã đổi thành `"automatic"`.
+
+Đây là lỗi tôi bỏ sót ở lượt làm dark mode — chỉ lộ ra khi chạy thử. Bài học: **làm dark mode thì phải kiểm `app.json`**, không chỉ `tailwind.config.js`.
+
+## Đã thử và loại: `app/+html.jsx`
+
+Có cân nhắc khai biến `--css-interop-darkMode` thẳng trong HTML tĩnh để nó có mặt trước khi bundle chạy. **Không dùng được**: dự án để `web.output` mặc định (`single`), và bản export chứng minh expo-router bỏ qua `+html.jsx` ở chế độ đó — HTML sinh ra vẫn là template mặc định. Cách này chỉ có tác dụng khi `web.output` là `static`.
+
+## Gộp khuôn hai lớp phủ của header
+
+`AppDrawer` (trái) trước đây là panel cao hết màn hình trượt từ mép trái, còn `ProfileMenu` (phải) là thẻ nổi bo góc. Hai lớp phủ mở ra từ **cùng một thanh header** mà trông như hai thành phần của hai app khác nhau.
+
+Đã cho drawer dùng chung khuôn với ProfileMenu: cùng thẻ `w-56` bo góc, cùng cỡ chữ `text-[13px]`, cùng khoảng đệm `px-3 py-2.5`, cùng kiểu bung ra (scale + trượt dọc), cùng độ mờ nền `bg-black/20`.
+
+Hai thay đổi kèm theo:
+
+- **Bỏ chữ IN HOA giãn ký tự** ở nhãn mục — `navItems.js` vốn đã viết hoa đầu từ ("Tin Mới Nhất"), ép uppercase nữa là thừa và làm nhãn dài ra.
+- **Mục đang mở** đổi từ vạch dọc bên trái sang chữ + icon accent kèm một chấm tròn cuối dòng. Vạch dọc phải luôn chiếm chỗ (kể cả khi trong suốt) để chữ không nhích ngang; chấm cuối dòng không có vấn đề đó.
+
+Sửa một trong hai file thì phải sửa cả file kia — đã ghi vào [07-web-mapping.md](07-web-mapping.md).
+
+## Nợ để lại
+
+| Chỗ | Vấn đề |
+|---|---|
+| `shadow` trong `tokens.js` | Bóng đen trên nền tối gần như không thấy; lớp nổi hiện chỉ nhận biết bằng nền sáng hơn |
+| `src/constants/tournament.js` | Badge vẫn hardcode hex. Nền đặc chữ trắng nên đọc được ở cả hai chế độ, chưa gấp |
+| Ảnh hero | Lớp phủ tối cố định, ở chế độ tối có thể muốn đậm hơn |
+
+---
+
 # 2026-07-29 — Sáu màn công khai
 
 Dựng xong toàn bộ nhóm màn công khai mà web đang có: giải đấu, tin tức, cơ sở. Cộng thêm làm lại màn hồ sơ cho đủ chức năng như web.

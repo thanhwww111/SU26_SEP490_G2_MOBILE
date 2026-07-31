@@ -21,7 +21,7 @@ export default function OptionPicker({
   return (
     <View className={className}>
       {label ? (
-        <Text className="mb-1 text-xs text-slate-500">{label}</Text>
+        <Text className="mb-1 text-xs text-muted">{label}</Text>
       ) : null}
 
       <View className="flex-row flex-wrap gap-2">
@@ -40,8 +40,8 @@ export default function OptionPicker({
                 active
                   ? "bg-navy-700"
                   : disabled
-                    ? "border border-slate-200 bg-slate-50"
-                    : "border border-slate-300 bg-white active:bg-slate-50"
+                    ? "border border-line bg-canvas"
+                    : "border border-line-strong bg-surface active:bg-sunken"
               }`}
             >
               <Text
@@ -49,8 +49,8 @@ export default function OptionPicker({
                   active
                     ? "font-semibold text-white"
                     : disabled
-                      ? "text-slate-300"
-                      : "text-slate-700"
+                      ? "text-disabled"
+                      : "text-content-2"
                 }`}
               >
                 {option.label}

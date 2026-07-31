@@ -6,7 +6,7 @@ import RemoteImage from "../home/RemoteImage";
 import AppFooter from "../layout/AppFooter";
 import * as newsApi from "../../api/newsApi";
 import { fmtDateShort } from "../../utils/date";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Chi tiết bài viết, bám trang /news/:slug của FE web.
@@ -19,6 +19,8 @@ import { colors } from "../../theme/tokens";
  * đã có nút quay lại.
  */
 export default function NewsDetail({ slug }) {
+  const colors = useThemeColors();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,7 +50,7 @@ export default function NewsDetail({ slug }) {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator size="small" color={colors.brand} />
       </View>
     );
@@ -56,15 +58,15 @@ export default function NewsDetail({ slug }) {
 
   if (error || !post) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-white px-4">
-        <Text className="text-center text-sm text-slate-500">
+      <View className="flex-1 items-center justify-center gap-4 bg-surface px-4">
+        <Text className="text-center text-sm text-muted">
           {error || "Không tìm thấy bài viết."}
         </Text>
         <Pressable
           onPress={load}
-          className="rounded-full border border-slate-300 bg-white px-5 py-2.5 active:bg-slate-50"
+          className="rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
         >
-          <Text className="text-sm font-semibold text-slate-700">Thử lại</Text>
+          <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
         </Pressable>
       </View>
     );
@@ -73,7 +75,7 @@ export default function NewsDetail({ slug }) {
   const publishedAt = fmtDateShort(post.publishedAt);
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView className="flex-1 bg-surface">
       <View className="gap-3 px-4 pt-6">
         {post.categoryName ? (
           <Text className="text-overline font-bold uppercase text-accent">
@@ -81,12 +83,12 @@ export default function NewsDetail({ slug }) {
           </Text>
         ) : null}
 
-        <Text className="text-2xl font-black leading-8 text-navy-900">
+        <Text className="text-2xl font-black leading-8 text-content">
           {post.title}
         </Text>
 
         {publishedAt ? (
-          <Text className="text-sm text-slate-400">{publishedAt}</Text>
+          <Text className="text-sm text-faint">{publishedAt}</Text>
         ) : null}
       </View>
 
@@ -101,8 +103,8 @@ export default function NewsDetail({ slug }) {
       {post.tags?.length > 0 ? (
         <View className="flex-row flex-wrap gap-2 px-4 pt-6">
           {post.tags.map((tag) => (
-            <View key={tag} className="rounded-full bg-slate-100 px-3 py-1">
-              <Text className="text-xs text-slate-600">#{tag}</Text>
+            <View key={tag} className="rounded-full bg-sunken px-3 py-1">
+              <Text className="text-xs text-content-2">#{tag}</Text>
             </View>
           ))}
         </View>

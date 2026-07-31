@@ -14,9 +14,9 @@ import { fmtDateTime } from "../../utils/date";
 /** Một dòng "nhãn — giá trị"; giá trị dài thì xuống dòng chứ không bị cắt */
 function InfoRow({ label, value }) {
   return (
-    <View className="flex-row items-start justify-between gap-4 border-b border-slate-100 py-2.5">
-      <Text className="text-sm text-slate-500">{label}</Text>
-      <Text className="flex-1 text-right text-sm font-medium text-slate-900">
+    <View className="flex-row items-start justify-between gap-4 border-b border-line-soft py-2.5">
+      <Text className="text-sm text-muted">{label}</Text>
+      <Text className="flex-1 text-right text-sm font-medium text-content">
         {value || "—"}
       </Text>
     </View>
@@ -25,7 +25,7 @@ function InfoRow({ label, value }) {
 
 function SectionTitle({ children }) {
   return (
-    <Text className="mb-1 text-overline font-semibold uppercase text-slate-400">
+    <Text className="mb-1 text-overline font-semibold uppercase text-faint">
       {children}
     </Text>
   );
@@ -92,7 +92,7 @@ export default function RegistrationDetailSection({ registrationId, onCancelled 
 
   if (loading || error || !detail) {
     return (
-      <View className="flex-1 bg-slate-50 px-4">
+      <View className="flex-1 bg-canvas px-4">
         <SectionState
           loading={loading}
           error={error}
@@ -106,12 +106,12 @@ export default function RegistrationDetailSection({ registrationId, onCancelled 
   const fieldValues = detail.fieldValues || [];
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-canvas">
       <ScrollView className="flex-1">
         <View className="gap-5 px-4 pb-8 pt-6">
           {/* Khối đầu: giải nào, đang ở trạng thái gì */}
-          <View className="rounded-xl border border-slate-200 bg-white p-4">
-            <Text numberOfLines={3} className="mb-2.5 text-base font-bold leading-snug text-slate-900">
+          <View className="rounded-xl border border-line bg-surface p-4">
+            <Text numberOfLines={3} className="mb-2.5 text-base font-bold leading-snug text-content">
               {detail.tournamentName}
             </Text>
             <RegistrationStatusBadge status={detail.status} />
@@ -128,7 +128,7 @@ export default function RegistrationDetailSection({ registrationId, onCancelled 
             ) : null}
           </View>
 
-          <View className="rounded-xl border border-slate-200 bg-white p-4">
+          <View className="rounded-xl border border-line bg-surface p-4">
             <SectionTitle>Thông tin đăng ký</SectionTitle>
             <InfoRow label="Người đăng ký" value={detail.playerFullName} />
             <InfoRow label="Số điện thoại" value={detail.playerPhone} />
@@ -137,7 +137,7 @@ export default function RegistrationDetailSection({ registrationId, onCancelled 
           </View>
 
           {fieldValues.length > 0 ? (
-            <View className="rounded-xl border border-slate-200 bg-white p-4">
+            <View className="rounded-xl border border-line bg-surface p-4">
               <SectionTitle>Thông tin đã điền</SectionTitle>
               {fieldValues.map((fv) => (
                 <InfoRow key={fv.fieldKey} label={fv.label || fv.fieldKey} value={fv.value} />

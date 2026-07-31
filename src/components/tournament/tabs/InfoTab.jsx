@@ -18,7 +18,8 @@ import { participantTypeLabel } from "../../../constants/tournament";
 import { fmtCurrency } from "../../../utils/format";
 import { fmtDateTime } from "../../../utils/date";
 import { useAuthStore } from "../../../store/authStore";
-import { colors, iconSize } from "../../../theme/tokens";
+import { iconSize } from "../../../theme/tokens";
+import { useThemeColors } from "../../../theme/useThemeColors";
 
 const SEEDING_LABELS = {
   RANDOM: "Ngẫu nhiên",
@@ -55,17 +56,17 @@ const SlotBar = ({ approved, max }) => {
   return (
     <View className="gap-2">
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm text-slate-500">Đã đăng ký</Text>
+        <Text className="text-sm text-muted">Đã đăng ký</Text>
         <Text className={`text-sm font-semibold ${textColor}`}>
           {full ? "Đã đủ người" : `Còn ${remaining} slot`}
         </Text>
       </View>
 
-      <View className="h-2 overflow-hidden rounded-full bg-slate-100">
+      <View className="h-2 overflow-hidden rounded-full bg-sunken">
         <View className={`h-full rounded-full ${barColor}`} style={{ width: `${percent}%` }} />
       </View>
 
-      <Text className="text-xs text-slate-400">
+      <Text className="text-xs text-faint">
         {approved} / {max} người
       </Text>
     </View>
@@ -73,30 +74,38 @@ const SlotBar = ({ approved, max }) => {
 };
 
 /** Ô thông tin nhỏ trong lưới hai cột */
-const StatBox = ({ Icon, label, value }) => (
-  <View className="flex-1 rounded-lg border border-slate-200 bg-slate-50 p-3">
-    <View className="mb-1 flex-row items-center gap-1.5">
-      <Icon size={12} color={colors.textPlaceholder} />
-      <Text className="text-overline font-bold uppercase text-slate-400">{label}</Text>
+const StatBox = ({ Icon, label, value }) => {
+  const colors = useThemeColors();
+
+  return (
+    <View className="flex-1 rounded-lg border border-line bg-canvas p-3">
+      <View className="mb-1 flex-row items-center gap-1.5">
+        <Icon size={12} color={colors.faint} />
+        <Text className="text-overline font-bold uppercase text-faint">{label}</Text>
+      </View>
+      <Text numberOfLines={2} className="text-sm font-bold text-content">
+        {value}
+      </Text>
     </View>
-    <Text numberOfLines={2} className="text-sm font-bold text-slate-900">
-      {value}
-    </Text>
-  </View>
-);
+  );
+};
 
 /** Một mốc thời gian trong khối "Thời gian" */
-const TimeRow = ({ Icon, label, value }) => (
-  <View className="flex-row items-start gap-3">
-    <View className="h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
-      <Icon size={14} color={colors.brand} />
+const TimeRow = ({ Icon, label, value }) => {
+  const colors = useThemeColors();
+
+  return (
+    <View className="flex-row items-start gap-3">
+      <View className="h-8 w-8 items-center justify-center rounded-lg bg-sunken">
+        <Icon size={14} color={colors.brand} />
+      </View>
+      <View className="flex-1">
+        <Text className="text-overline font-bold uppercase text-faint">{label}</Text>
+        <Text className="mt-0.5 text-sm font-semibold text-content">{value || "—"}</Text>
+      </View>
     </View>
-    <View className="flex-1">
-      <Text className="text-overline font-bold uppercase text-slate-400">{label}</Text>
-      <Text className="mt-0.5 text-sm font-semibold text-slate-900">{value || "—"}</Text>
-    </View>
-  </View>
-);
+  );
+};
 
 /**
  * Khối kêu gọi đăng ký ở đầu tab, bám banner CTA của web.
@@ -107,6 +116,7 @@ const TimeRow = ({ Icon, label, value }) => (
  * 01-design-system.md cấm để nút bấm vào mà không phản ứng.
  */
 const RegistrationBanner = ({ tournament, myRegistration, isPlayer, onOpenMyRegistrations }) => {
+  const colors = useThemeColors();
   const approved = tournament.approvedCount ?? 0;
   const max = tournament.maxParticipants ?? 0;
   const remaining =
@@ -335,7 +345,7 @@ export default function InfoTab({ tournament, onOpenMyRegistrations }) {
         </View>
 
         {tournament.prizeDescription ? (
-          <Text className="mt-3 border-t border-slate-100 pt-3 text-sm leading-6 text-slate-600">
+          <Text className="mt-3 border-t border-line-soft pt-3 text-sm leading-6 text-content-2">
             {tournament.prizeDescription}
           </Text>
         ) : null}
@@ -347,12 +357,12 @@ export default function InfoTab({ tournament, onOpenMyRegistrations }) {
             {formatRows.map((row) => (
               <View
                 key={row.label}
-                className="flex-row items-center justify-between border-b border-slate-100 py-2"
+                className="flex-row items-center justify-between border-b border-line-soft py-2"
               >
-                <Text className="text-sm text-slate-500">{row.label}</Text>
+                <Text className="text-sm text-muted">{row.label}</Text>
                 <Text
                   numberOfLines={1}
-                  className="flex-1 text-right text-sm font-semibold text-slate-900"
+                  className="flex-1 text-right text-sm font-semibold text-content"
                 >
                   {row.value}
                 </Text>
@@ -364,11 +374,11 @@ export default function InfoTab({ tournament, onOpenMyRegistrations }) {
 
       {tournament.venueName || tournament.venue?.name ? (
         <SectionCard title="Địa điểm">
-          <Text className="text-sm font-semibold text-slate-900">
+          <Text className="text-sm font-semibold text-content">
             {tournament.venueName || tournament.venue?.name}
           </Text>
           {tournament.venueAddress || tournament.venue?.address ? (
-            <Text className="mt-1 text-sm leading-6 text-slate-600">
+            <Text className="mt-1 text-sm leading-6 text-content-2">
               {tournament.venueAddress || tournament.venue?.address}
             </Text>
           ) : null}
@@ -377,7 +387,7 @@ export default function InfoTab({ tournament, onOpenMyRegistrations }) {
 
       {tournament.description ? (
         <SectionCard title="Giới thiệu">
-          <Text className="text-sm leading-6 text-slate-600">
+          <Text className="text-sm leading-6 text-content-2">
             {tournament.description}
           </Text>
         </SectionCard>

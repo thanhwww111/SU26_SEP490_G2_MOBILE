@@ -1,6 +1,9 @@
 import { Pressable, Text, View } from "react-native";
 import { ChevronLeft, Menu, User } from "lucide-react-native";
 
+import { useThemeColors } from "../../theme/useThemeColors";
+import { iconSize } from "../../theme/tokens";
+
 /**
  * Thanh trên cùng của mọi màn trong nhóm (app).
  *
@@ -18,22 +21,27 @@ export default function AppHeader({
   onPressLogo,
   onPressProfile,
 }) {
+  const colors = useThemeColors();
+
   return (
-    <View className="h-14 flex-row items-center justify-between border-b border-slate-200 bg-white px-2">
+    <View className="h-14 flex-row items-center justify-between border-b border-line bg-surface px-2">
       <Pressable
         onPress={showBack ? onPressBack : onPressMenu}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        className="h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
+        className="h-10 w-10 items-center justify-center rounded-full active:bg-sunken-strong"
+        accessibilityLabel={showBack ? "Quay lại" : "Mở menu"}
       >
         {showBack ? (
-          <ChevronLeft size={24} color="#1a2a4a" />
+          <ChevronLeft size={iconSize.lg} color={colors.content} />
         ) : (
-          <Menu size={22} color="#1a2a4a" />
+          <Menu size={iconSize.md} color={colors.content} />
         )}
       </Pressable>
 
       <Pressable onPress={onPressLogo} className="px-2 py-1 active:opacity-60">
-        <Text className="text-xl font-black uppercase italic tracking-tighter text-navy-700">
+        {/* Chữ logo dùng token chữ chính chứ không phải navy cứng: ở chế độ tối
+            nền header là navy sẫm, chữ navy sẽ chìm hẳn vào nền */}
+        <Text className="text-xl font-black uppercase italic tracking-tighter text-content">
           capstone<Text className="text-accent">.</Text>
         </Text>
       </Pressable>
@@ -41,10 +49,11 @@ export default function AppHeader({
       <Pressable
         onPress={onPressProfile}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        className="h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
+        className="h-10 w-10 items-center justify-center rounded-full active:bg-sunken-strong"
+        accessibilityLabel="Mở menu hồ sơ"
       >
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100">
-          <User size={17} color="#1a2a4a" />
+        <View className="h-8 w-8 items-center justify-center rounded-full bg-sunken">
+          <User size={iconSize.sm} color={colors.content} />
         </View>
       </Pressable>
     </View>

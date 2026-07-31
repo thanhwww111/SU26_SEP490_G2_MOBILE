@@ -60,15 +60,15 @@ export default function ConfirmSheet({
         ]}
       >
         <View
-          className="rounded-t-2xl bg-white px-6 pt-5"
+          className="rounded-t-2xl bg-surface px-6 pt-5"
           style={{ paddingBottom: insets.bottom + 20 }}
         >
           {/* Tay nắm chỉ để báo hiệu đây là lớp trượt lên, không kéo được */}
-          <View className="mb-4 h-1 w-10 self-center rounded-full bg-slate-200" />
+          <View className="mb-4 h-1 w-10 self-center rounded-full bg-sunken-strong" />
 
-          <Text className="text-base font-bold text-slate-900">{title}</Text>
+          <Text className="text-base font-bold text-content">{title}</Text>
           {message ? (
-            <Text className="mt-2 text-sm leading-5 text-slate-600">{message}</Text>
+            <Text className="mt-2 text-sm leading-5 text-content-2">{message}</Text>
           ) : null}
 
           <View className="mt-6 gap-3">

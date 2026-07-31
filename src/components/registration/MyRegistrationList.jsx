@@ -7,7 +7,7 @@ import SectionState from "../home/SectionState";
 import AppFooter from "../layout/AppFooter";
 import * as registrationApi from "../../api/playerRegistrationApi";
 import { DEFAULT_PAGE_SIZE } from "../../utils/pagination";
-import { colors } from "../../theme/tokens";
+import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
  * Danh sách đăng ký giải của người dùng đang đăng nhập.
@@ -24,6 +24,8 @@ import { colors } from "../../theme/tokens";
  * ở cuối vẫn chạy hết bề ngang màn hình như trên web.
  */
 export default function MyRegistrationList({ onPressItem }) {
+  const colors = useThemeColors();
+
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -101,7 +103,7 @@ export default function MyRegistrationList({ onPressItem }) {
 
   return (
     <FlatList
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-canvas"
       data={items}
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
@@ -112,8 +114,8 @@ export default function MyRegistrationList({ onPressItem }) {
       ItemSeparatorComponent={() => <View className="h-3" />}
       ListHeaderComponent={
         <View className="px-4 pb-4 pt-6">
-          <Text className="text-2xl font-bold text-slate-900">Đăng ký của tôi</Text>
-          <Text className="mt-1 text-sm text-slate-500">
+          <Text className="text-2xl font-bold text-content">Đăng ký của tôi</Text>
+          <Text className="mt-1 text-sm text-muted">
             Lịch sử và trạng thái các đăng ký giải đấu
           </Text>
         </View>

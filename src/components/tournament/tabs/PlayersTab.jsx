@@ -72,10 +72,10 @@ export default function PlayersTab({ tournamentId }) {
         placeholder="Tìm cơ thủ..."
       />
 
-      <View className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <View className="overflow-hidden rounded-xl border border-line bg-surface">
         {filtered.length === 0 ? (
           <View className="py-8">
-            <Text className="text-center text-sm text-slate-400">
+            <Text className="text-center text-sm text-faint">
               Không tìm thấy cơ thủ.
             </Text>
           </View>
@@ -86,7 +86,7 @@ export default function PlayersTab({ tournamentId }) {
             return (
               <View
                 key={participant.id}
-                className="flex-row items-center gap-3 border-b border-slate-100 px-4 py-3"
+                className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3"
               >
                 {/* Backend đặt tên trường là `avtarUrl`, không phải `avatarUrl` */}
                 <PlayerAvatar
@@ -102,14 +102,14 @@ export default function PlayersTab({ tournamentId }) {
                       className="flex-shrink"
                     />
                     {eliminated ? (
-                      <Text className="rounded-full bg-slate-100 px-2 py-0.5 text-overline font-bold uppercase text-slate-500">
+                      <Text className="rounded-full bg-sunken px-2 py-0.5 text-overline font-bold uppercase text-muted">
                         Bị loại
                       </Text>
                     ) : null}
                   </View>
 
                   {participant.seedNo ? (
-                    <Text className="mt-1 text-xs text-slate-400">
+                    <Text className="mt-1 text-xs text-faint">
                       Hạt giống #{participant.seedNo}
                     </Text>
                   ) : null}
@@ -120,7 +120,7 @@ export default function PlayersTab({ tournamentId }) {
         )}
 
         <View className="px-4 py-2.5">
-          <Text className="text-right text-xs text-slate-400">
+          <Text className="text-right text-xs text-faint">
             {filtered.length} / {participants.length} cơ thủ
           </Text>
         </View>
