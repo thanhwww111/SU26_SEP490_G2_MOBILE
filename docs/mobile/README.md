@@ -29,6 +29,7 @@ Bộ tài liệu chuẩn cho app mobile. Mục tiêu: mọi màn mới, dù ai l
 | [09-backend-reference.md](09-backend-reference.md) | Endpoint và enum trạng thái, trích từ controller thật. | Tiếng Việt |
 | [10-data-contracts.md](10-data-contracts.md) | Shape DTO thật: response có field gì, request cần gì. | Tiếng Việt |
 | [11-changelog.md](11-changelog.md) | Nhật ký: màn nào đã dựng, quyết định gì, còn nợ gì. | Tiếng Việt |
+| [12-payos-test-checklist.md](12-payos-test-checklist.md) | Bảy kịch bản phải tự tay chạy trên máy thật trước khi phát hành bản có thanh toán. | Tiếng Việt |
 
 Spec của từng tính năng nằm riêng ở `docs/superpowers/specs/`.
 
@@ -52,6 +53,7 @@ Slash command (`.claude/commands/new-screen.md`) chạy đúng quy trình: tra w
 | "Nhãn tiếng Việt của `PENDING_PAYMENT`?" | [09](09-backend-reference.md) |
 | "Màu nút chính là gì?" | [01](01-design-system.md) |
 | "Bắt đầu màn mới từ đâu?" | [05](05-screen-template.md) |
+| "Sắp phát hành bản có thanh toán, phải thử gì?" | [12](12-payos-test-checklist.md) |
 
 ---
 

@@ -12,6 +12,15 @@ export const register = (body) => axiosClient.post("/auth/register", body);
 export const forgotPassword = (body) =>
   axiosClient.post("/auth/forgot-password", body);
 
+/**
+ * POST /auth/verify-otp — body: { email, otp }
+ *
+ * Chỉ kiểm mã, chưa đổi mật khẩu. Nhờ bước này người dùng gõ nhầm OTP biết ngay
+ * thay vì phải điền xong cả mật khẩu mới rồi mới bị báo sai — web tách đúng như
+ * vậy ở `ForgotPasswordPage`.
+ */
+export const verifyOtp = (body) => axiosClient.post("/auth/verify-otp", body);
+
 /** POST /auth/reset-password — body: { email, otp, newPassword } */
 export const resetPassword = (body) =>
   axiosClient.post("/auth/reset-password", body);

@@ -45,8 +45,8 @@ export default function ForgotPasswordScreen() {
       if (!data.success) {
         throw new Error(data.message || "Không thể gửi OTP.");
       }
-      // Màn đặt lại mật khẩu cần email để gửi kèm khi xác nhận OTP
-      router.push({ pathname: "/reset-password", params: { email } });
+      // Bước 2 cần email để gửi kèm khi xác thực OTP
+      router.push({ pathname: "/verify-otp", params: { email } });
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {

@@ -7,6 +7,8 @@ import Button from "../Button";
 import FormError from "../auth/FormError";
 import FormSuccess from "../auth/FormSuccess";
 import * as authApi from "../../api/authApi";
+import { useAuthStore } from "../../store/authStore";
+import { persistCredentials } from "../../utils/auth";
 import { MIN_PASSWORD_LENGTH } from "../../utils/validators";
 import { iconSize } from "../../theme/tokens";
 import { useThemeColors } from "../../theme/useThemeColors";
@@ -102,6 +104,14 @@ export default function ChangePasswordCard({ disabled = false }) {
         oldPassword: form.oldPassword,
         newPassword: form.newPassword,
       });
+
+      // Mật khẩu cũ đang được giữ trên máy để tự lấy phiên mới khi JWT hết hạn — không cập nhật
+      // thì lần hết hạn sau việc đăng nhập ngầm sẽ hỏng và người dùng bị đá ra màn Login.
+      const email = useAuthStore.getState().user?.email;
+      if (email) {
+        await persistCredentials({ email, password: form.newPassword });
+      }
+
       reset();
       setOpen(false);
       setSuccess("Đổi mật khẩu thành công.");

@@ -1,22 +1,27 @@
-import { Newspaper, Radio, Trophy, MapPin, BarChart3, Users } from "lucide-react-native";
+import { Newspaper, Trophy, MapPin, BarChart3 } from "lucide-react-native";
 
 /**
- * Mục điều hướng của drawer — đúng 6 mục trong NAV_ITEMS của Header web,
- * kể cả thứ tự. Trang chủ không nằm ở đây: bên web về trang chủ bằng cách bấm
- * logo, mobile cũng vậy (logo giữa AppHeader).
+ * Mục điều hướng của drawer — đúng NAV_ITEMS của Header web, kể cả thứ tự.
+ * Trang chủ không nằm ở đây: bên web về trang chủ bằng cách bấm logo, mobile
+ * cũng vậy (logo giữa AppHeader).
  *
- * `path: null` = màn chưa dựng trên mobile. Bên web ba mục cũng để null; ở đây
- * còn nhiều hơn vì mobile mới có home với profile. Mục null vẫn hiện trong
- * drawer nhưng làm mờ và bấm không ăn — bỏ hẳn thì người dùng không thấy được
- * app sẽ có những gì, mà cho bấm thì expo-router văng lỗi không tìm thấy route.
+ * `key` PHẢI trùng segment cuối của route: `app/(app)/_layout.jsx` lấy segment
+ * đó làm `activeKey` để tô mục đang mở.
  *
- * Khi thêm màn mới: dựng file trong app/(app)/ rồi điền path vào đây là xong.
+ * Danh sách này cũng là nguồn cho các link ở AppFooter — thêm màn mới ở đây là
+ * cả drawer lẫn footer có luôn, không phải sửa hai nơi.
+ *
+ * Trước 2026-08-06 còn hai mục nữa: "Tỷ Số Trực Tiếp" và "Cơ Thủ", để `path:
+ * null` và làm mờ trong drawer. Web đã bỏ cả hai khỏi thanh điều hướng (xem
+ * `FE/src/components/layouts/Header.jsx`), nên mobile bỏ theo cho khớp.
+ *
+ * Nếu sau này lại có mục chưa dựng màn: `path: null` vẫn được `AppDrawer` xử lý
+ * — hiện mờ và bấm không ăn. Bỏ hẳn thì người dùng không biết app sẽ có gì, mà
+ * cho bấm thì expo-router văng lỗi không tìm thấy route.
  */
 export const NAV_ITEMS = [
   { key: "news", label: "Tin Mới Nhất", path: "/(app)/news", Icon: Newspaper },
-  { key: "live", label: "Tỷ Số Trực Tiếp", path: null, Icon: Radio },
   { key: "event", label: "Giải Đấu", path: "/(app)/event", Icon: Trophy },
   { key: "branches", label: "Cơ Sở", path: "/(app)/branches", Icon: MapPin },
-  { key: "ranking", label: "Bảng Xếp Hạng", path: null, Icon: BarChart3 },
-  { key: "players", label: "Cơ Thủ", path: null, Icon: Users },
+  { key: "rankings", label: "Bảng Xếp Hạng", path: "/(app)/rankings", Icon: BarChart3 },
 ];

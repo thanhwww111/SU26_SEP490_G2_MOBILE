@@ -6,6 +6,292 @@ Không ghi ở đây: chi tiết cách dùng component (xem [08](08-reusable-pat
 
 ---
 
+# 2026-08-08 (b) — Ba khác biệt cuối cùng bị xoá bỏ
+
+Ba chỗ trước đây được ghi là "khác web có chủ ý" nay làm cho giống hẳn, theo yêu cầu của nhóm. **Thêm hai thư viện** — pull về nhớ `npm install`.
+
+## 1. Quên mật khẩu: 2 màn → 3 bước như web
+
+Thêm `verify-otp.jsx` giữa `forgot-password` và `reset-password`, dùng endpoint `/auth/verify-otp` mà trước đây mobile bỏ không.
+
+Trước: OTP và mật khẩu mới điền chung một màn, gõ nhầm OTP thì phải điền lại cả mật khẩu. Nay sai OTP biết ngay ở bước 2.
+
+Web gộp ba bước trong một trang bằng biến `step`; mobile tách ba màn vì nút Quay lại của hệ điều hành phải lùi từng bước — gộp một màn thì bấm Quay lại là văng khỏi cả luồng. OTP chuyển tiếp sang bước 3 qua tham số route (backend cần cả `otp` lẫn `newPassword` trong một lời gọi). Vào thẳng bước 3 mà thiếu tham số thì bị đẩy về bước 1.
+
+## 2. Ngày sinh: ô gõ tay → bộ chọn ngày của hệ điều hành
+
+`@react-native-community/datetimepicker` (8.4.4, bản Expo SDK 54 pin) + `src/components/DateField.jsx`.
+
+**Giá trị vào/ra vẫn là chuỗi `dd/mm/yyyy`**, không phải `Date` — cố ý, để `profileFormUtils` và `dateFieldToIso` không phải sửa gì; hai chỗ đó đã có sẵn phần đổi qua lại với ISO và đã được kiểm.
+
+Hai nền tảng hành xử khác hẳn nên `DateField` phải tách nhánh: Android là hộp thoại hệ thống tự đóng, iOS là view nằm trong màn không tự đóng nên phải tự dựng khung + nút "Xong".
+
+Dùng ở hồ sơ (chặn ngày tương lai) và ở trường `DATE_PICKER` của form đăng ký giải (không chặn — Owner có thể hỏi ngày dự kiến có mặt).
+
+## 3. Tỷ số trực tiếp: poll 15 giây → WebSocket dùng chung với web
+
+`@stomp/stompjs` `^7.3.0` — **đúng version web đang dùng**, để hai bản khách không bao giờ hiểu khác nhau về một bản tin.
+
+Backend khai `/ws` không kèm `.withSockJS()` → WebSocket thuần, không cần `sockjs-client`.
+
+`src/hooks/useTournamentSocket.js` port từ web, thêm hai thứ mà bản web không cần:
+
+- **Theo vòng đời tiền cảnh.** Trình duyệt giữ tab sống khi người dùng chuyển tab; điện thoại thì hệ điều hành cắt socket khi app xuống nền. Không xử lý thì người dùng mở lại app thấy tỷ số đứng im mà tưởng trận chưa đánh. Hook tự ngắt khi xuống nền, nối lại khi quay lại.
+- **`forceBinaryWSFrames` + `appendMissingNULLonIncoming`.** Bản WebSocket của React Native không xử lý khung văn bản giống trình duyệt; thiếu hai cờ này thì bản tin STOMP bị cắt cụt.
+
+Không cần polyfill `TextEncoder`/`TextDecoder` dù stompjs v7 dùng cả hai: Hermes có sẵn `TextEncoder`, Expo cài `TextDecoder` vào global (`expo/src/winter/runtime.native.ts`). Đã kiểm ở SDK 54 — **nâng SDK thì kiểm lại**.
+
+**Cả tab Trận đấu cũng nghe socket**, không riêng tab Trực tiếp. Nếu chỉ một tab nghe thì cùng một trận sẽ hiện hai tỷ số khác nhau tuỳ người dùng đang mở tab nào. Bảng điểm tự tính lại theo vì nó dựng từ chính mảng `stages` được socket cập nhật.
+
+Nối lại sau khi rớt mạng thì tải lại toàn bộ từ REST — quãng mất kết nối có thể đã lỡ bản tin, đắp từng cái lên trạng thái cũ thì sai âm thầm. `BRACKET_SYNC` cũng tải lại thay vì đắp, vì lúc đó cấu trúc vòng đổi hẳn.
+
+## Chưa chạy trên máy thật
+
+Bundle sạch, nhưng **cả ba mục này đều chỉ kiểm được trên thiết bị**:
+
+- Bộ chọn ngày: hai nhánh Android/iOS khác nhau hoàn toàn, phải thử cả hai.
+- WebSocket: nối được tới IP LAN không, tỷ số có về thật không, và ba nhịp vòng đời (xuống nền → lên lại, rớt mạng → nối lại, đổi tab).
+- Luồng OTP 3 bước: cần email thật để nhận mã.
+
+---
+
+# 2026-08-08 — Khép bốn khoảng cách còn lại so với web
+
+Không có màn nào hoàn toàn mới trừ hồ sơ cơ thủ nhánh `participantId`; đợt này lấp bốn chỗ mobile còn thua web sau khi rà lại toàn bộ nhóm PLAYER.
+
+## 1. Hồ sơ cơ thủ theo `participantId`
+
+`app/(app)/players/participant/[participantId].jsx` + `getParticipantProfile` trong `publicPlayerApi`.
+
+Trước đó tab Cơ thủ và tab Xếp hạng trong chi tiết giải là **chữ chết** — cả hai chỉ cầm `participantId` mà mobile mới có nhánh `userId`. Giờ bấm được cả hai.
+
+`PlayerProfileView` nhận một trong hai khoá. Suất dự giải có gắn tài khoản thì chuyển tiếp sang nhánh `userId` bằng `router.replace` (không phải `push` — `push` sẽ tạo vòng lặp khi bấm Quay lại). Suất do ban tổ chức thêm tay thì `userId` là null, đọc thẳng hồ sơ trong phạm vi giải đó.
+
+## 2. Tab Trận đấu: bảng điểm và bộ lọc
+
+Đổi nguồn từ `/tournaments/{id}/matches` sang **`/tournaments/{id}/stages`**. Lý do: bảng điểm gộp xếp hạng theo thứ tự giai đoạn nên cần `orderNo`, chip giai đoạn cần `name` — mảng matches phẳng không có hai trường đó. Tab Trực tiếp vẫn dùng `/matches`, nó chỉ cần các trận đang đá.
+
+Thêm: chuyển chế độ Lịch đấu / Bảng điểm, chip giai đoạn kèm đếm tiến độ (`3/8`), ô tìm tên cơ thủ, chip lọc vòng. Đủ cả ba bộ lọc của web.
+
+Bảng điểm chỉ hiện khi giải có giai đoạn vòng tròn — giải loại trực tiếp thuần không có gì để tính, bày nút rỗng chỉ làm người dùng bấm hụt.
+
+**`src/utils/standings.js` có test, và test phải chạy được sau mỗi lần sửa.** Thứ tự phân định hạng (thắng → hiệu số → đối đầu trực tiếp → ván thắng → tên) PHẢI khớp `BracketGenerationServiceImpl.computeStageStandings()` của backend; lệch nhau thì khán giả thấy một bảng còn hệ thống loại người theo bảng khác. Chạy: `node scripts/test-standings.js` (25 test).
+
+Đây là lần đầu repo giữ lại file test thay vì xoá sau khi chạy — vì logic này ràng buộc với backend chứ không phải hàm tiện ích thông thường.
+
+## 3. Thanh toán PayOS: chống mất bước đối chiếu
+
+Gom logic trùng ở hai màn vào `src/hooks/usePayOsCheckout.js`.
+
+Lỗi cũ: `openBrowserAsync` chỉ resolve khi người dùng **đóng** trình duyệt. Trả tiền xong rồi bấm Home, hoặc bị hệ điều hành thu hồi bộ nhớ, thì bước đối chiếu bị bỏ lỡ và app hiện trạng thái cũ — người dùng tưởng mình trả hụt. Tiền không mất (webhook PayOS vẫn cập nhật server), nhưng trải nghiệm thì hỏng.
+
+Sửa: ghi mã đơn xuống bộ nhớ **trước khi** mở trình duyệt, rồi đối chiếu lại ở ba thời điểm — trình duyệt đóng, app trở lại tiền cảnh (`AppState`), và hook gắn lần đầu (bắt trường hợp app đã bị đóng hẳn giữa chừng). Khoá bị xoá ngay sau khi đọc nên hai nguồn gọi cùng lúc không đối chiếu hai lần.
+
+## 4. Chi tiết trận trong Lịch thi đấu
+
+`src/components/match/MatchDetailSheet.jsx` — web mở modal chi tiết trận; mobile đổi thành lớp trượt lên, dùng chung khuôn với `ConfirmSheet`. Dải chân thẻ vẫn đi thẳng sang giải đấu, không bắt qua hai bước.
+
+**Dải chữ chạy của trang chủ: đã dựng rồi gỡ bỏ trong cùng ngày.** Ba dải Marquee của web được port sang `Animated.loop`, chạy được, nhưng nhóm chốt là không cần trên mobile — nó là chi tiết trang trí của landing page desktop, đặt lên màn hẹp chỉ tốn chiều cao và tốn pin cho một hoạt ảnh chạy không ngừng. Không dựng lại; xem mục "cố ý không sao chép từ web" ở [07](07-web-mapping.md).
+
+## 5. Hai chỗ sót ra từ đợt rà soát lại
+
+Rà toàn bộ nhóm PLAYER lần hai, đối chiếu từng màn với web, tìm thêm được hai chỗ:
+
+- **Nút "Xem giải đấu" trong chi tiết đăng ký.** Web có trong modal; mobile bỏ vì lúc dựng (2026-08-07) route chi tiết giải chưa có. Route đã có từ 2026-07-29 — comment trong `RegistrationDetailSection` lỗi thời mà không ai để ý. Nay đủ ba hành động như web: thanh toán nốt, xem giải, huỷ.
+- **Nút "Thanh toán" ngay trên thẻ đăng ký.** Web đặt ở dải chân thẻ; mobile bắt vào màn chi tiết mới trả được — thêm một bước cho việc gấp nhất màn này. Nay có luôn trên thẻ, dùng cùng `usePayOsCheckout`. Đây là ngoại lệ cố ý của quy tắc "cả thẻ là một vùng bấm": nút nằm ở dải chân, đủ xa vùng bấm chính.
+
+## Component dùng chung mới
+
+`src/components/ChipRow.jsx` — tách từ định nghĩa cục bộ trong `RankingFilterBar`, giờ dùng ở cả bộ lọc bảng xếp hạng lẫn tab Trận đấu. Có thêm `badge` cho chip giai đoạn.
+
+## Chưa chạy trên máy thật
+
+Cả đợt mới bundle sạch (`npx expo export --platform web`) và chạy test hàm thuần. Hai chỗ chỉ kiểm được trên thiết bị:
+
+- `usePayOsCheckout`: phải thử đúng ba kịch bản rời app giữa lúc thanh toán — xem [12](12-payos-test-checklist.md).
+- Bảng điểm với giải vòng tròn thật — test dùng dữ liệu tự dựng.
+
+---
+
+# 2026-08-07 (b) — Trọn luồng player: đăng ký giải, thanh toán, lịch thi đấu, lịch sử thanh toán
+
+Bốn màn mới, bám đúng các trang tương ứng của FE web. Trước đó app xem được giải nhưng không đăng ký được — `InfoTab` phải thay nút bằng một ghi chú "đang được dựng".
+
+| Màn mới | Web tương ứng |
+|---|---|
+| `app/(app)/register/[id].jsx` | `/player/tournaments/:id/register` |
+| `app/(app)/payments.jsx` | `/player/payments` |
+| `app/(app)/matches.jsx` | `/player/matches` |
+
+Hai mục "Lịch thi đấu" và "Lịch sử thanh toán" trong `ProfileMenu` đã bỏ `path: null`.
+
+## PayOS: vì sao không dùng deep link
+
+`PayOSServiceImpl` đọc `returnUrl` từ **cấu hình server**, không nhận từ client. Nghĩa là PayOS luôn trả người dùng về URL của bản web, không có cách nào bắt nó quay về `btms://` mà không sửa backend.
+
+Cách đi vòng, không phải sửa gì ở backend:
+
+1. Mở `checkoutUrl` bằng `WebBrowser.openBrowserAsync` — trình duyệt trong app, biết được lúc người dùng đóng.
+2. Đóng xong thì gọi `POST /player/payments/confirm-return?orderCode=...`. Endpoint này **hỏi thẳng PayOS** trạng thái đơn chứ không tin lời client, nên gọi nhiều lần hay bỏ ngang giữa chừng đều an toàn.
+3. Tải lại đăng ký để hiện kết quả.
+
+Kể cả bước 2 lỗi cũng không sao — webhook PayOS vẫn cập nhật ở phía server, lời gọi đó chỉ để người dùng thấy kết quả ngay thay vì phải chờ.
+
+## Form đăng ký động
+
+Owner cấu hình trường cho từng giải, nên form phải dựng từ `GET /player/tournaments/{id}/registration-form`. Hai chỗ lệch web do nền tảng:
+
+- `SELECT`/`RADIO` → hàng chip `OptionPicker`, không phải thẻ select: trên điện thoại select bung ra bánh xe che nửa màn.
+- `DATE_PICKER` → ô nhập `dd/mm/yyyy`, vì repo chưa có thư viện chọn ngày. `dateFieldToIso` đổi sang ISO trước khi gửi.
+
+Client chỉ kiểm tra trường bắt buộc; mọi luật còn lại để backend quyết, tránh hai bên lệch nhau.
+
+## Giải miễn phí đi đường khác
+
+`RegistrationServiceImpl` tự xét duyệt ngay trong lời gọi tạo đăng ký khi `entryFee` bằng 0 — không qua PayOS. Nên phản hồi của `POST registrations` có thể đã là `APPROVED` hoặc `REJECTED` (hết suất), màn đăng ký phải xử lý luôn cả hai.
+
+Nguồn duy nhất quyết định có phí hay không là `entryFee` trong form preview, đừng đoán từ chỗ khác.
+
+## Trả tiền sau
+
+`RegistrationDetailSection` có thêm nút "Thanh toán ngay" khi trạng thái là `PENDING_PAYMENT`, dùng lại đúng luồng PayOS trên. Người dùng bỏ ngang lúc đăng ký không phải làm lại từ đầu.
+
+---
+
+# 2026-08-07 — Thông báo: chuông trên header, màn danh sách, thông báo đẩy
+
+Màn `notifications.jsx` và chuông ở `AppHeader`. **Không có màn tương ứng trên web** — trang `TournamentNotificationsPage` bên web là chỗ Owner/Manager gửi email theo giải, còn đây là góc nhìn của người nhận. Đây là ngoại lệ đầu tiên của luật "web là chuẩn giao diện", và có lý do: điện thoại là nơi duy nhất nhận được thông báo đẩy.
+
+## Không có bảng thông báo trong DB
+
+Danh sách dựng lại từ `email_send_logs` lọc theo `recipient_user_id` — mỗi email hệ thống đã gửi cho bạn là một thông báo. Dự án đã gần xong nên tránh thêm bảng; bảng duy nhất được thêm là `device_tokens`, và nó độc lập hoàn toàn, không sửa bảng nào đang có.
+
+**Hệ quả phải nhớ khi test:** sự kiện nào không có rule email đang bật thì không thành thông báo. Màn hình rỗng chưa chắc là hỏng — kiểm tra `email_automation_rules` trước.
+
+Trạng thái đã đọc là một mốc thời gian trong SecureStore, không phải cột trong DB. Vì vậy hai máy của cùng một người đếm chưa đọc độc lập nhau, và gỡ app cài lại thì mọi thứ thành chưa đọc.
+
+## Thông báo đẩy không chạy trong Expo Go
+
+Từ SDK 53 Expo đã gỡ remote push khỏi Expo Go. `usePushNotifications.js` được viết để thất bại trong im lặng ở mọi nhánh không lấy được token — Expo Go, máy ảo, người dùng từ chối quyền, chưa chạy `eas init`. App vẫn chạy đủ, chỉ là thông báo chỉ thấy khi mở màn thông báo.
+
+Muốn thử push thật cần development build EAS, và cần `extra.eas.projectId` trong `app.json` (chưa có).
+
+Huy hiệu chưa đọc vì thế **không** dựa vào push: `_layout.jsx` đếm lại mỗi lần đổi màn.
+
+## JWT hết hạn và thông báo đẩy
+
+Backend cấp JWT sống 24 giờ, không có refresh token. Thông báo đẩy vẫn tới máy khi hết hạn (push đi bằng device token, không liên quan JWT), nhưng bấm vào thì app gọi API và gặp 401.
+
+`axiosClient.js` giờ thử đăng nhập lại ngầm bằng thông tin lưu trong SecureStore rồi chạy lại request, hỏng mới logout. Đổi mật khẩu ở `ChangePasswordCard` phải cập nhật lại thông tin đã lưu, nếu không lần hết hạn sau sẽ đăng nhập ngầm thất bại.
+
+Chỉ lưu trên native — trên bản web lớp lưu trữ rơi về localStorage, để mật khẩu ở đó là rủi ro thật.
+
+## Bố cục header
+
+`AppHeader` đổi từ `justify-between` sang ba vùng cố định `w-20`. Mép phải giờ có hai nút còn mép trái một, để chúng tự co giãn thì logo bị đẩy lệch khỏi tâm.
+
+## Endpoint dùng chung với web
+
+Ban đầu API đặt ở `/player/notifications`, sau đổi thành **`/notifications`** khi làm phần thông báo cho FE web. Lý do: web chủ yếu do Admin/Owner/Manager/Staff dùng, mà `SecurityConfig` khoá cứng nhánh `/player/**` vào role PLAYER — để nguyên thì web không gọi được.
+
+Hai nền tảng giờ dùng chung `NotificationController` ở backend. Sửa response ở đó là ảnh hưởng cả hai, kiểm tra cả hai trước khi đổi.
+
+---
+
+# 2026-08-06 (d) — Nút mạng xã hội ở footer
+
+Thêm lại nút mạng xã hội, lần này bấm được. Facebook dùng URL thật lấy từ footer của FE web; Instagram và YouTube để `url: ""` chờ nhóm điền.
+
+`SOCIAL_LINKS` trong `AppFooter.jsx` lọc bỏ mục chưa có URL, nên hiện chỉ mỗi Facebook hiển thị. Cố ý **không** hiện icon xám bấm không ăn — đó đúng là thứ vừa bị gỡ khỏi footer và khỏi drawer, dựng lại thì mâu thuẫn.
+
+Điền URL vào là nút tự hiện, không phải sửa phần dựng giao diện.
+
+Mạng khác (TikTok, Threads) cần vẽ icon vào `src/components/icons/BrandIcons.jsx` trước — `lucide-react-native` từ v1 đã bỏ hẳn nhóm icon thương hiệu, import vào chỉ nhận `undefined`. File đó thành mồ côi sau lần dọn footer trước, giờ được dùng lại.
+
+---
+
+# 2026-08-06 (c) — Dọn thanh điều hướng
+
+Bỏ "Tỷ Số Trực Tiếp" và "Cơ Thủ" khỏi `navItems.js`. Hai mục đó để `path: null` và hiện mờ trong drawer từ đầu, nhưng web đã bỏ hẳn chúng khỏi `Header.jsx` — mobile giữ lại là lệch chuẩn, và người dùng thì thấy hai mục bấm không ăn mà chẳng bao giờ dùng được.
+
+Drawer còn 4 mục, khớp đúng web cả nội dung lẫn thứ tự: Tin Mới Nhất, Giải Đấu, Cơ Sở, Bảng Xếp Hạng. Cả 4 đều đã có màn, nên hiện không còn mục nào bị làm mờ.
+
+Cơ chế `path: null` trong `AppDrawer` vẫn giữ, phòng khi thêm mục chưa dựng màn.
+
+---
+
+# 2026-08-06 (b) — Nút quay lại và chiều sâu chế độ tối
+
+## Nút quay lại đứng im khi vào thẳng màn con
+
+`app/(app)/_layout.jsx` gọi `router.back()` trần. Lệnh đó chỉ chạy khi ngăn xếp điều hướng có màn phía trước — vào thẳng một màn con bằng deep link, F5 trên bản web, hoặc mở app từ thông báo thì expo-router dựng lại ngăn xếp chỉ với đúng màn đó, `canGoBack()` trả false và `back()` thành lệnh rỗng. Nút vẫn hiện, bấm không phản ứng.
+
+Ảnh hưởng **mọi** màn con trong nhóm `(app)` vì tất cả dùng chung header, không riêng màn hồ sơ.
+
+Sửa: `canGoBack()` thì `back()`, không thì `replace("/(app)/home")`. Dùng `replace` chứ không `push` — push chồng thêm entry và lần bấm sau lại kẹt đúng chỗ cũ.
+
+Kiểm chứng trên Expo web: mở thẳng `/profile` rồi bấm quay lại — trước khi sửa URL đứng yên, sau khi sửa về `/home`.
+
+## Chế độ tối trông phẳng
+
+Thang tối cũ đặt `canvas` `#0A1220` ngay cạnh `surface` `#0D1B2E`. Chênh lệch quá nhỏ nên thẻ chìm vào nền, mà bóng đổ thì cũng vô dụng trên nền tối (đen chồng đen) — mất cả hai tín hiệu phân tầng cùng lúc.
+
+Sửa ở đúng hai file định nghĩa màu, không đụng màn nào: kéo `canvas` tối hẳn xuống `#070D18`, nâng `surface` lên `#0F1E33`, nâng `line` lên `#273B57` để thấy được cạnh thẻ.
+
+Thêm token `surface-raised` (`#18293F` ở chế độ tối) cho lớp phủ — drawer, menu hồ sơ, `ConfirmSheet`. Trước đây chúng dùng `bg-surface`, trùng đúng màu thẻ nằm dưới nên trông như dán phẳng vào trang.
+
+Chế độ sáng giữ nguyên: nó vốn tách tầng tốt và đang bám đúng web. `surface-raised` ở nhánh sáng bằng `#FFFFFF`, tức không đổi gì — bóng đã lo phần việc đó.
+
+Quy tắc cho màn mới: lớp phủ dùng `bg-surface-raised`, thẻ dùng `bg-surface`.
+
+---
+
+# 2026-08-06 — Bảng xếp hạng, hồ sơ cơ thủ, footer thật
+
+Hai chỗ cuối trên trang chủ còn dùng nội dung chép từ nguyên mẫu đã được thay bằng dữ liệu thật.
+
+## Khối Top tay cơ — từ mảng cứng sang API
+
+`RankedSection` trước đây đọc `src/constants/topPlayers.js`: 9 cơ thủ nước ngoài, ảnh trỏ sang `matchroompool.com`. Comment trong file nói backend chưa có endpoint xếp hạng toàn hệ thống — **điều đó đã hết đúng từ lâu**. `PublicLeaderboardController` (`GET /leaderboard`) tồn tại và FE web đã dùng nó ở cả trang chủ lẫn trang `/rankings`.
+
+Nay khối này gọi đúng endpoint đó với đúng tham số web dùng: `period=YEAR`, `size=9`. File `topPlayers.js` đã xoá.
+
+Bài học ghi lại: comment "backend chưa có" phải kèm ngày, nếu không nó sống lâu hơn sự thật.
+
+## Màn mới
+
+| Màn | Route | Web tương ứng |
+|---|---|---|
+| Bảng xếp hạng | `app/(app)/rankings.jsx` | `pages/Rankings/index.jsx` |
+| Hồ sơ cơ thủ công khai | `app/(app)/players/[userId].jsx` | `pages/Event/PlayerProfilePage.jsx` |
+
+Mục "Bảng Xếp Hạng" trong drawer đã mở path (`key` đổi từ `ranking` sang `rankings` để khớp segment cuối của route, đúng quy ước `activeKey`).
+
+## Ba chỗ cố ý lệch web
+
+- **Ảnh cơ thủ.** Web đặt `onError` đổi `src` sang `/player-default.webp`; `Image` của React Native không đổi nguồn kiểu đó. Thêm `PlayerPortrait` — thiếu ảnh thì hiện chữ cái đầu, theo đúng quy ước sẵn có của `PlayerAvatar`. Không dùng `RemoteImage` vì ảnh dự phòng của nó là `auth-hero.jpg`, một tấm ảnh bàn bi-a đặt vào ô chân dung trông như lỗi dữ liệu.
+- **Bộ lọc kỳ.** Web dùng ba thẻ `<select>` và ghi bộ lọc vào query string. Mobile dùng chip cuộn ngang (không có select gốc; `OptionPicker` chỉ hợp 3–5 mục nên không dùng được cho 12 tháng) và giữ bộ lọc trong state — không có thao tác F5 để mà khôi phục.
+- **Lỗi tải hồ sơ.** Web tự `navigate("/event")`. Mobile hiện nút thử lại: mạng di động chập chờn mà màn tự nhảy đi thì người dùng mất phương hướng, và nút quay lại trên header đã đủ lối thoát.
+
+## Footer
+
+Bỏ toàn bộ thông tin của Matchroom Multi Sport Ltd (địa chỉ Essex, dòng bản quyền, cụm "CAPS.tv"), mười link chữ chết và ba icon mạng xã hội không trỏ đâu. Tất cả đều là chỗ giữ chỗ chép từ nguyên mẫu, không phải thông tin của dự án.
+
+Thay bằng link tới các màn đã dựng — đọc từ `NAV_ITEMS` đã lọc `path !== null`, cùng nguồn với drawer nên mở path cho một mục là footer có luôn — và một dòng bản quyền của chính dự án, năm tính động.
+
+Không dựng địa chỉ / điện thoại / mạng xã hội: nhóm chưa chốt thông tin thật, và bịa ra thì tệ hơn để trống.
+
+## Còn nợ
+
+- `src/components/icons/BrandIcons.jsx` giờ không nơi nào dùng — footer là chỗ duy nhất gọi nó. Chưa xoá vì có thể cần lại khi nhóm chốt mạng xã hội thật.
+- Tab Cơ thủ trong chi tiết giải vẫn không bấm sang hồ sơ được: nó cầm `participantId`, còn màn hồ sơ dựng trên nhánh `userId`.
+- Mục "Cơ Thủ" trong drawer vẫn xám — chưa có màn danh sách cơ thủ.
+- Bên web, `FE/src/components/layouts/Footer.jsx` và ba màn Auth vẫn mang nguyên thông tin Matchroom.
+
+Thiết kế chi tiết: `docs/superpowers/specs/2026-08-06-leaderboard-and-footer-design.md`.
+
+---
+
 # 2026-07-29 — Dark mode
 
 Bật dark mode cho toàn bộ nhóm `(app)`. Nhóm `(auth)` khoá ở chế độ Sáng theo yêu cầu.
@@ -232,7 +518,17 @@ Ngoài ra `TournamentRankingEntryResponse` **không có trường ảnh** — nh
 
 # Chạy test
 
-Không có test runner trong project. Các hàm thuần (`src/utils/html.js`, `src/components/profile/profileFormUtils.js`, `src/utils/date.js`) test được bằng node với babel của Expo:
+Không có test runner trong project.
+
+**Test đã có sẵn, chạy được ngay:**
+
+```
+node scripts/test-standings.js
+```
+
+25 test cho `src/utils/standings.js`. Bắt buộc chạy lại nếu sửa thứ tự phân định hạng — nó phải khớp backend, xem mục 2026-08-08.
+
+**Viết test mới cho hàm thuần khác** (`src/utils/html.js`, `src/components/profile/profileFormUtils.js`, `src/utils/date.js`): chép khuôn nạp babel dưới đây, hoặc đơn giản hơn là chép `scripts/test-standings.js` rồi thay phần khẳng định.
 
 ```js
 // .tmp-test.js ở thư mục gốc repo — nhớ xoá sau khi chạy

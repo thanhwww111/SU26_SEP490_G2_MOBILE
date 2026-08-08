@@ -68,7 +68,7 @@ export default function LoginScreen() {
           data.message || "Đăng nhập thất bại. Sai email hoặc mật khẩu."
         );
       }
-      await loginFromResponse(data, form.email);
+      await loginFromResponse(data, form.email, form.password);
       router.replace("/(app)/home");
     } catch (err) {
       setErrors({ submit: err.message });

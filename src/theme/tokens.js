@@ -77,6 +77,7 @@ export const lightColors = {
 
   canvas: palette.slate50,
   surface: palette.white,
+  surfaceRaised: palette.white,
   sunken: palette.slate100,
   sunkenStrong: palette.slate200,
   surfaceInverse: palette.navy900,
@@ -99,21 +100,28 @@ export const lightColors = {
 /**
  * Bảng màu chế độ Tối. Khớp nhánh `.dark:root` trong global.css.
  *
- * `brand` phải sáng lên chứ không giữ navy-700: navy đặt trên nền #0A1220 gần
- * như chìm hẳn, icon và spinner sẽ không nhìn ra.
+ * Ở chế độ tối, độ cao biểu diễn bằng ĐỘ SÁNG bề mặt chứ không bằng bóng — bóng
+ * đen chồng nền đen thì không ai thấy. Vì vậy các bậc nền phải cách nhau đủ xa:
+ * `canvas` lùi hẳn ra sau, `surface` là thẻ, `surfaceRaised` là lớp phủ nổi lên
+ * trên thẻ. Thang cũ để canvas #0A1220 cạnh surface #0D1B2E, gần nhau tới mức
+ * thẻ chìm vào nền và cả app trông phẳng.
+ *
+ * `brand` phải sáng lên chứ không giữ navy-700: navy đặt trên nền tối gần như
+ * chìm hẳn, icon và spinner sẽ không nhìn ra.
  */
 export const darkColors = {
   ...constantColors,
 
-  canvas: "#0A1220",
-  surface: "#0D1B2E",
-  sunken: "#14202F",
-  sunkenStrong: "#1B2A3D",
-  surfaceInverse: "#060D18",
+  canvas: "#070D18",
+  surface: "#0F1E33",
+  surfaceRaised: "#18293F",
+  sunken: "#16243A",
+  sunkenStrong: "#1F3049",
+  surfaceInverse: "#03070F",
 
-  lineSoft: "#172433",
-  line: "#1F2E42",
-  lineStrong: "#2A3B52",
+  lineSoft: "#1A2942",
+  line: "#273B57",
+  lineStrong: "#3A5175",
 
   content: "#F1F5F9",
   content2: "#C7D2DE",

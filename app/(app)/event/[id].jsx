@@ -19,6 +19,10 @@ export default function EventDetailScreen() {
     <TournamentDetail
       id={id}
       onOpenMyRegistrations={() => router.push("/(app)/my-registrations")}
+      onRegister={() => router.push(`/(app)/register/${id}`)}
+      onPressParticipant={(participantId) =>
+        router.push(`/(app)/players/participant/${participantId}`)
+      }
     />
   );
 }

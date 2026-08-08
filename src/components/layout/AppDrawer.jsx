@@ -44,7 +44,9 @@ export default function AppDrawer({ visible, onClose, onNavigate, activeKey }) {
           transform: [{ translateY }, { scale }],
         }}
       >
-        <View className="w-56 overflow-hidden rounded-xl border border-line bg-surface shadow-lg">
+        {/* `surface-raised` chứ không phải `surface`: ở chế độ tối lớp phủ nhận
+            biết bằng nền sáng hơn nội dung phía dưới, vì bóng đen không hiện */}
+        <View className="w-56 overflow-hidden rounded-xl border border-line bg-surface-raised shadow-lg">
           {NAV_ITEMS.map(({ key, label, path, Icon }, index) => {
             const active = key === activeKey;
             const disabled = !path;

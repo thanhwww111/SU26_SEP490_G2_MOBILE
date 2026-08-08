@@ -12,19 +12,27 @@ import * as authApi from "../../src/api/authApi";
 import {
   collectErrors,
   validateConfirmPassword,
-  validateOtp,
   validatePassword,
 } from "../../src/utils/validators";
 
 /** Chờ chút cho người dùng kịp đọc thông báo thành công rồi mới đẩy về Login */
 const REDIRECT_DELAY_MS = 2000;
 
+/**
+ * Bước 3 của luồng khôi phục mật khẩu: đặt mật khẩu mới.
+ *
+ * `email` và `otp` đến từ tham số route — OTP đã được bước 2 xác thực, ở đây
+ * chỉ gửi kèm lên vì backend cần cả ba trường trong một lời gọi.
+ *
+ * Vào thẳng màn này mà thiếu tham số (deep link cũ, hoặc khôi phục phiên) thì
+ * không có gì để gửi lên; lúc đó đẩy người dùng về bước 1 thay vì để họ điền
+ * xong rồi mới nhận lỗi từ server.
+ */
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const { email = "" } = useLocalSearchParams();
+  const { email = "", otp = "" } = useLocalSearchParams();
 
   const [form, setForm] = useState({
-    otp: "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -41,8 +49,13 @@ export default function ResetPasswordScreen() {
     []
   );
 
+  /* Thiếu email hoặc OTP thì không có gì gửi lên — quay về bước 1 ngay thay vì
+     để người dùng điền xong mật khẩu rồi mới nhận lỗi từ server */
+  useEffect(() => {
+    if (!email || !otp) router.replace("/forgot-password");
+  }, [email, otp, router]);
+
   const validateOne = (name, value, source) => {
-    if (name === "otp") return validateOtp(value);
     if (name === "newPassword") return validatePassword(value);
     if (name === "confirmPassword")
       return validateConfirmPassword(value, source.newPassword);
@@ -77,10 +90,9 @@ export default function ResetPasswordScreen() {
     setTouched((prev) => ({ ...prev, [name]: true }));
 
   const handleSubmit = async () => {
-    setTouched({ otp: true, newPassword: true, confirmPassword: true });
+    setTouched({ newPassword: true, confirmPassword: true });
 
     const nextErrors = collectErrors({
-      otp: () => validateOtp(form.otp),
       newPassword: () => validatePassword(form.newPassword),
       confirmPassword: () =>
         validateConfirmPassword(form.confirmPassword, form.newPassword),
@@ -96,7 +108,7 @@ export default function ResetPasswordScreen() {
     try {
       const { data } = await authApi.resetPassword({
         email,
-        otp: form.otp,
+        otp,
         newPassword: form.newPassword,
       });
       if (!data.success) {
@@ -122,24 +134,9 @@ export default function ResetPasswordScreen() {
       <FormError message={errors.submit} tone="dark" />
 
       <Text className="mb-3 text-xs text-slate-300">
-        Nhập mã OTP đã được gửi đến{" "}
-        <Text className="font-bold text-white">{email}</Text> và mật khẩu mới của
-        bạn.
+        Mã OTP đã được xác thực. Đặt mật khẩu mới cho{" "}
+        <Text className="font-bold text-white">{email}</Text>.
       </Text>
-
-      <Input
-        label="Mã OTP"
-        value={form.otp}
-        onChangeText={setField("otp")}
-        onBlur={markTouched("otp")}
-        placeholder="Nhập mã OTP"
-        error={errors.otp}
-        touched={touched.otp}
-        tone="dark"
-        keyboardType="number-pad"
-        autoCapitalize="none"
-        className="mb-3"
-      />
 
       <Input
         label="Mật khẩu mới"

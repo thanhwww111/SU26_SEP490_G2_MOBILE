@@ -1,6 +1,6 @@
 # Ánh xạ Web ↔ Mobile
 
-Cập nhật: 2026-07-28
+Cập nhật: 2026-08-08
 
 Web FE là chuẩn giao diện. Trước khi dựng bất kỳ màn nào, tra bảng này để biết **đọc file nào bên web**.
 
@@ -28,38 +28,48 @@ Cột **Mobile**:
 | Chi tiết tin | `/news/:slug` | `pages/News/ArticleDetailPage.jsx` | ✅ | `app/(app)/news/[slug].jsx` |
 | Danh sách giải | `/event` | `pages/Event/index.jsx` | ✅ | `app/(app)/event.jsx` |
 | Chi tiết giải | `/event/:id` | `pages/Event/EventDetailPage.jsx` + `MatchesTab.jsx`, `RankingTab.jsx`, `eventTheme.css` | ✅ | `app/(app)/event/[id].jsx` |
-| Hồ sơ cơ thủ | `/event/players/:participantId` | `pages/Event/PlayerProfilePage.jsx` | ⏳ | |
-| Đăng ký giải | `/player/tournaments/:id/register` | `pages/Player/TournamentRegisterPage.jsx` | 🎯 | `app/(app)/tournaments/[id]/register.jsx` |
+| Hồ sơ cơ thủ (tài khoản) | `/event/players/user/:userId` | `pages/Event/PlayerProfilePage.jsx` | ✅ | `app/(app)/players/[userId].jsx` |
+| Hồ sơ cơ thủ (suất dự giải) | `/event/players/:participantId` | `pages/Event/PlayerProfilePage.jsx` | ✅ | `app/(app)/players/participant/[participantId].jsx` |
+| Bảng xếp hạng | `/rankings` | `pages/Rankings/index.jsx` | ✅ | `app/(app)/rankings.jsx` |
+| Đăng ký giải | `/player/tournaments/:id/register` | `pages/Player/TournamentRegisterPage.jsx` | ✅ | `app/(app)/register/[id].jsx` |
 | Đăng ký của tôi | `/player/registrations` | `pages/Player/MyRegistrationsPage.jsx` | ✅ | `app/(app)/my-registrations.jsx` |
 | Chi tiết đăng ký | (modal trong `MyRegistrationsPage`) | `pages/Player/MyRegistrationsPage.jsx` | ✅ | `app/(app)/my-registrations/[id].jsx` |
-| Lịch thi đấu của tôi | `/player/matches` | `pages/Player/PlayerMatchSchedulePage.jsx` | 🎯 | `app/(app)/my-matches.jsx` |
-| Lịch sử thanh toán | `/player/payments` | `pages/Payment/MyPaymentsPage.jsx` | ⏳ | |
+| Lịch thi đấu của tôi | `/player/matches` | `pages/Player/PlayerMatchSchedulePage.jsx` | ✅ | `app/(app)/matches.jsx` |
+| Lịch sử thanh toán | `/player/payments` | `pages/Payment/MyPaymentsPage.jsx` | ✅ | `app/(app)/payments.jsx` |
 | Chi nhánh | `/branches`, `/branches/:id` | `pages/Branch/index.jsx`, `BranchDetailPage.jsx` | ✅ | `app/(app)/branches.jsx`, `app/(app)/branches/[id].jsx` |
-| Kết quả thanh toán | `/payment/success`, `/payment/cancel` | `pages/Payment/PaymentSuccessPage.jsx` | ⏳ | Cần deep link, xem ghi chú cuối trang |
+| Kết quả thanh toán | `/payment/success`, `/payment/cancel` | `pages/Payment/PaymentSuccessPage.jsx` | ✅ | Không có màn riêng — xem ghi chú cuối trang |
+
+**Chi tiết giải cho PLAYER.** Web tách `/player/tournaments/:id` (`PlayerTournamentDetailPage`) khỏi `/event/:id` công khai. Mobile gộp làm một: tab Thông tin của `app/(app)/event/[id].jsx` đã có đủ khối kêu gọi đăng ký, phí, số slot và trạng thái đăng ký của tôi. Hai màn riêng trên điện thoại chỉ khiến người dùng thấy cùng một giải ở hai chỗ khác nhau.
+
+**Hai nhánh hồ sơ cơ thủ.** Web đặt `participantId` ở gốc và `userId` ở dưới `user/`; mobile làm ngược lại vì màn `userId` có trước và đã được trang chủ lẫn bảng xếp hạng trỏ tới. Suất dự giải có gắn tài khoản thì `PlayerProfileView` tự chuyển tiếp sang nhánh `userId` — giống web.
+
+**Dải chữ chạy ở trang chủ: cố ý không có trên mobile.** Web chèn ba dải Marquee ngăn giữa các khối (`pages/Home/components/Marquee.jsx`). Bản mobile đã được dựng ngày 2026-08-08 rồi gỡ bỏ ngay: đó là chi tiết trang trí của landing page desktop, trên màn hẹp nó chỉ ăn chiều cao và bắt máy chạy một hoạt ảnh không bao giờ dừng. **Đừng dựng lại** — nếu thấy thiếu so với web thì đây là lý do.
 
 Sáu màn công khai (giải đấu, tin tức, cơ sở) đã xong ngày 2026-07-29. Route giữ đúng tên web (`/event`, `/news`, `/branches`) chứ không phải `tournaments` như bảng này từng dự kiến — nhờ vậy `key` trong `navItems.js` khớp thẳng `activeKey` mà layout truyền cho drawer.
 
-Trang chủ giờ nối được hết: cả nút "Tất cả" của khối Tin tức lẫn nút "Toàn bộ" và từng thẻ của khối Lịch thi đấu. Khối Top tay cơ vẫn chưa có màn đích.
+Trang chủ giờ nối được hết, kể cả khối Top tay cơ: nút "Tất cả" mở `/rankings`, từng thẻ cơ thủ mở hồ sơ công khai (2026-08-06).
 
 **Lưu ý về `/branches`:** web có hai nhóm màn chi nhánh khác hẳn nhau — `/branches` (công khai, `CommonLayout`) và `/owner/branches`, `/manager/branches` (quản trị, có tạo/sửa/xoá). Mobile chỉ làm nhóm công khai.
 
 **Nội dung bài viết là HTML.** Mobile không dùng WebView mà tự chuyển sang component gốc — xem `src/utils/html.js` và mục 11d trong [08-reusable-patterns.md](08-reusable-patterns.md). Bảng và video nhúng mất định dạng nhưng chữ vẫn giữ.
 
-Ba chỗ trong màn giải đấu còn chờ màn khác:
+Màn giải đấu giờ ngang web về chức năng, trừ sơ đồ bracket (cố ý bỏ).
 
-| Chờ màn | Hiện đang |
-|---|---|
-| `/player/tournaments/:id/register` | Khối phí vẫn hiện, thay nút đăng ký bằng ghi chú |
-| `/event/players/:participantId` | Tên cơ thủ chỉ để đọc, không bấm được |
-| WebSocket realtime | Tab Trực tiếp tự làm mới mỗi 15 giây |
+Tab Cơ thủ và tab Xếp hạng đã bấm sang hồ sơ được (2026-08-08), đi bằng nhánh `participantId`. Tab Trực tiếp và tab Trận đấu cùng nghe WebSocket như web, không còn tự làm mới mỗi 15 giây.
+
+**Tab Trận đấu (2026-08-08).** Đọc `/tournaments/{id}/stages` thay cho `/matches` — bảng điểm gộp cần `orderNo` và chip giai đoạn cần `name`, hai trường đó chỉ endpoint stages mới có. Có đủ hai chế độ xem (Lịch đấu, Bảng điểm) và cả ba bộ lọc của web (tên cơ thủ, vòng, giai đoạn). Riêng sơ đồ bracket vẫn không làm — xem mục "Ba chỗ cố ý không sao chép từ web" trong [11-changelog.md](11-changelog.md).
+
+Thứ tự phân định hạng trong bảng điểm phải khớp `BracketGenerationServiceImpl.computeStageStandings()` của backend. Có test: `node scripts/test-standings.js`.
 
 Chi tiết thiết kế: `docs/superpowers/specs/2026-07-29-event-screens-design.md`.
 
 ## Menu điều hướng của web
 
-`Header.jsx` có 6 mục: Tin Mới Nhất (`/news`), Tỷ Số Trực Tiếp (chưa có), Giải Đấu (`/event`), Cơ Sở (`/branches`), Bảng Xếp Hạng (chưa có), Cơ Thủ (chưa có).
+`Header.jsx` có 4 mục: Tin Mới Nhất (`/news`), Giải Đấu (`/event`), Cơ Sở (`/branches`), Bảng Xếp Hạng (`/rankings`).
 
-`src/components/layout/navItems.js` của mobile bám đúng 6 mục này. Thêm màn mới thì cập nhật file đó, **không** hardcode trong `AppDrawer`.
+> **Đổi từ 2026-08-06.** Trước đây mục này ghi 6 mục, thêm "Tỷ Số Trực Tiếp" và "Cơ Thủ". Web đã bỏ cả hai khỏi thanh điều hướng (cùng với "Vé" và "Cửa Hàng" đang bị chú thích lại trong `Header.jsx`), nên mobile bỏ theo. Cả 4 mục còn lại đều đã có màn trên mobile.
+
+`src/components/layout/navItems.js` của mobile bám đúng 4 mục này, cùng thứ tự. Thêm màn mới thì cập nhật file đó, **không** hardcode trong `AppDrawer` — file đó cũng là nguồn cho các link ở `AppFooter`.
 
 Menu hồ sơ của web (PLAYER): Hồ sơ, Đăng ký của tôi, Lịch thi đấu, Lịch sử thanh toán, Đăng xuất.
 
@@ -151,9 +161,13 @@ Mục đang mở đánh dấu bằng chữ + icon màu accent và một chấm t
 
 # Ghi chú về thanh toán
 
-Web dùng PayOS, redirect về `/payment/success` hoặc `/payment/cancel`. Trên mobile luồng này cần deep link (`expo-linking` đã có trong `package.json`) để quay lại app sau khi thanh toán trên trình duyệt.
+Web dùng PayOS, redirect về `/payment/success` hoặc `/payment/cancel`. **Mobile không dựng hai màn đó và cũng không dùng deep link** — `PayOSServiceImpl` đọc `returnUrl` từ cấu hình server chứ không nhận từ client, nên PayOS luôn trả về bản web, không có cách nào bắt nó quay về `btms://`.
 
-Phải có spec riêng trước khi làm — đây không phải màn dựng theo khuôn thông thường.
+Cách đi vòng: mở PayOS bằng trình duyệt trong app (`expo-web-browser`), rồi nhờ backend hỏi thẳng PayOS xem đơn đã trả tiền chưa (`POST /player/payments/confirm-return`). Backend không tin lời client, nên không phải sửa gì phía server.
+
+Toàn bộ khâu này nằm ở `src/hooks/usePayOsCheckout.js`, dùng chung cho màn đăng ký giải và màn chi tiết đăng ký. **Đọc hook đó trước khi đụng vào luồng thanh toán** — nó giải thích vì sao mã đơn phải ghi xuống bộ nhớ trước khi mở trình duyệt, và vì sao phải đối chiếu lại ở ba thời điểm (trình duyệt đóng, app về tiền cảnh, hook gắn lần đầu).
+
+Nguồn sự thật vẫn là webhook của PayOS ở phía server; lời gọi đối chiếu chỉ để người dùng thấy kết quả ngay thay vì phải chờ.
 
 ---
 

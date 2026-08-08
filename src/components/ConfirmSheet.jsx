@@ -60,7 +60,7 @@ export default function ConfirmSheet({
         ]}
       >
         <View
-          className="rounded-t-2xl bg-surface px-6 pt-5"
+          className="rounded-t-2xl bg-surface-raised px-6 pt-5"
           style={{ paddingBottom: insets.bottom + 20 }}
         >
           {/* Tay nắm chỉ để báo hiệu đây là lớp trượt lên, không kéo được */}

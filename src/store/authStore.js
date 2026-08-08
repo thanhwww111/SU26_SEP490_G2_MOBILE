@@ -6,6 +6,7 @@ import {
   getRoleFromToken,
   normalizeUser,
   persistAuth,
+  persistCredentials,
   readStoredAuth,
 } from "../utils/auth";
 
@@ -37,9 +38,19 @@ export const useAuthStore = create((set, get) => ({
     });
   },
 
-  loginFromResponse: async (apiResponse, fallbackEmail) => {
+  /**
+   * @param password chỉ có ở luồng đăng nhập tay — giữ lại để tự lấy phiên mới khi JWT hết hạn,
+   *   xem `readStoredCredentials` và interceptor 401 trong `src/api/axiosClient.js`. Bỏ trống thì
+   *   phiên vẫn dùng được bình thường, chỉ là hết hạn sẽ phải đăng nhập lại bằng tay.
+   */
+  loginFromResponse: async (apiResponse, fallbackEmail, password) => {
     const session = buildSessionFromAuthPayload(apiResponse, fallbackEmail);
     await get().setSession(session);
+
+    if (password) {
+      await persistCredentials({ email: fallbackEmail || session.user?.email, password });
+    }
+
     return session.user;
   },
 

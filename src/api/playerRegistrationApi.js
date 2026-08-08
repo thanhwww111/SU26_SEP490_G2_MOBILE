@@ -6,9 +6,7 @@ import { parsePagedResponse } from "../utils/pagination";
  * Đăng ký giải đấu dưới góc nhìn PLAYER.
  * Bám đúng SU26_SEP490_G2_FE/src/api/playerRegistrationApi.js.
  *
- * Cố ý chưa có createCheckout: luồng thanh toán PayOS trên mobile phải mở
- * trình duyệt rồi bắt deep link quay lại app, cần spec riêng — xem
- * docs/mobile/09-backend-reference.md, mục Thanh toán.
+ * Phần thanh toán nằm ở `paymentApi.js`.
  */
 
 /** GET /player/registrations — tất cả đăng ký của tôi, phân trang */
@@ -36,3 +34,30 @@ export const getMyRegistrationDetail = (id) =>
 /** DELETE /player/registrations/{id} — huỷ đăng ký (backend chỉ cho huỷ khi còn chờ thanh toán) */
 export const cancelMyRegistration = (id) =>
   axiosClient.delete(`/player/registrations/${id}`).then((res) => getApiData(res));
+
+/**
+ * GET /player/tournaments/{id}/registration-form — form đăng ký của giải.
+ *
+ * Form là ĐỘNG: Owner cấu hình từng giải một, nên số trường và kiểu trường đổi theo giải.
+ * Trả về kèm `entryFee` — đây là nguồn quyết định giải này có phải thanh toán hay không,
+ * đừng đoán từ chỗ khác.
+ */
+export const getTournamentRegistrationForm = (tournamentId) =>
+  axiosClient
+    .get(`/player/tournaments/${tournamentId}/registration-form`)
+    .then((res) => getApiData(res));
+
+/**
+ * POST /player/tournaments/{id}/registrations — nộp đăng ký.
+ *
+ * Body: `{ registrationType, note, fieldValues: [{ fieldKey, value }] }`.
+ * Mọi giá trị gửi lên đều là chuỗi, kể cả số và checkbox — backend tự ép kiểu theo cấu hình
+ * trường, giống hệt web.
+ *
+ * Backend đặt trạng thái `PENDING_PAYMENT`. Giải miễn phí thì tự xét duyệt ngay trong cùng
+ * lời gọi này, nên phản hồi có thể đã là `APPROVED` hoặc `REJECTED` (hết suất).
+ */
+export const submitTournamentRegistration = (tournamentId, body) =>
+  axiosClient
+    .post(`/player/tournaments/${tournamentId}/registrations`, body)
+    .then((res) => getApiData(res));

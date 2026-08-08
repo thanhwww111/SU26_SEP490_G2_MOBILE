@@ -32,6 +32,37 @@ export const fmtDateTime = (iso) => {
 };
 
 /**
+ * Thời gian kiểu "5 phút trước", dùng cho danh sách thông báo.
+ *
+ * Ở đó câu hỏi thường trực là "mới hay cũ" chứ không phải "đúng giờ nào", mà mốc tuyệt đối thì
+ * buộc người đọc tự trừ nhẩm. Quá một tuần đổi lại sang ngày tháng, vì "23 ngày trước" cũng
+ * chẳng nói lên điều gì.
+ */
+export const fmtRelative = (iso) => {
+  if (!iso) return "";
+
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+
+  const diffMs = Date.now() - d.getTime();
+
+  // Lệch giờ giữa máy chủ và máy người dùng có thể cho ra số âm nhỏ —
+  // đừng hiện "âm 2 phút trước"
+  if (diffMs < 60_000) return "Vừa xong";
+
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 60) return `${minutes} phút trước`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} ngày trước`;
+
+  return fmtDateShort(iso) || "";
+};
+
+/**
  * "1998-05-15" → "15/05/1998".
  *
  * Dành cho ô nhập ngày: backend trả LocalDate dạng ISO, người Việt gõ và đọc

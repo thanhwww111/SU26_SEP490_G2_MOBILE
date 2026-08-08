@@ -24,6 +24,7 @@
     /* Nền */
     --c-canvas: #f8fafc; /* nền màn, thay bg-slate-50 */
     --c-surface: #ffffff; /* nền thẻ và khối, thay bg-white */
+    --c-surface-raised: #ffffff; /* lớp phủ nổi trên nội dung — bản sáng đã có bóng lo việc này */
     --c-sunken: #f1f5f9; /* khối chìm trong thẻ, thay bg-slate-100 */
     --c-sunken-strong: #e2e8f0; /* nền chờ ảnh, thay bg-slate-200 */
 
@@ -43,17 +44,36 @@
     --c-tint-danger: #fef2f2;
     --c-tint-success: #ecfdf5;
     --c-tint-warning: #fffbeb;
+
+    /* Nền của dòng thông báo chưa đọc. Tách khỏi tint-danger dù cùng gốc đỏ:
+       chưa đọc không phải là lỗi, và hai thứ này sẽ đi hai hướng nếu sau này
+       màu nhấn đổi. */
+    --c-tint-accent: #fff1f0;
   }
 
+  /*
+   * Nhánh tối — độ cao biểu diễn bằng ĐỘ SÁNG bề mặt, không bằng bóng.
+   *
+   * Bóng đổ vô dụng ở đây (đen chồng đen), nên thứ duy nhất tách được lớp này
+   * với lớp kia là chênh lệch độ sáng. Bản trước để canvas #0a1220 và surface
+   * #0d1b2e — cách nhau quá ít, thẻ chìm hẳn vào nền và cả app trông phẳng lì.
+   *
+   * Thang hiện tại giãn khoảng cách ra thành bốn bậc rõ rệt:
+   *   canvas (lùi sau) → surface (thẻ) → surface-raised (lớp phủ) → sunken-strong
+   * Mỗi bậc sáng hơn bậc dưới đủ để thấy mà không phá tông navy của thương hiệu.
+   */
   .dark:root {
-    --c-canvas: #0a1220;
-    --c-surface: #0d1b2e;
-    --c-sunken: #14202f;
-    --c-sunken-strong: #1b2a3d;
+    --c-canvas: #070d18; /* tối hơn hẳn để thẻ có chỗ nổi lên */
+    --c-surface: #0f1e33; /* thẻ, khối nội dung */
+    --c-surface-raised: #18293f; /* drawer, menu, bottom sheet — nổi trên thẻ */
+    --c-sunken: #16243a; /* khối chìm trong thẻ */
+    --c-sunken-strong: #1f3049; /* nền chờ ảnh */
 
-    --c-line-soft: #172433;
-    --c-line: #1f2e42;
-    --c-line-strong: #2a3b52;
+    /* Viền sáng lên rõ: ở chế độ tối cạnh thẻ là tín hiệu phân tầng thứ hai,
+       viền quá tối thì thẻ mất đường bao và trôi vào nhau */
+    --c-line-soft: #1a2942;
+    --c-line: #273b57;
+    --c-line-strong: #3a5175;
 
     --c-content: #f1f5f9;
     --c-content-2: #c7d2de;
@@ -65,6 +85,8 @@
     --c-tint-danger: #2a1416;
     --c-tint-success: #0e2a1f;
     --c-tint-warning: #2b2110;
+
+    --c-tint-accent: #24161c;
   }
 }
 

@@ -31,6 +31,7 @@ module.exports = {
          */
         canvas: "var(--c-canvas)",
         surface: "var(--c-surface)",
+        "surface-raised": "var(--c-surface-raised)",
         sunken: "var(--c-sunken)",
         "sunken-strong": "var(--c-sunken-strong)",
 
@@ -47,6 +48,7 @@ module.exports = {
         "tint-danger": "var(--c-tint-danger)",
         "tint-success": "var(--c-tint-success)",
         "tint-warning": "var(--c-tint-warning)",
+        "tint-accent": "var(--c-tint-accent)",
 
         // Navy — màu thương hiệu chính, lấy từ trang chủ và trang Auth của web
         navy: {

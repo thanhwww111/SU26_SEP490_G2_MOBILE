@@ -69,7 +69,8 @@ Kiểm chứng bằng `package.json`, đừng đoán. Tính tới 2026-07-29:
 | Toast | **Chưa có.** Thông báo hiển thị inline qua `FormError`, `FormSuccess`, `SectionState`. Đừng sinh code gọi `Toast.show()` |
 | Chọn ảnh | Có `expo-image-picker` (thêm 2026-07-29, cho màn hồ sơ) |
 | Render HTML | **Không dùng thư viện.** Tự chuyển bằng `src/utils/html.js` — xem [11](11-changelog.md) |
-| WebSocket | **Chưa có.** Tab tỷ số trực tiếp đang tự làm mới mỗi 15 giây thay vì realtime |
+| WebSocket | **Có** (`@stomp/stompjs`, từ 2026-08-08). Dùng qua `src/hooks/useTournamentSocket.js`, đừng tự dựng `Client` mới |
+| Chọn ngày | **Có** (`@react-native-community/datetimepicker`, từ 2026-08-08). Dùng qua `src/components/DateField.jsx`, giá trị vào/ra là chuỗi `dd/mm/yyyy` |
 | Date picker | **Chưa có.** Ngày sinh trong hồ sơ dùng ô nhập `dd/mm/yyyy` tự validate |
 | Gradient | **Chưa có.** Chỗ nào web dùng gradient thì mobile dùng nền đặc |
 

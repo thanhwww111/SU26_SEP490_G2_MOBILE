@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { ChevronLeft, Menu, User } from "lucide-react-native";
 
+import NotificationBell from "./NotificationBell";
 import { useThemeColors } from "../../theme/useThemeColors";
 import { iconSize } from "../../theme/tokens";
 
@@ -13,49 +14,63 @@ import { iconSize } from "../../theme/tokens";
  *
  * Logo giữa bấm được để về trang chủ, giống Header web — drawer bám đúng 6 mục
  * của web nên không có mục "Trang chủ" nào cả.
+ *
+ * Ba vùng có bề rộng cố định bằng nhau (`w-20` = đúng hai nút) thay vì
+ * `justify-between`: mép phải có hai nút còn mép trái chỉ một, để chúng tự co
+ * giãn thì logo bị đẩy lệch khỏi tâm header.
  */
 export default function AppHeader({
   showBack = false,
+  unreadCount = 0,
   onPressMenu,
   onPressBack,
   onPressLogo,
+  onPressNotifications,
   onPressProfile,
 }) {
   const colors = useThemeColors();
 
   return (
-    <View className="h-14 flex-row items-center justify-between border-b border-line bg-surface px-2">
-      <Pressable
-        onPress={showBack ? onPressBack : onPressMenu}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        className="h-10 w-10 items-center justify-center rounded-full active:bg-sunken-strong"
-        accessibilityLabel={showBack ? "Quay lại" : "Mở menu"}
-      >
-        {showBack ? (
-          <ChevronLeft size={iconSize.lg} color={colors.content} />
-        ) : (
-          <Menu size={iconSize.md} color={colors.content} />
-        )}
-      </Pressable>
+    <View className="h-14 flex-row items-center border-b border-line bg-surface px-2">
+      <View className="w-20 flex-row items-center">
+        <Pressable
+          onPress={showBack ? onPressBack : onPressMenu}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-sunken-strong"
+          accessibilityLabel={showBack ? "Quay lại" : "Mở menu"}
+        >
+          {showBack ? (
+            <ChevronLeft size={iconSize.lg} color={colors.content} />
+          ) : (
+            <Menu size={iconSize.md} color={colors.content} />
+          )}
+        </Pressable>
+      </View>
 
-      <Pressable onPress={onPressLogo} className="px-2 py-1 active:opacity-60">
-        {/* Chữ logo dùng token chữ chính chứ không phải navy cứng: ở chế độ tối
-            nền header là navy sẫm, chữ navy sẽ chìm hẳn vào nền */}
-        <Text className="text-xl font-black uppercase italic tracking-tighter text-content">
-          capstone<Text className="text-accent">.</Text>
-        </Text>
-      </Pressable>
+      <View className="flex-1 items-center">
+        <Pressable onPress={onPressLogo} className="px-2 py-1 active:opacity-60">
+          {/* Chữ logo dùng token chữ chính chứ không phải navy cứng: ở chế độ tối
+              nền header là navy sẫm, chữ navy sẽ chìm hẳn vào nền */}
+          <Text className="text-xl font-black uppercase italic tracking-tighter text-content">
+            capstone<Text className="text-accent">.</Text>
+          </Text>
+        </Pressable>
+      </View>
 
-      <Pressable
-        onPress={onPressProfile}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        className="h-10 w-10 items-center justify-center rounded-full active:bg-sunken-strong"
-        accessibilityLabel="Mở menu hồ sơ"
-      >
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-sunken">
-          <User size={iconSize.sm} color={colors.content} />
-        </View>
-      </Pressable>
+      <View className="w-20 flex-row items-center justify-end">
+        <NotificationBell count={unreadCount} onPress={onPressNotifications} />
+
+        <Pressable
+          onPress={onPressProfile}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-sunken-strong"
+          accessibilityLabel="Mở menu hồ sơ"
+        >
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-sunken">
+            <User size={iconSize.sm} color={colors.content} />
+          </View>
+        </Pressable>
+      </View>
     </View>
   );
 }

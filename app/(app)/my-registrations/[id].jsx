@@ -16,6 +16,9 @@ export default function RegistrationDetailScreen() {
     <RegistrationDetailSection
       registrationId={id}
       onCancelled={() => router.back()}
+      onOpenTournament={(tournamentId) =>
+        router.push(`/(app)/event/${tournamentId}`)
+      }
     />
   );
 }

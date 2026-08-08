@@ -5,7 +5,9 @@ import { useFocusEffect } from "expo-router";
 import RegistrationCard from "./RegistrationCard";
 import SectionState from "../home/SectionState";
 import AppFooter from "../layout/AppFooter";
+import FormError from "../auth/FormError";
 import * as registrationApi from "../../api/playerRegistrationApi";
+import { usePayOsCheckout } from "../../hooks/usePayOsCheckout";
 import { DEFAULT_PAGE_SIZE } from "../../utils/pagination";
 import { useThemeColors } from "../../theme/useThemeColors";
 
@@ -33,6 +35,10 @@ export default function MyRegistrationList({ onPressItem }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+
+  // Đơn đang mở PayOS — chỉ thẻ đó hiện vòng quay, các thẻ khác vẫn bấm được
+  const [payingId, setPayingId] = useState(null);
+  const [payError, setPayError] = useState("");
 
   // Người dùng có thể rời màn giữa chừng; ref để mọi nhánh tải cùng đọc một cờ
   const alive = useRef(true);
@@ -87,6 +93,33 @@ export default function MyRegistrationList({ onPressItem }) {
     }
   };
 
+  /* Đối chiếu xong với PayOS thì tải lại trang đầu để thấy trạng thái mới.
+     Cố ý tải lại từ trang 0 thay vì sửa một phần tử: người dùng có thể đã trả
+     tiền cho nhiều đơn trong một phiên (hook đối chiếu cả đơn treo từ lần mở
+     app trước), nên cập nhật một dòng là chưa đủ. */
+  const refreshAfterPay = useCallback(async () => {
+    try {
+      await loadPage(0);
+    } catch {
+      // Giữ nguyên danh sách đang hiện — kéo làm mới vẫn dùng được
+    }
+  }, [loadPage]);
+
+  const { pay } = usePayOsCheckout({ onSettled: refreshAfterPay });
+
+  const handlePay = async (registrationId) => {
+    setPayError("");
+    setPayingId(registrationId);
+
+    try {
+      await pay(registrationId);
+    } catch (e) {
+      if (alive.current) setPayError(e.message);
+    } finally {
+      if (alive.current) setPayingId(null);
+    }
+  };
+
   const handleLoadMore = () => {
     if (loading || loadingMore || refreshing || !hasMore) return;
 
@@ -108,7 +141,12 @@ export default function MyRegistrationList({ onPressItem }) {
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
         <View className="px-4">
-          <RegistrationCard item={item} onPress={() => onPressItem?.(item)} />
+          <RegistrationCard
+            item={item}
+            onPress={() => onPressItem?.(item)}
+            onPay={() => handlePay(item.id)}
+            paying={payingId === item.id}
+          />
         </View>
       )}
       ItemSeparatorComponent={() => <View className="h-3" />}
@@ -118,6 +156,10 @@ export default function MyRegistrationList({ onPressItem }) {
           <Text className="mt-1 text-sm text-muted">
             Lịch sử và trạng thái các đăng ký giải đấu
           </Text>
+
+          {/* Lỗi thanh toán hiện ở đầu danh sách: thẻ gây lỗi có thể đã bị cuộn
+              khuất, đặt lỗi ngay trên thẻ đó thì người dùng không thấy */}
+          <FormError message={payError} className="mt-4" />
         </View>
       }
       ListEmptyComponent={

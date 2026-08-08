@@ -8,6 +8,7 @@ import Button from "../Button";
 import ConfirmSheet from "../ConfirmSheet";
 import FormError from "../auth/FormError";
 import * as registrationApi from "../../api/playerRegistrationApi";
+import { usePayOsCheckout } from "../../hooks/usePayOsCheckout";
 import { canCancelRegistration } from "../../constants/registration";
 import { fmtDateTime } from "../../utils/date";
 
@@ -38,10 +39,13 @@ function SectionTitle({ children }) {
  * `fieldValues` do admin cấu hình nên số dòng không đoán trước được — một modal
  * cao bằng màn hình thì chẳng khác gì màn riêng, mà lại mất nút quay lại.
  *
- * Không có nút "Xem giải đấu" như web: route chi tiết giải trên mobile chưa
- * dựng, thêm nút bấm vào không đi đâu còn tệ hơn là chưa có nút.
+ * Có đủ ba hành động của modal bên web: thanh toán nốt, xem giải đấu, hủy đăng ký.
  */
-export default function RegistrationDetailSection({ registrationId, onCancelled }) {
+export default function RegistrationDetailSection({
+  registrationId,
+  onCancelled,
+  onOpenTournament,
+}) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,6 +53,31 @@ export default function RegistrationDetailSection({ registrationId, onCancelled 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
+
+  const [payError, setPayError] = useState("");
+
+  /** Tải lại đăng ký để thấy trạng thái mới sau khi đối chiếu xong với PayOS */
+  const refreshDetail = useCallback(async () => {
+    try {
+      const fresh = await registrationApi.getMyRegistrationDetail(registrationId);
+      setDetail(fresh);
+    } catch {
+      // Giữ nguyên dữ liệu đang hiện: đối chiếu đã xong, chỉ là chưa tải lại được
+    }
+  }, [registrationId]);
+
+  const { pay, paying } = usePayOsCheckout({ onSettled: refreshDetail });
+
+  /** Trả nốt phí cho đăng ký còn treo */
+  const handlePay = useCallback(async () => {
+    setPayError("");
+
+    try {
+      await pay(registrationId);
+    } catch (e) {
+      setPayError(e.message);
+    }
+  }, [pay, registrationId]);
 
   useEffect(() => {
     let alive = true;
@@ -147,11 +176,33 @@ export default function RegistrationDetailSection({ registrationId, onCancelled 
 
           {/* className rỗng: khoảng cách đã do `gap-5` của khối cha lo */}
           <FormError message={cancelError} className="" />
+          <FormError message={payError} className="" />
+
+          {/* Đăng ký đã tạo nhưng chưa trả tiền — cho trả nốt ngay tại đây thay vì bắt
+              đăng ký lại từ đầu. Cùng luồng PayOS với màn đăng ký. */}
+          {detail.status === "PENDING_PAYMENT" ? (
+            <Button
+              title="Thanh toán ngay"
+              loading={paying}
+              loadingTitle="Đang chờ thanh toán..."
+              onPress={handlePay}
+            />
+          ) : null}
+
+          {detail.tournamentId ? (
+            <Button
+              title="Xem giải đấu"
+              variant="outline"
+              disabled={paying}
+              onPress={() => onOpenTournament?.(detail.tournamentId)}
+            />
+          ) : null}
 
           {canCancelRegistration(detail.status) ? (
             <Button
               title="Hủy đăng ký"
               variant="danger"
+              disabled={paying}
               onPress={() => {
                 setCancelError("");
                 setConfirmOpen(true);

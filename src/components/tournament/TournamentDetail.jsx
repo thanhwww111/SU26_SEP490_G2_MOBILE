@@ -51,7 +51,12 @@ const InfoCell = ({ label, value }) => (
  * Tab đã mở thì được giữ lại (ẩn bằng `display: none`) để chuyển qua chuyển lại
  * không gọi lại API.
  */
-export default function TournamentDetail({ id, onOpenMyRegistrations }) {
+export default function TournamentDetail({
+  id,
+  onOpenMyRegistrations,
+  onRegister,
+  onPressParticipant,
+}) {
   const colors = useThemeColors();
 
   const [tournament, setTournament] = useState(null);
@@ -138,21 +143,35 @@ export default function TournamentDetail({ id, onOpenMyRegistrations }) {
         <InfoTab
           tournament={tournament}
           onOpenMyRegistrations={onOpenMyRegistrations}
+          onRegister={onRegister}
         />
       );
-    if (tabId === "players") return <PlayersTab tournamentId={tournament.id} />;
+    if (tabId === "players")
+      return (
+        <PlayersTab
+          tournamentId={tournament.id}
+          onPressParticipant={onPressParticipant}
+        />
+      );
     if (tabId === "matches")
       return (
         <MatchesTab
           tournamentId={tournament.id}
           locked={tournament.status === "OPEN_FOR_REGISTRATION"}
+          active={activeTab === "matches"}
         />
       );
     if (tabId === "live")
       return (
         <LiveTab tournamentId={tournament.id} active={activeTab === "live"} />
       );
-    if (tabId === "ranking") return <RankingTab tournamentId={tournament.id} />;
+    if (tabId === "ranking")
+      return (
+        <RankingTab
+          tournamentId={tournament.id}
+          onPressParticipant={onPressParticipant}
+        />
+      );
     return null;
   };
 

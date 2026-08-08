@@ -1,4 +1,11 @@
-import { BTMS_TOKEN_KEY, BTMS_USER_KEY, ROLES } from "../constants/auth";
+import { Platform } from "react-native";
+
+import {
+  BTMS_CREDENTIALS_KEY,
+  BTMS_TOKEN_KEY,
+  BTMS_USER_KEY,
+  ROLES,
+} from "../constants/auth";
 import { getItem, removeItem, setItem } from "./storage";
 
 /** Chuẩn hóa role phase 1: ADMIN | OWNER | MANAGER | STAFF | PLAYER */
@@ -153,4 +160,40 @@ export const persistAuth = async ({ token, user }) => {
 export const clearStoredAuth = async () => {
   await removeItem(BTMS_TOKEN_KEY);
   await removeItem(BTMS_USER_KEY);
+  await removeItem(BTMS_CREDENTIALS_KEY);
+};
+
+/* --- Thông tin đăng nhập để tự lấy phiên mới khi JWT hết hạn --- */
+
+/**
+ * Chỉ lưu trên native.
+ *
+ * Trên bản web (`npm run web`), lớp lưu trữ rơi về localStorage — nơi bất kỳ script nào cũng
+ * đọc được. Mật khẩu nằm ở đó là rủi ro thật, trong khi web lại chẳng cần tính năng này: người
+ * dùng đang ngồi trước máy, đăng nhập lại chỉ mất vài giây.
+ */
+export const persistCredentials = async ({ email, password }) => {
+  if (Platform.OS === "web") return;
+  if (!email || !password) return;
+
+  await setItem(BTMS_CREDENTIALS_KEY, JSON.stringify({ email, password }));
+};
+
+export const readStoredCredentials = async () => {
+  if (Platform.OS === "web") return null;
+
+  try {
+    const raw = await getItem(BTMS_CREDENTIALS_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.email || !parsed?.password) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+export const clearStoredCredentials = async () => {
+  await removeItem(BTMS_CREDENTIALS_KEY);
 };

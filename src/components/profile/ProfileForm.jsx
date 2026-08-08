@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 
 import Input from "../Input";
 import Button from "../Button";
+import DateField from "../DateField";
 import OptionPicker from "../OptionPicker";
 import SectionCard from "../tournament/SectionCard";
 import {
@@ -13,8 +14,9 @@ import {
  * Form thông tin hồ sơ, bám ProfileForm.jsx của web.
  *
  * Web xếp các trường thành lưới hai cột; mobile đổ thành một cột, thứ tự trường
- * giữ nguyên. Hai thẻ `<select>` của web đổi thành `OptionPicker` — React Native
- * không có select gốc.
+ * giữ nguyên. Hai thẻ `<select>` của web đổi thành `OptionPicker`, còn
+ * `<input type="date">` đổi thành `DateField` — React Native không có thẻ nào
+ * trong hai loại đó.
  *
  * `touched` cố ý luôn là true: khác các màn auth (mở ra là ô trống), ở đây dữ
  * liệu đã có sẵn và lỗi chỉ xuất hiện sau khi người dùng bấm lưu, nên hiện ngay
@@ -89,23 +91,15 @@ export default function ProfileForm({
             </View>
           ) : null}
 
-          <View>
-            <Input
-              label="Ngày sinh"
-              value={form.dateOfBirth}
-              onChangeText={setField("dateOfBirth")}
-              placeholder="dd/mm/yyyy"
-              error={errors.dateOfBirth}
-              touched
-              keyboardType="numbers-and-punctuation"
-              editable={!saving}
-            />
-            {!errors.dateOfBirth ? (
-              <Text className="mt-1 text-xs text-faint">
-                Ví dụ: 15/05/1998
-              </Text>
-            ) : null}
-          </View>
+          <DateField
+            label="Ngày sinh"
+            value={form.dateOfBirth}
+            onChange={setField("dateOfBirth")}
+            placeholder="Chọn ngày sinh"
+            error={errors.dateOfBirth}
+            touched
+            disabled={saving}
+          />
 
           <OptionPicker
             label="Giới tính"

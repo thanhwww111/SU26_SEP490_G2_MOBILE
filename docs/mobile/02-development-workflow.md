@@ -371,7 +371,7 @@ Pure helper functions. Currently: `apiError`, `auth`, `date`, `pagination`, `sto
 constants/
 ```
 
-Static application data. Currently: `auth`, `config`, `topPlayers`, `tournament`.
+Static application data. Currently: `auth`, `config`, `leaderboard`, `profile`, `registration`, `tournament`.
 
 ---
 

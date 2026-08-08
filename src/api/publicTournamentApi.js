@@ -30,6 +30,24 @@ export const getPublicMatches = (id) =>
     .then((res) => getApiData(res) ?? []);
 
 /**
+ * GET /tournaments/{id}/stages — các giai đoạn của giải, mỗi giai đoạn kèm
+ * mảng `matches` lồng bên trong (`StageWithMatchesResponse`).
+ *
+ * Khác `/matches` ở chỗ có thêm `name`, `orderNo`, `stageType` của từng giai
+ * đoạn. Tab Trận đấu cần ba trường đó để đặt tên chip giai đoạn và để dựng
+ * bảng điểm gộp — bảng đó xếp hạng theo thứ tự giai đoạn, mà `/matches` phẳng
+ * thì không biết giai đoạn nào trước giai đoạn nào.
+ *
+ * Backend chặn bằng `requirePublicRatio(id)`: giải tắt công khai tỷ số thì
+ * endpoint này trả lỗi. Tab Trận đấu vốn đã bị ẩn trong trường hợp đó nên
+ * không cần xử lý riêng.
+ */
+export const getPublicStages = (id) =>
+  axiosClient
+    .get(`/tournaments/${id}/stages`)
+    .then((res) => getApiData(res) ?? []);
+
+/**
  * GET /tournaments/{id}/rankings — xếp hạng chung cuộc.
  *
  * Trả OBJECT `{ tournamentId, tournamentStatus, isOfficial, entries }`, không

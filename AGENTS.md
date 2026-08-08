@@ -43,6 +43,9 @@ Không dùng `localhost` (điện thoại hiểu là chính nó). Không có h�
 ## Lưu ý
 
 - **`expo-image-picker` thêm ngày 2026-07-29** (màn hồ sơ cần chọn ảnh đại diện). Pull về nhớ chạy `npm install`.
-- Chưa cài toast, WebSocket, date picker, gradient, thư viện render HTML. Bảng đầy đủ kèm cách xử lý thay thế: `docs/mobile/06-agent.md`, mục "Thư viện: có gì, chưa có gì".
+- **`expo-notifications` + `expo-device` + `expo-web-browser` thêm ngày 2026-08-07** (thông báo đẩy, thanh toán PayOS). Pull về nhớ chạy `npm install`.
+- **Thông báo đẩy không chạy trong Expo Go** — Expo đã gỡ remote push khỏi Expo Go từ SDK 53. Cần development build EAS, và cần `extra.eas.projectId` trong `app.json` (chưa có). Phần thông báo trong app thì chạy bình thường. Chi tiết: `docs/mobile/11-changelog.md`, mục ngày 2026-08-07.
+- **`@stomp/stompjs` + `@react-native-community/datetimepicker` thêm ngày 2026-08-08** (tỷ số trực tiếp realtime, ô chọn ngày). Pull về nhớ chạy `npm install`.
+- Chưa cài toast, gradient, thư viện render HTML. Bảng đầy đủ kèm cách xử lý thay thế: `docs/mobile/06-agent.md`, mục "Thư viện: có gì, chưa có gì".
 - Mục "Cấu trúc thư mục" trong `README.md` đã lỗi thời; đọc cấu trúc thật từ thư mục.
 - Repo này là một trong ba repo git độc lập: `SU26_SEP490_G2_BE`, `SU26_SEP490_G2_FE`, `SU26_SEP490_G2_MOBILE`.

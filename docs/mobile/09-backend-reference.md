@@ -101,7 +101,16 @@ Năm endpoint có dấu ✅ đã nối trong `src/api/publicTournamentApi.js` (k
 
 Mobile gom nhóm trận theo vòng từ `/matches` (mảng phẳng, mỗi trận có sẵn `stageId` / `stageType` / `roundNo`) thay vì đọc `/stages` như web — tab Trực tiếp cũng cần đúng endpoint đó, một nguồn cho hai tab thì ít chỗ sai hơn.
 
-**Chưa có WebSocket trên mobile.** Web cập nhật tỷ số trực tiếp qua STOMP (`useTournamentSocket`); `package.json` của mobile không có `@stomp/stompjs` lẫn `sockjs-client`, nên tab Trực tiếp đang gọi lại `/matches` mỗi 15 giây. Cài thư viện socket là quyết định của cả nhóm.
+**WebSocket dùng chung với web** (từ 2026-08-08). Backend khai endpoint `/ws` trong `WebSocketConfig` **không kèm `.withSockJS()`** → WebSocket thuần, `@stomp/stompjs` nối thẳng, không cần `sockjs-client`.
+
+| Thứ | Giá trị |
+|---|---|
+| Endpoint | `ws://<host>:8080/ws` (`getWebSocketUrl()` tự đổi `http`→`ws`) |
+| Topic tỷ số | `/topic/tournament/{id}/matches` |
+| Topic bracket | `/topic/tournament/{id}/bracket` |
+| Hook | `src/hooks/useTournamentSocket.js` — **đừng tự dựng `Client` mới** |
+
+Payload có hai dạng trên cả hai topic: một trận (`MatchResponse`, hoặc bọc trong `{ match }`), hoặc `{ type: "BRACKET_SYNC", matches: [...] }` khi bốc thăm lại / chuyển giai đoạn.
 
 ---
 

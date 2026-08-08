@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { ChevronRight } from "lucide-react-native";
 
 import PlayerAvatar from "../PlayerAvatar";
 import PlayerName from "../PlayerName";
 import SearchField from "../../SearchField";
 import SectionState from "../../home/SectionState";
 import * as publicTournamentApi from "../../../api/publicTournamentApi";
+import { iconSize } from "../../../theme/tokens";
+import { useThemeColors } from "../../../theme/useThemeColors";
 
 /**
  * Tab Xếp hạng — kết quả chung cuộc của giải.
@@ -17,8 +20,12 @@ import * as publicTournamentApi from "../../../api/publicTournamentApi";
  * `TournamentRankingEntryResponse` không có trường ảnh — web đọc
  * `player.avatarUrl` nên nhánh ảnh bên đó không bao giờ chạy. Ở đây chỉ dùng
  * avatar chữ cái, không dựng sẵn code chết.
+ *
+ * Mỗi hàng bấm được sang hồ sơ cơ thủ theo `participantId`, giống web.
  */
-export default function RankingTab({ tournamentId }) {
+export default function RankingTab({ tournamentId, onPressParticipant }) {
+  const colors = useThemeColors();
+
   const [entries, setEntries] = useState([]);
   const [isOfficial, setIsOfficial] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -99,7 +106,12 @@ export default function RankingTab({ tournamentId }) {
       />
 
       {champion ? (
-        <View className="flex-row items-center gap-4 rounded-xl border border-gold bg-navy-900 p-4">
+        <Pressable
+          onPress={() => onPressParticipant?.(champion.participantId)}
+          accessibilityRole="button"
+          accessibilityLabel={`Hồ sơ ${champion.displayName}`}
+          className="flex-row items-center gap-4 rounded-xl border border-gold bg-navy-900 p-4 active:bg-navy-800"
+        >
           <PlayerAvatar name={champion.displayName} size="lg" />
 
           <View className="flex-1">
@@ -113,15 +125,20 @@ export default function RankingTab({ tournamentId }) {
               <Text className="mt-0.5 text-sm text-navy-500">{champion.note}</Text>
             ) : null}
           </View>
-        </View>
+
+          <ChevronRight size={iconSize.sm} color={colors.textInverseMuted} />
+        </Pressable>
       ) : null}
 
       {rest.length > 0 ? (
         <View className="overflow-hidden rounded-xl border border-line bg-surface">
           {rest.map((entry, index) => (
-            <View
+            <Pressable
               key={`${entry.participantId}-${index}`}
-              className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3"
+              onPress={() => onPressParticipant?.(entry.participantId)}
+              accessibilityRole="button"
+              accessibilityLabel={`Hồ sơ ${entry.displayName}`}
+              className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3 active:bg-sunken"
             >
               <Text className="w-14 text-base font-bold italic text-muted">
                 {entry.rankLabel}
@@ -135,7 +152,9 @@ export default function RankingTab({ tournamentId }) {
                   <Text className="mt-0.5 text-xs text-faint">{entry.note}</Text>
                 ) : null}
               </View>
-            </View>
+
+              <ChevronRight size={iconSize.sm} color={colors.faint} />
+            </Pressable>
           ))}
         </View>
       ) : null}

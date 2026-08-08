@@ -6,6 +6,7 @@ import {
   Monitor,
   Moon,
   Sun,
+  Swords,
   User,
 } from "lucide-react-native";
 
@@ -21,8 +22,8 @@ import { useThemeColors } from "../../theme/useThemeColors";
  */
 const PLAYER_MENU = [
   { key: "registrations", label: "Đăng ký của tôi", path: "/(app)/my-registrations", Icon: FileText },
-  { key: "matches", label: "Lịch thi đấu", path: null, Icon: FileText },
-  { key: "payments", label: "Lịch sử thanh toán", path: null, Icon: CreditCard },
+  { key: "matches", label: "Lịch thi đấu", path: "/(app)/matches", Icon: Swords },
+  { key: "payments", label: "Lịch sử thanh toán", path: "/(app)/payments", Icon: CreditCard },
 ];
 
 /**
@@ -108,7 +109,8 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
           transform: [{ translateY }, { scale }],
         }}
       >
-        <View className="w-56 overflow-hidden rounded-xl border border-line bg-surface shadow-lg">
+        {/* Nền sáng hơn thẻ bên dưới — xem ghi chú cùng chỗ trong AppDrawer */}
+        <View className="w-56 overflow-hidden rounded-xl border border-line bg-surface-raised shadow-lg">
           {/* Header mobile chỉ có icon tròn, không hiện tên như web —
               nên tên và email để ở đây, bằng không không biết đang là ai. */}
           <View className="border-b border-line-soft px-3 py-2.5">

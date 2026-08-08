@@ -134,13 +134,14 @@ Toàn app chỉ có **một màu accent duy nhất**.
 
 | Vai trò | Class | Sáng | Tối |
 |---|---|---|---|
-| Nền màn | `bg-canvas` | `#F8FAFC` | `#0A1220` |
-| Nền thẻ, khối | `bg-surface` | `#FFFFFF` | `#0D1B2E` |
-| Nền chìm (khối trong card) | `bg-sunken` | `#F1F5F9` | `#14202F` |
-| Nền chờ ảnh | `bg-sunken-strong` | `#E2E8F0` | `#1B2A3D` |
-| Kẻ giữa các dòng | `border-line-soft` | `#F1F5F9` | `#172433` |
-| Viền thẻ | `border-line` | `#E2E8F0` | `#1F2E42` |
-| Viền ô nhập | `border-line-strong` | `#CBD5E1` | `#2A3B52` |
+| Nền màn | `bg-canvas` | `#F8FAFC` | `#070D18` |
+| Nền thẻ, khối | `bg-surface` | `#FFFFFF` | `#0F1E33` |
+| Lớp phủ nổi trên nội dung | `bg-surface-raised` | `#FFFFFF` | `#18293F` |
+| Nền chìm (khối trong card) | `bg-sunken` | `#F1F5F9` | `#16243A` |
+| Nền chờ ảnh | `bg-sunken-strong` | `#E2E8F0` | `#1F3049` |
+| Kẻ giữa các dòng | `border-line-soft` | `#F1F5F9` | `#1A2942` |
+| Viền thẻ | `border-line` | `#E2E8F0` | `#273B57` |
+| Viền ô nhập | `border-line-strong` | `#CBD5E1` | `#3A5175` |
 | Chữ chính | `text-content` | `#0F172A` | `#F1F5F9` |
 | Chữ phụ | `text-content-2` | `#334155` | `#C7D2DE` |
 | Chữ mờ | `text-muted` | `#64748B` | `#94A3B8` |
@@ -166,11 +167,13 @@ Màu trạng thái **chỉ dùng cho trạng thái**. Không dùng `danger` làm
 
 `gold` = `#C9A227` — chỉ dùng cho thứ hạng và podium.
 
-## `brand-*` và `topPlayers.js`
+## `brand-*` và dải màu của khối Top tay cơ
 
 `brand-50 → brand-700` là nhóm xanh dương còn sót từ trước khi có design system, hiện chỉ dùng ở `app/(app)/profile.jsx`. **Không dùng cho màn mới.**
 
-`src/constants/topPlayers.js` có trường `accent` chứa nhiều mã màu — đó là **dữ liệu mock** cho khối Top tay cơ, không phải token giao diện. Giữ nguyên.
+`RANK_ACCENTS` trong `src/constants/leaderboard.js` là tám mã màu cho vạch dưới ảnh cơ thủ ở khối Top tay cơ, xoay vòng theo thứ hạng. Đây là **ngoại lệ có chủ đích** với luật một accent ở trên: khối Ranked của web vốn nhiều màu (`--accent-*` trong `FE/src/styles/variables.css`), và mobile bám theo. Chỉ dùng cho đúng khối đó, không mở rộng sang chỗ khác.
+
+> **Đổi từ 2026-08-06.** Mục này trước đây nói về `src/constants/topPlayers.js` — mảng 9 cơ thủ tĩnh với trường `accent`. File đó đã xoá khi khối Top tay cơ chuyển sang gọi `GET /leaderboard`. Dải màu được giữ lại nhưng tách khỏi dữ liệu, vì giờ dữ liệu đến từ backend còn màu thì vẫn là quyết định giao diện.
 
 ---
 
@@ -458,13 +461,30 @@ Cả hai phải khớp nhau. Sửa `global.css` thì sửa `src/theme/tokens.js`
 
 | Token | Sáng | Tối | Thay cho |
 |---|---|---|---|
-| `canvas` | `#F8FAFC` | `#0A1220` | `bg-slate-50` — nền màn |
-| `surface` | `#FFFFFF` | `#0D1B2E` | `bg-white` — nền thẻ, khối |
-| `sunken` | `#F1F5F9` | `#14202F` | `bg-slate-100` — khối chìm trong thẻ |
-| `sunken-strong` | `#E2E8F0` | `#1B2A3D` | `bg-slate-200` — nền chờ ảnh |
-| `line-soft` | `#F1F5F9` | `#172433` | `border-slate-100` |
-| `line` | `#E2E8F0` | `#1F2E42` | `border-slate-200` — viền thẻ |
-| `line-strong` | `#CBD5E1` | `#2A3B52` | `border-slate-300` — viền ô nhập |
+| `canvas` | `#F8FAFC` | `#070D18` | `bg-slate-50` — nền màn |
+| `surface` | `#FFFFFF` | `#0F1E33` | `bg-white` — nền thẻ, khối |
+| `surface-raised` | `#FFFFFF` | `#18293F` | lớp phủ: drawer, menu, bottom sheet |
+| `sunken` | `#F1F5F9` | `#16243A` | `bg-slate-100` — khối chìm trong thẻ |
+| `sunken-strong` | `#E2E8F0` | `#1F3049` | `bg-slate-200` — nền chờ ảnh |
+| `line-soft` | `#F1F5F9` | `#1A2942` | `border-slate-100` |
+| `line` | `#E2E8F0` | `#273B57` | `border-slate-200` — viền thẻ |
+| `line-strong` | `#CBD5E1` | `#3A5175` | `border-slate-300` — viền ô nhập |
+
+## Chiều sâu ở chế độ tối — sáng dần, không phải bóng
+
+> **Đổi từ 2026-08-06.** Thang tối cũ đặt `canvas` `#0A1220` cạnh `surface` `#0D1B2E`. Hai giá trị đó cách nhau quá ít: thẻ chìm vào nền, và vì bóng đổ cũng vô dụng trên nền tối, cả app mất hết cảm giác phân tầng. Thang hiện tại giãn khoảng cách ra.
+
+Ở chế độ sáng, lớp nổi nhận biết bằng **bóng**. Ở chế độ tối bóng đen chồng nền đen thì không ai thấy, nên lớp nổi nhận biết bằng **độ sáng bề mặt** — càng nổi càng sáng:
+
+```
+canvas (#070D18)  ← nền màn, lùi xa nhất
+  surface (#0F1E33)      ← thẻ, khối nội dung
+    surface-raised (#18293F)  ← drawer, menu hồ sơ, bottom sheet
+```
+
+Viền cũng là tín hiệu phân tầng thứ hai, nên `line` ở chế độ tối phải đủ sáng để thấy được cạnh thẻ.
+
+**Khi dựng lớp phủ mới** (menu, sheet, popover) thì dùng `bg-surface-raised`, đừng dùng `bg-surface` — bằng không nó sẽ cùng màu với thẻ nằm dưới và trông như dán phẳng vào trang.
 | `content` | `#0F172A` | `#F1F5F9` | `text-slate-900` — chữ chính |
 | `content-2` | `#334155` | `#C7D2DE` | `text-slate-700`, `slate-600` — chữ phụ |
 | `muted` | `#64748B` | `#94A3B8` | `text-slate-500` — chú thích |
@@ -545,7 +565,7 @@ Nợ còn lại của dark mode:
 
 | Chỗ | Vấn đề |
 |---|---|
-| `shadow` trong `tokens.js` | Bóng đen trên nền tối gần như không thấy. Lớp nổi hiện nhận biết bằng nền sáng hơn nền trang, chưa có bóng riêng cho chế độ tối |
+| `shadow` trong `tokens.js` | Bóng đen trên nền tối gần như không thấy. **Đã xử lý 2026-08-06** bằng token `surface-raised`: lớp nổi sáng hơn thẻ bên dưới. Bóng vẫn giữ nguyên cho chế độ sáng |
 | Ảnh hero | `HomeBanner` và `TournamentHero` phủ lớp tối cố định lên ảnh — hợp cả hai chế độ, nhưng ở chế độ tối có thể muốn phủ đậm hơn |
 
 ---

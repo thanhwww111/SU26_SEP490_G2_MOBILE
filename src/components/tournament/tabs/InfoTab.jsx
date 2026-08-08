@@ -110,12 +110,15 @@ const TimeRow = ({ Icon, label, value }) => {
 /**
  * Khối kêu gọi đăng ký ở đầu tab, bám banner CTA của web.
  *
- * Bốn tình huống như web: đã đăng ký, đang mở, hết chỗ, và đóng/chưa mở. Khác
- * web ở chỗ nút "Đăng ký tham dự" chưa có màn đích trên mobile
- * (`/player/tournaments/:id/register` chưa dựng) nên thay bằng ghi chú —
- * 01-design-system.md cấm để nút bấm vào mà không phản ứng.
+ * Bốn tình huống như web: đã đăng ký, đang mở, hết chỗ, và đóng/chưa mở.
  */
-const RegistrationBanner = ({ tournament, myRegistration, isPlayer, onOpenMyRegistrations }) => {
+const RegistrationBanner = ({
+  tournament,
+  myRegistration,
+  isPlayer,
+  onOpenMyRegistrations,
+  onRegister,
+}) => {
   const colors = useThemeColors();
   const approved = tournament.approvedCount ?? 0;
   const max = tournament.maxParticipants ?? 0;
@@ -179,10 +182,14 @@ const RegistrationBanner = ({ tournament, myRegistration, isPlayer, onOpenMyRegi
           </Text>
         ) : null}
 
-        <Text className="mt-1 text-sm text-navy-500">
-          Đăng ký giải hiện thực hiện trên bản web — màn đăng ký trên app đang
-          được dựng.
-        </Text>
+        <Pressable
+          onPress={onRegister}
+          className="mt-2 h-11 items-center justify-center rounded-full bg-accent active:bg-accent-pressed"
+        >
+          <Text className="text-sm font-bold uppercase text-white">
+            Đăng ký tham dự
+          </Text>
+        </Pressable>
       </View>
     );
   }
@@ -239,7 +246,7 @@ const RegistrationBanner = ({ tournament, myRegistration, isPlayer, onOpenMyRegi
  * Lỗi của request đó cố ý nuốt — không biết mình đã đăng ký hay chưa thì phần
  * còn lại của tab vẫn phải đọc được.
  */
-export default function InfoTab({ tournament, onOpenMyRegistrations }) {
+export default function InfoTab({ tournament, onOpenMyRegistrations, onRegister }) {
   const user = useAuthStore((s) => s.user);
   const isPlayer = user?.role === ROLES.PLAYER;
 
@@ -302,6 +309,7 @@ export default function InfoTab({ tournament, onOpenMyRegistrations }) {
         myRegistration={myRegistration}
         isPlayer={isPlayer}
         onOpenMyRegistrations={onOpenMyRegistrations}
+        onRegister={onRegister}
       />
 
       <SectionCard title="Thời gian">

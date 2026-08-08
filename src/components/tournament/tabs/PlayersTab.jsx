@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { ChevronRight } from "lucide-react-native";
 
 import PlayerAvatar from "../PlayerAvatar";
 import PlayerName from "../PlayerName";
 import SearchField from "../../SearchField";
 import SectionState from "../../home/SectionState";
 import * as publicTournamentApi from "../../../api/publicTournamentApi";
+import { iconSize } from "../../../theme/tokens";
+import { useThemeColors } from "../../../theme/useThemeColors";
 
 /**
  * Tab Cơ thủ — danh sách người tham gia giải.
@@ -17,10 +20,11 @@ import * as publicTournamentApi from "../../../api/publicTournamentApi";
  * Tìm kiếm lọc tại chỗ trên mảng đã tải, không gọi lại API — endpoint
  * `/participants` trả toàn bộ danh sách một lần, không có tham số tìm kiếm.
  *
- * Chưa nối được sang hồ sơ cơ thủ: màn `/event/players/:id` chưa dựng trên
- * mobile, nên mỗi dòng chỉ để đọc chứ không bấm được.
+ * Mỗi dòng bấm được sang hồ sơ cơ thủ, đi bằng `participantId` như web.
  */
-export default function PlayersTab({ tournamentId }) {
+export default function PlayersTab({ tournamentId, onPressParticipant }) {
+  const colors = useThemeColors();
+
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,9 +88,12 @@ export default function PlayersTab({ tournamentId }) {
             const eliminated = participant.status === "INACTIVE";
 
             return (
-              <View
+              <Pressable
                 key={participant.id}
-                className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3"
+                onPress={() => onPressParticipant?.(participant.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Hồ sơ ${participant.displayName}`}
+                className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3 active:bg-sunken"
               >
                 {/* Backend đặt tên trường là `avtarUrl`, không phải `avatarUrl` */}
                 <PlayerAvatar
@@ -114,7 +121,9 @@ export default function PlayersTab({ tournamentId }) {
                     </Text>
                   ) : null}
                 </View>
-              </View>
+
+                <ChevronRight size={iconSize.sm} color={colors.faint} />
+              </Pressable>
             );
           })
         )}
