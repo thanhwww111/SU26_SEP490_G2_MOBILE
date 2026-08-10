@@ -134,19 +134,19 @@ Toàn app chỉ có **một màu accent duy nhất**.
 
 | Vai trò | Class | Sáng | Tối |
 |---|---|---|---|
-| Nền màn | `bg-canvas` | `#F8FAFC` | `#070D18` |
-| Nền thẻ, khối | `bg-surface` | `#FFFFFF` | `#0F1E33` |
-| Lớp phủ nổi trên nội dung | `bg-surface-raised` | `#FFFFFF` | `#18293F` |
-| Nền chìm (khối trong card) | `bg-sunken` | `#F1F5F9` | `#16243A` |
-| Nền chờ ảnh | `bg-sunken-strong` | `#E2E8F0` | `#1F3049` |
-| Kẻ giữa các dòng | `border-line-soft` | `#F1F5F9` | `#1A2942` |
-| Viền thẻ | `border-line` | `#E2E8F0` | `#273B57` |
-| Viền ô nhập | `border-line-strong` | `#CBD5E1` | `#3A5175` |
-| Chữ chính | `text-content` | `#0F172A` | `#F1F5F9` |
-| Chữ phụ | `text-content-2` | `#334155` | `#C7D2DE` |
-| Chữ mờ | `text-muted` | `#64748B` | `#94A3B8` |
-| Mờ nhất | `text-faint` | `#94A3B8` | `#6B7A8F` |
-| Bị vô hiệu | `text-disabled` | `#CBD5E1` | `#3A4A60` |
+| Nền màn | `bg-canvas` | `#F8FAFC` | `#0B0D12` |
+| Nền thẻ, khối | `bg-surface` | `#FFFFFF` | `#161A22` |
+| Lớp phủ nổi trên nội dung | `bg-surface-raised` | `#FFFFFF` | `#20242E` |
+| Nền chìm (khối trong card) | `bg-sunken` | `#F1F5F9` | `#1C2029` |
+| Nền chờ ảnh | `bg-sunken-strong` | `#E2E8F0` | `#262A35` |
+| Kẻ giữa các dòng | `border-line-soft` | `#F1F5F9` | `#1F232C` |
+| Viền thẻ | `border-line` | `#E2E8F0` | `#2B3039` |
+| Viền ô nhập | `border-line-strong` | `#CBD5E1` | `#3C424D` |
+| Chữ chính | `text-content` | `#0F172A` | `#F8FAFC` |
+| Chữ phụ | `text-content-2` | `#334155` | `#D2D6DC` |
+| Chữ mờ | `text-muted` | `#64748B` | `#9CA1A9` |
+| Mờ nhất | `text-faint` | `#94A3B8` | `#838892` |
+| Bị vô hiệu | `text-disabled` | `#CBD5E1` | `#474B54` |
 
 Giá trị định nghĩa ở `global.css`. Chi tiết và các trường hợp ngoại lệ: Phần 9.
 
@@ -505,19 +505,20 @@ Cả hai phải khớp nhau. Sửa `global.css` thì sửa `src/theme/tokens.js`
 
 | Token | Sáng | Tối | Thay cho |
 |---|---|---|---|
-| `canvas` | `#F8FAFC` | `#0A1220` | `bg-slate-50` — nền màn |
-| `surface` | `#FFFFFF` | `#131C2E` | `bg-white` — nền thẻ, khối |
-| `surface-raised` | `#FFFFFF` | `#1D2739` | lớp phủ: drawer, menu, bottom sheet |
-| `sunken` | `#F1F5F9` | `#1A2333` | `bg-slate-100` — khối chìm trong thẻ |
-| `sunken-strong` | `#E2E8F0` | `#232C3D` | `bg-slate-200` — nền chờ ảnh |
-| `line-soft` | `#F1F5F9` | `#1E2839` | `border-slate-100` |
-| `line` | `#E2E8F0` | `#2A3446` | `border-slate-200` — viền thẻ |
-| `line-strong` | `#CBD5E1` | `#3D4759` | `border-slate-300` — viền ô nhập |
+| `canvas` | `#F8FAFC` | `#0B0D12` | `bg-slate-50` — nền màn |
+| `surface` | `#FFFFFF` | `#161A22` | `bg-white` — nền thẻ, khối |
+| `surface-raised` | `#FFFFFF` | `#20242E` | lớp phủ: drawer, menu, bottom sheet |
+| `sunken` | `#F1F5F9` | `#1C2029` | `bg-slate-100` — khối chìm trong thẻ |
+| `sunken-strong` | `#E2E8F0` | `#262A35` | `bg-slate-200` — nền chờ ảnh |
+| `line-soft` | `#F1F5F9` | `#1F232C` | `border-slate-100` |
+| `line` | `#E2E8F0` | `#2B3039` | `border-slate-200` — viền thẻ |
+| `line-strong` | `#CBD5E1` | `#3C424D` | `border-slate-300` — viền ô nhập |
+| `band` | `#0D1B2E` | `#262A35` | dải tiêu đề đậm trong thẻ — **đừng dùng `bg-navy-900`** |
 | `content` | `#0F172A` | `#F8FAFC` | `text-slate-900` — chữ chính |
-| `content-2` | `#334155` | `#CFD5DE` | `text-slate-700`, `slate-600` — chữ phụ |
-| `muted` | `#64748B` | `#9AA2AF` | `text-slate-500` — chú thích |
-| `faint` | `#94A3B8` | `#7C8491` | `text-slate-400` — mờ nhất |
-| `disabled` | `#CBD5E1` | `#464E5C` | `text-slate-300` — bị vô hiệu |
+| `content-2` | `#334155` | `#D2D6DC` | `text-slate-700`, `slate-600` — chữ phụ |
+| `muted` | `#64748B` | `#9CA1A9` | `text-slate-500` — chú thích |
+| `faint` | `#94A3B8` | `#838892` | `text-slate-400` — mờ nhất |
+| `disabled` | `#CBD5E1` | `#474B54` | `text-slate-300` — bị vô hiệu |
 
 ## Chế độ tối phải ĐEN SÂU, không được ngả xanh
 
@@ -525,16 +526,25 @@ Cả hai phải khớp nhau. Sửa `global.css` thì sửa `src/theme/tokens.js`
 
 Web tăng độ sáng bằng cách **pha trắng** lên nền — `rgba(255,255,255,.03)`, `dark:border-white/10` (dùng 80 lần), `dark:text-white/60`. Cộng đều cả ba kênh nên sắc độ giữ nguyên xuyên suốt.
 
-**Quy tắc: mọi bậc tối phải có `B − R` nằm trong khoảng 18–28.** Thêm màu tối mới thì kiểm lại con số này trước khi commit. Đừng "làm sáng lên" bằng cách tăng riêng kênh xanh.
+**Quy tắc: mọi bậc tối phải có `B − R` nằm trong khoảng 5–17.** Thêm màu tối mới thì kiểm lại con số này trước khi commit. Đừng "làm sáng lên" bằng cách tăng riêng kênh xanh.
 
-`canvas` và `surface` lấy **đúng** giá trị của web (`src/styles/global.css` bên FE, dòng 168 và 224). Hai giá trị đó chỉ cách nhau khoảng 11 điểm độ sáng, nên thứ tách thẻ khỏi nền là **viền**, không phải chênh lệch nền — đúng như web vẫn làm.
+> **MỐC LÀ TRANG CHỦ CỦA WEB, không phải `.dark body` trong `global.css` bên đó.**
+>
+> `pages/Home/index.jsx` ghi đè nền bằng `dark:bg-[#0b0d12]` và thẻ bằng
+> `dark:bg-[#161a22]` — B−R chỉ 7 và 12, gần như đen trung tính. Còn `.dark body`
+> để `#0a1220` (B−R 22) là thang navy cũ. Lấy nhầm nó làm mốc thì cả app ngả
+> xanh trong khi trang chủ vẫn đen — đúng lỗi đã xảy ra ngày 2026-08-10.
+
+**Đừng dùng `bg-navy-900` làm nền khối.** Đó là màu cứng, không đổi theo chế độ. Trên nền trắng nó là dải đậm tương phản mạnh — đúng; nhưng trên nền tối nó gần trùng độ sáng với thẻ mà lại xanh hơn hẳn (B−R 33 so với 27), hiện ra thành mảng xanh trôi nổi. Dùng token `band`. `navy-*` chỉ còn dành cho hero, banner và chip đang chọn — những chỗ cố ý tối ở cả hai chế độ.
+
+ 168 và 224). Hai giá trị đó chỉ cách nhau khoảng 11 điểm độ sáng, nên thứ tách thẻ khỏi nền là **viền**, không phải chênh lệch nền — đúng như web vẫn làm.
 
 Thứ tự các lớp, sáng dần:
 
 ```
-canvas (#0A1220)  ← nền màn, lùi xa nhất
-  surface (#131C2E)      ← thẻ, khối nội dung
-    surface-raised (#1D2739)  ← drawer, menu hồ sơ, bottom sheet
+canvas (#0B0D12)  ← nền màn, lùi xa nhất
+  surface (#161A22)      ← thẻ, khối nội dung
+    surface-raised (#20242E)  ← drawer, menu hồ sơ, bottom sheet
 ```
 
 **Khi dựng lớp phủ mới** (menu, sheet, popover) thì dùng `bg-surface-raised`, đừng dùng `bg-surface` — bằng không nó sẽ cùng màu với thẻ nằm dưới và trông như dán phẳng vào trang.
@@ -550,7 +560,7 @@ Thương hiệu và trạng thái giữ nguyên ở cả hai chế độ — đ�
 
 `accent` · `gold` · `success` · `warning` · `danger` · `info` · `navy-*`
 
-**Riêng `brand` thì có đổi**: navy-700 đặt trên nền `#0A1220` gần như chìm hẳn, nên ở chế độ tối nó sáng lên thành `#8FB0DC`. Đây là màu của icon và spinner, không phải màu nền nút.
+**Riêng `brand` thì có đổi**: navy-700 đặt trên nền `#0B0D12` gần như chìm hẳn, nên ở chế độ tối nó sáng lên thành `#8FB0DC`. Đây là màu của icon và spinner, không phải màu nền nút.
 
 ## Khối cố ý tối
 

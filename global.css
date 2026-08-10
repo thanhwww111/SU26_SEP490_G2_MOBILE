@@ -40,6 +40,10 @@
     --c-faint: #94a3b8; /* mờ nhất, thay text-slate-400 */
     --c-disabled: #cbd5e1; /* chữ bị vô hiệu, thay text-slate-300 */
 
+    /* Dải tiêu đề đậm nằm trong thẻ: đầu bảng điểm, đầu mỗi vòng đấu, thẻ vô
+       địch. Ở chế độ sáng là navy đậm tương phản với thẻ trắng. */
+    --c-band: #0d1b2e;
+
     /* Nền tint của trạng thái — bản sáng dùng thang 50 của Tailwind */
     --c-tint-danger: #fef2f2;
     --c-tint-success: #ecfdf5;
@@ -70,27 +74,47 @@
    * hiện 80 lần bên đó.
    */
   .dark:root {
-    --c-canvas: #0a1220; /* nền trang — đúng `.dark body` của web */
-    --c-surface: #131c2e; /* thẻ — đúng `.dark .content-dark .bg-white` của web */
-    --c-surface-raised: #1d2739; /* drawer, menu, bottom sheet — nổi trên thẻ */
-    --c-sunken: #1a2333; /* khối chìm trong thẻ */
-    --c-sunken-strong: #232c3d; /* nền chờ ảnh */
+    /*
+     * MỐC LÀ TRANG CHỦ CỦA WEB, không phải `.dark body` trong global.css bên đó.
+     *
+     * `pages/Home/index.jsx` ghi đè nền body bằng `dark:bg-[#0b0d12]` và thẻ
+     * bằng `dark:bg-[#161a22]` — hiệu B−R chỉ 7 và 12, tức gần như đen trung
+     * tính. Còn `.dark body` để #0a1220 (B−R 22) là thang navy cũ mà các trang
+     * khác đang dùng; lấy nhầm nó làm mốc thì cả app ngả xanh.
+     */
+    --c-canvas: #0b0d12; /* nền trang — đúng trang chủ web */
+    --c-surface: #161a22; /* thẻ — đúng trang chủ web */
+    --c-surface-raised: #20242e; /* drawer, menu, bottom sheet — nổi trên thẻ */
+    --c-sunken: #1c2029; /* khối chìm trong thẻ */
+    --c-sunken-strong: #262a35; /* nền chờ ảnh */
 
     /* Viền là tín hiệu phân tầng CHÍNH ở chế độ tối, không phải phụ: nền và thẻ
        chỉ cách nhau vài phần trăm độ sáng, mất viền là thẻ trôi vào nền */
-    --c-line-soft: #1e2839;
-    --c-line: #2a3446;
-    --c-line-strong: #3d4759;
+    --c-line-soft: #1f232c;
+    --c-line: #2b3039;
+    --c-line-strong: #3c424d;
 
-    /* Chữ quy về thang trung tính, bám `dark:text-white/…` của web thay vì
-       thang slate ngả xanh */
+    /*
+     * Dải tiêu đề ở chế độ tối phải SÁNG hơn thẻ, không phải tối hơn.
+     *
+     * Bản trước dùng thẳng `navy-900` (#0D1B2E) cho cả hai chế độ. Trên nền
+     * trắng nó là dải đậm tương phản mạnh — đúng. Nhưng trên nền tối nó gần
+     * trùng độ sáng với thẻ (#131C2E) mà lại xanh hơn hẳn (hiệu B−R 33 so với
+     * 27), nên hiện ra thành mảng xanh trôi nổi thay vì một dải tiêu đề.
+     *
+     * Ở đây đảo lại: sáng hơn thẻ một bậc, giữ đúng tông của thang tối.
+     */
+    --c-band: #262a35;
+
+    /* Chữ cũng phải trung tính theo nền: thang slate cũ (B−R 21+) đặt trên nền
+       B−R 7 thì chính chữ lại là thứ ngả xanh */
     --c-content: #f8fafc;
-    --c-content-2: #cfd5de;
-    --c-muted: #9aa2af;
+    --c-content-2: #d2d6dc;
+    --c-muted: #9ca1a9;
     /* Sáng hơn thang cũ một bậc để đạt 4.5:1 trên nền thẻ — mức AA cho chữ
        thường. Bản trước chỉ được 3.83 nên chú thích và mốc thời gian khó đọc */
-    --c-faint: #7c8491;
-    --c-disabled: #464e5c;
+    --c-faint: #838892;
+    --c-disabled: #474b54;
 
     /* Tint tối hơn hẳn bản sáng: nền #fef2f2 đặt trên trang #0a1220 sẽ chói */
     --c-tint-danger: #2a1416;

@@ -395,7 +395,7 @@ export default function MatchesTab({ tournamentId, locked, active }) {
               >
                 {/* Web tô gradient đỏ cho thanh tiêu đề vòng; RN chưa có thư viện
                     gradient trong project nên dùng nền navy đặc như các khối tối khác */}
-                <View className="flex-row items-center justify-between bg-navy-900 px-4 py-2.5">
+                <View className="flex-row items-center justify-between bg-band px-4 py-2.5">
                   <Text className="text-sm font-semibold text-white">
                     {round.label}
                   </Text>

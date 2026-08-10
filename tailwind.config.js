@@ -163,6 +163,10 @@ module.exports = {
         faint: "var(--c-faint)",
         disabled: "var(--c-disabled)",
 
+        /* Dải tiêu đề đậm trong thẻ — đừng dùng `navy-900` cho việc này, nó là
+           màu cứng nên không đổi theo chế độ tối */
+        band: "var(--c-band)",
+
         "tint-danger": "var(--c-tint-danger)",
         "tint-success": "var(--c-tint-success)",
         "tint-warning": "var(--c-tint-warning)",

@@ -126,7 +126,7 @@ export default function StandingTable({ rows }) {
 
   return (
     <View className="overflow-hidden rounded-xl border border-line bg-surface">
-      <View className="flex-row items-center justify-between bg-navy-900 px-4 py-2.5">
+      <View className="flex-row items-center justify-between bg-band px-4 py-2.5">
         <Text className="text-sm font-semibold text-white">Bảng xếp hạng</Text>
         <Text className="text-xs text-navy-500">{rows.length} cơ thủ</Text>
       </View>

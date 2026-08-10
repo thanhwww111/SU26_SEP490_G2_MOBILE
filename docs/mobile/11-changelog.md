@@ -6,6 +6,40 @@ Không ghi ở đây: chi tiết cách dùng component (xem [08](08-reusable-pat
 
 ---
 
+# Đã thiết kế, CHƯA làm
+
+**Theo dõi giải / cơ thủ + thông báo** — [spec đầy đủ](../superpowers/specs/2026-08-10-follow-and-notify-design.md), chốt 2026-08-10.
+
+Người dùng theo dõi một giải hoặc một cơ thủ để tiện xem đối thủ, nhận thông báo ba tầng: realtime khi mở app (WebSocket có sẵn), hẹn giờ cục bộ khi app đóng, và push từ server khi có kết quả bất ngờ.
+
+Gác lại vì nhóm đang tập trung hoàn thiện sản phẩm. **Đã chốt: làm cả ba tầng khi nào cần tới.** Spec đã khảo sát sẵn toàn bộ hạ tầng backend kèm `file:line`, nêu rõ bốn file BE cần thêm và vì sao thêm bảng mới không vi phạm ràng buộc 07/08 — mở ra là code được ngay, không phải dò lại.
+
+---
+
+# 2026-08-10 (d) — Chế độ tối lấy đúng mốc: TRANG CHỦ, không phải `.dark body`
+
+Bản (c) bên dưới chữa đúng cơ chế nhưng **lấy sai mốc**, nên app vẫn ngả xanh so với trang chủ web.
+
+Nguồn nhầm lẫn: `global.css` bên FE có `.dark body { background: #0a1220 }` — trông như mốc chung của web. Nhưng `pages/Home/index.jsx` **ghi đè nó**:
+
+```jsx
+<div className="w-full bg-white dark:bg-[#0b0d12] ...">   // nền
+<div className="... dark:bg-[#161a22] ...">                // thẻ
+```
+
+| | nền | B−R | thẻ | B−R |
+|---|---|---|---|---|
+| Trang chủ (mốc thật) | `#0b0d12` | **7** | `#161a22` | **12** |
+| `.dark body` (mốc nhầm) | `#0a1220` | 22 | `#131c2e` | 27 |
+
+Hiệu B−R 22 so với 7 là khác biệt mắt thấy rõ: một bên navy, một bên đen. Thang tối mobile giờ lấy đúng cặp của trang chủ, mọi bậc B−R nằm trong **5–17**.
+
+Bốn bậc chữ vẫn đạt AA trên nền mới (thấp nhất là `faint`, 4.90:1).
+
+**Repo FE cũng đồng bộ cùng lượt**: `global.css`, `admin.css`, `eventTheme.css`, `rankingsTheme.css` — toàn bộ đưa về thang đen của trang chủ. Trước đó mỗi khu một tông, và không khu nào khớp chính trang chủ.
+
+---
+
 # 2026-08-10 (c) — Chế độ tối hết ngả xanh
 
 Phản hồi: "dark mode mobile chỉ là nền xanh đậm, không đen sâu có chiều sâu như web".

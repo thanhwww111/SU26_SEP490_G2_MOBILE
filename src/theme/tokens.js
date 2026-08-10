@@ -81,6 +81,8 @@ export const lightColors = {
   sunken: palette.slate100,
   sunkenStrong: palette.slate200,
   surfaceInverse: palette.navy900,
+  /* Dải tiêu đề đậm trong thẻ — xem chú thích ở nhánh tối */
+  band: palette.navy900,
 
   lineSoft: palette.slate100,
   line: palette.slate200,
@@ -115,23 +117,26 @@ export const lightColors = {
 export const darkColors = {
   ...constantColors,
 
-  canvas: "#0A1220",
-  surface: "#131C2E",
-  surfaceRaised: "#1D2739",
-  sunken: "#1A2333",
-  sunkenStrong: "#232C3D",
-  surfaceInverse: "#05090F",
+  canvas: "#0B0D12",
+  surface: "#161A22",
+  surfaceRaised: "#20242E",
+  sunken: "#1C2029",
+  sunkenStrong: "#262A35",
+  surfaceInverse: "#05060A",
+  /* Sáng hơn thẻ chứ không tối hơn — `navy-900` cũ gần trùng độ sáng với thẻ
+     mà lại xanh hơn hẳn, hiện ra thành mảng xanh thay vì dải tiêu đề */
+  band: "#262A35",
 
-  lineSoft: "#1E2839",
-  line: "#2A3446",
-  lineStrong: "#3D4759",
+  lineSoft: "#1F232C",
+  line: "#2B3039",
+  lineStrong: "#3C424D",
 
   content: "#F8FAFC",
-  content2: "#CFD5DE",
-  muted: "#9AA2AF",
+  content2: "#D2D6DC",
+  muted: "#9CA1A9",
   /* Đạt đúng 4.5:1 trên nền thẻ — mức AA cho chữ thường. Đừng hạ xuống tối hơn */
-  faint: "#7C8491",
-  disabled: "#464E5C",
+  faint: "#838892",
+  disabled: "#474B54",
 
   brand: "#8FB0DC",
   brandPressed: "#A9C4E6",

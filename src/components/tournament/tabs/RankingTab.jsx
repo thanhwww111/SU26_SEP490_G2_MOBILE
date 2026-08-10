@@ -117,7 +117,7 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
           onPress={() => onPressParticipant?.(champion.participantId)}
           accessibilityRole="button"
           accessibilityLabel={`Hồ sơ ${champion.displayName}`}
-          className="flex-row items-center gap-4 rounded-xl border border-gold bg-navy-900 p-4 active:bg-navy-800"
+          className="flex-row items-center gap-4 rounded-xl border border-gold bg-band p-4 active:bg-sunken-strong"
         >
           <PlayerAvatar name={champion.displayName} size="lg" />
 

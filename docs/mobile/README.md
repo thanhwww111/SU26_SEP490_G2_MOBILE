@@ -96,13 +96,11 @@ Cập nhật: 2026-07-29. Chi tiết từng đợt làm nằm ở [11-changelog.
 | Tin tức | Danh sách `/news`, chi tiết `/news/[slug]` |
 | Cơ sở | Danh sách `/branches`, chi tiết `/branches/[id]` |
 | Cá nhân | Hồ sơ (sửa thông tin, đổi ảnh, đổi mật khẩu), đăng ký giải của tôi |
-| Giao diện | Dark mode cho toàn nhóm `(app)` — Tự động / Sáng / Tối trong menu hồ sơ |
+| Giao diện | Dark mode cho toàn nhóm `(app)` — nút Sáng/Tối cạnh chuông trên header |
 
-**Ưu tiên tiếp theo** — vẫn là luồng PLAYER:
+**Đã chốt thiết kế, HOÃN thi công:**
 
-1. Đăng ký giải `/player/tournaments/:id/register` — form động, đọc field từ API.
-2. Lịch thi đấu cá nhân `/player/matches`.
-3. Lịch sử thanh toán `/player/payments` — cần deep link PayOS, phải có spec riêng.
+- **Theo dõi giải / cơ thủ + thông báo** — [spec đầy đủ](../superpowers/specs/2026-08-10-follow-and-notify-design.md). Nhóm đang tập trung hoàn thiện sản phẩm nên gác lại; spec viết đủ chi tiết để mở ra code ngay, đã khảo sát sẵn hạ tầng backend kèm `file:line`. Chốt làm cả ba tầng khi nào cần tới.
 
 **Chặn bởi web:** ba mục `Tỷ Số Trực Tiếp`, `Bảng Xếp Hạng`, `Cơ Thủ` trong drawer còn trống vì **web cũng chưa dựng**. Mobile không tự định nghĩa giao diện mới — cần nhóm chốt thiết kế trước.
 
