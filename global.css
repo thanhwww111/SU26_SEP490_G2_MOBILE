@@ -53,33 +53,44 @@
 
   /*
    * Nhánh tối — độ cao biểu diễn bằng ĐỘ SÁNG bề mặt, không bằng bóng.
+   * Bóng đổ vô dụng ở đây (đen chồng đen).
    *
-   * Bóng đổ vô dụng ở đây (đen chồng đen), nên thứ duy nhất tách được lớp này
-   * với lớp kia là chênh lệch độ sáng. Bản trước để canvas #0a1220 và surface
-   * #0d1b2e — cách nhau quá ít, thẻ chìm hẳn vào nền và cả app trông phẳng lì.
+   * SỬA 2026-08-10: mọi bậc trước đây tăng độ sáng chủ yếu ở kênh xanh, nên
+   * càng lên lớp cao càng xanh — đo bằng hiệu B−R thì viền đậm lệch tới 59
+   * trong khi web giữ khoảng 24 ở mọi lớp. Kết quả là app trông "xanh đậm"
+   * chứ không "đen sâu" như web.
    *
-   * Thang hiện tại giãn khoảng cách ra thành bốn bậc rõ rệt:
-   *   canvas (lùi sau) → surface (thẻ) → surface-raised (lớp phủ) → sunken-strong
-   * Mỗi bậc sáng hơn bậc dưới đủ để thấy mà không phá tông navy của thương hiệu.
+   * Web tăng độ sáng bằng cách PHA TRẮNG lên nền (`rgba(255,255,255,.03)`,
+   * `white/10`…), tức cộng đều cả ba kênh, nên sắc độ giữ nguyên xuyên suốt.
+   * Thang dưới đây làm đúng vậy: B−R nằm trong khoảng 18–28 ở mọi bậc.
+   *
+   * `canvas` và `surface` lấy ĐÚNG giá trị của web (`global.css` bên FE, dòng
+   * 168 và 224). Hai giá trị đó cách nhau không nhiều, nên việc tách thẻ khỏi
+   * nền trông cậy vào VIỀN — cũng là cách web làm, `dark:border-white/10` xuất
+   * hiện 80 lần bên đó.
    */
   .dark:root {
-    --c-canvas: #070d18; /* tối hơn hẳn để thẻ có chỗ nổi lên */
-    --c-surface: #0f1e33; /* thẻ, khối nội dung */
-    --c-surface-raised: #18293f; /* drawer, menu, bottom sheet — nổi trên thẻ */
-    --c-sunken: #16243a; /* khối chìm trong thẻ */
-    --c-sunken-strong: #1f3049; /* nền chờ ảnh */
+    --c-canvas: #0a1220; /* nền trang — đúng `.dark body` của web */
+    --c-surface: #131c2e; /* thẻ — đúng `.dark .content-dark .bg-white` của web */
+    --c-surface-raised: #1d2739; /* drawer, menu, bottom sheet — nổi trên thẻ */
+    --c-sunken: #1a2333; /* khối chìm trong thẻ */
+    --c-sunken-strong: #232c3d; /* nền chờ ảnh */
 
-    /* Viền sáng lên rõ: ở chế độ tối cạnh thẻ là tín hiệu phân tầng thứ hai,
-       viền quá tối thì thẻ mất đường bao và trôi vào nhau */
-    --c-line-soft: #1a2942;
-    --c-line: #273b57;
-    --c-line-strong: #3a5175;
+    /* Viền là tín hiệu phân tầng CHÍNH ở chế độ tối, không phải phụ: nền và thẻ
+       chỉ cách nhau vài phần trăm độ sáng, mất viền là thẻ trôi vào nền */
+    --c-line-soft: #1e2839;
+    --c-line: #2a3446;
+    --c-line-strong: #3d4759;
 
-    --c-content: #f1f5f9;
-    --c-content-2: #c7d2de;
-    --c-muted: #94a3b8;
-    --c-faint: #6b7a8f;
-    --c-disabled: #3a4a60;
+    /* Chữ quy về thang trung tính, bám `dark:text-white/…` của web thay vì
+       thang slate ngả xanh */
+    --c-content: #f8fafc;
+    --c-content-2: #cfd5de;
+    --c-muted: #9aa2af;
+    /* Sáng hơn thang cũ một bậc để đạt 4.5:1 trên nền thẻ — mức AA cho chữ
+       thường. Bản trước chỉ được 3.83 nên chú thích và mốc thời gian khó đọc */
+    --c-faint: #7c8491;
+    --c-disabled: #464e5c;
 
     /* Tint tối hơn hẳn bản sáng: nền #fef2f2 đặt trên trang #0a1220 sẽ chói */
     --c-tint-danger: #2a1416;

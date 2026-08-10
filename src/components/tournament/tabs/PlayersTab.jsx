@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
+import TabScreen from "./TabScreen";
 import PlayerAvatar from "../PlayerAvatar";
 import PlayerName from "../PlayerName";
 import SearchField from "../../SearchField";
@@ -60,22 +61,26 @@ export default function PlayersTab({ tournamentId, onPressParticipant }) {
 
   if (loading || error || participants.length === 0) {
     return (
-      <SectionState
-        loading={loading}
-        error={error}
-        emptyMessage="Danh sách cơ thủ chưa được công bố."
-      />
+      <TabScreen>
+        <SectionState
+          loading={loading}
+          error={error}
+          emptyMessage="Danh sách cơ thủ chưa được công bố."
+        />
+      </TabScreen>
     );
   }
 
   return (
-    <View className="gap-3">
-      <SearchField
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Tìm cơ thủ..."
-      />
-
+    <TabScreen
+      filters={
+        <SearchField
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Tìm cơ thủ..."
+        />
+      }
+    >
       <View className="overflow-hidden rounded-xl border border-line bg-surface">
         {filtered.length === 0 ? (
           <View className="py-8">
@@ -134,6 +139,6 @@ export default function PlayersTab({ tournamentId, onPressParticipant }) {
           </Text>
         </View>
       </View>
-    </View>
+    </TabScreen>
   );
 }

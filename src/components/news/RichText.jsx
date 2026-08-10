@@ -10,12 +10,16 @@ import { parseHtmlBlocks } from "../../utils/html";
  * Web để h1 rất lớn, nhưng trong bài viết trên điện thoại thì h1 và h2 gần như
  * cùng vai trò (tiêu đề bài đã nằm riêng phía trên), nên gom lại còn ba bậc.
  * Mọi cỡ đều nằm trong thang ở 01-design-system.md.
+ *
+ * Hai bậc trên dùng `font-display` cho khớp web — bên đó h1–h6 đều đổi sang
+ * phông tiêu đề. Bậc h5/h6 giữ phông chữ thường: ở cỡ 14 thì phông tiêu đề
+ * condensed đọc mệt mà cũng chẳng còn ra dáng tiêu đề.
  */
 const HEADING_CLASS = {
-  1: "text-xl font-bold",
-  2: "text-xl font-bold",
-  3: "text-base font-bold",
-  4: "text-base font-bold",
+  1: "text-xl font-display",
+  2: "text-xl font-display",
+  3: "text-base font-display",
+  4: "text-base font-display",
   5: "text-sm font-bold",
   6: "text-sm font-bold",
 };
@@ -35,11 +39,18 @@ const openLink = (href) => {
 const Inlines = ({ inlines, className = "" }) => (
   <Text className={className}>
     {inlines.map((chunk, index) => {
-      const style = [
-        chunk.bold ? "font-bold" : "",
-        chunk.italic ? "italic" : "",
-        chunk.href ? "text-info underline" : "",
-      ]
+      /* Đậm và nghiêng phải gộp thành MỘT lớp: mỗi tổ hợp là một họ font riêng
+         trên React Native, gõ `font-bold font-italic` thì lớp sau đè lớp trước
+         và mất vế kia — xem chú thích trong tailwind.config.js */
+      const weight = chunk.bold
+        ? chunk.italic
+          ? "font-bold-italic"
+          : "font-bold"
+        : chunk.italic
+          ? "font-italic"
+          : "";
+
+      const style = [weight, chunk.href ? "text-info underline" : ""]
         .filter(Boolean)
         .join(" ");
 
@@ -99,7 +110,7 @@ export default function RichText({ html }) {
             >
               <Inlines
                 inlines={block.inlines}
-                className="text-base italic leading-7 text-content-2"
+                className="text-base font-italic leading-7 text-content-2"
               />
             </View>
           );

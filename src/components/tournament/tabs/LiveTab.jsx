@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { RefreshCw } from "lucide-react-native";
 
+import TabScreen from "./TabScreen";
 import MatchRow from "../MatchRow";
 import SectionState from "../../home/SectionState";
 import * as publicTournamentApi from "../../../api/publicTournamentApi";
@@ -126,7 +127,7 @@ export default function LiveTab({ tournamentId, active }) {
 
   if (loading || error || matches.length === 0) {
     return (
-      <View className="gap-3">
+      <TabScreen>
         <SectionState
           loading={loading}
           error={error}
@@ -151,42 +152,46 @@ export default function LiveTab({ tournamentId, active }) {
             </Pressable>
           </View>
         ) : null}
-      </View>
+      </TabScreen>
     );
   }
 
   return (
-    <View className="overflow-hidden rounded-xl border border-line bg-surface">
-      <View className="flex-row items-center justify-between bg-navy-900 px-4 py-2.5">
-        <View className="flex-row items-center gap-2">
-          <StatusDot />
-          <Text className="text-sm font-semibold text-white">
-            {isConnected ? "Đang diễn ra" : SOCKET_STATE_LABELS[connectionState]}
-          </Text>
+    <TabScreen>
+      <View className="overflow-hidden rounded-xl border border-line bg-surface">
+        <View className="flex-row items-center justify-between bg-navy-900 px-4 py-2.5">
+          <View className="flex-row items-center gap-2">
+            <StatusDot />
+            <Text className="text-sm font-semibold text-white">
+              {isConnected
+                ? "Đang diễn ra"
+                : SOCKET_STATE_LABELS[connectionState]}
+            </Text>
+          </View>
+          <Text className="text-xs text-navy-500">{matches.length} trận</Text>
         </View>
-        <Text className="text-xs text-navy-500">{matches.length} trận</Text>
+
+        {matches.map((match) => (
+          <MatchRow key={match.id} match={match} />
+        ))}
+
+        {/* Kết nối tốt thì tỷ số tự về, không cần mời người dùng bấm gì. Chỉ khi
+            đứt mới hiện nút — lúc đó REST là đường duy nhất còn lại */}
+        {!isConnected ? (
+          <Pressable
+            onPress={handleManualRefresh}
+            disabled={refreshing}
+            className="flex-row items-center justify-center gap-2 border-t border-line-soft bg-canvas py-3 active:bg-sunken-strong"
+          >
+            <RefreshCw size={iconSize.sm} color={colors.content2} />
+            <Text className="text-xs font-semibold text-content-2">
+              {refreshing
+                ? "Đang tải..."
+                : `${SOCKET_STATE_LABELS[connectionState]} · Chạm để làm mới`}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
-
-      {matches.map((match) => (
-        <MatchRow key={match.id} match={match} />
-      ))}
-
-      {/* Kết nối tốt thì tỷ số tự về, không cần mời người dùng bấm gì. Chỉ khi
-          đứt mới hiện nút — lúc đó REST là đường duy nhất còn lại */}
-      {!isConnected ? (
-        <Pressable
-          onPress={handleManualRefresh}
-          disabled={refreshing}
-          className="flex-row items-center justify-center gap-2 border-t border-line-soft bg-canvas py-3 active:bg-sunken-strong"
-        >
-          <RefreshCw size={iconSize.sm} color={colors.content2} />
-          <Text className="text-xs font-semibold text-content-2">
-            {refreshing
-              ? "Đang tải..."
-              : `${SOCKET_STATE_LABELS[connectionState]} · Chạm để làm mới`}
-          </Text>
-        </Pressable>
-      ) : null}
-    </View>
+    </TabScreen>
   );
 }

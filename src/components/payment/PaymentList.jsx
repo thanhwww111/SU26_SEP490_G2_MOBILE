@@ -160,7 +160,9 @@ export default function PaymentList() {
       ItemSeparatorComponent={() => <View className="h-3" />}
       ListHeaderComponent={
         <View className="px-4 pb-4 pt-6">
-          <Text className="text-2xl font-bold text-content">Lịch sử thanh toán</Text>
+          <Text className="text-2xl font-display uppercase text-content">
+            Lịch sử thanh toán
+          </Text>
           <Text className="mt-1 text-sm text-muted">
             Các khoản phí tham dự bạn đã tạo hoặc đã trả
           </Text>

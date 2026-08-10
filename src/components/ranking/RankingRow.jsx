@@ -23,13 +23,27 @@ export default function RankingRow({ entry, onPress }) {
       accessibilityRole="button"
       className="flex-row items-center gap-3 bg-surface px-4 py-3 active:bg-sunken"
     >
-      <Text
-        className="w-12 text-2xl font-black text-faint"
-        style={medal ? { color: medal } : undefined}
-      >
-        <Text className="text-xs font-bold">#</Text>
-        {entry.rank}
-      </Text>
+      {/* Dấu # và số hạng phải là hai Text ANH EM, không lồng nhau: React Native
+          lấy chiều cao dòng theo Text con nhỏ hơn, nên số hạng cỡ 24 bị cắt mất
+          phần trên — hạng 1, 2, 3 cụt đầu còn hạng 4 thì không, vì nét chữ 4
+          nằm thấp hơn.
+
+          Bề ngang để tối thiểu chứ không cố định: giải đông người có hạng ba
+          chữ số, `w-12` cũ không đủ chỗ. */}
+      <View className="min-w-[52px] flex-row items-baseline">
+        <Text
+          className="text-xs font-bold text-faint"
+          style={medal ? { color: medal } : undefined}
+        >
+          #
+        </Text>
+        <Text
+          className="text-2xl font-black text-faint"
+          style={medal ? { color: medal } : undefined}
+        >
+          {entry.rank}
+        </Text>
+      </View>
 
       <PlayerPortrait
         uri={entry.avatarUrl}

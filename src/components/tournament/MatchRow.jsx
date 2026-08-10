@@ -1,10 +1,8 @@
 import { Text, View } from "react-native";
 
+import MatchScore from "../match/MatchScore";
 import { getMatchState, getWinnerSide } from "../../constants/tournament";
 import { fmtDateTime } from "../../utils/date";
-
-/** Tỷ số chưa có thì để trống chứ không hiện 0 — 0 là một kết quả thật */
-const scoreText = (value) => (value == null ? "–" : String(value));
 
 /**
  * Một trận đấu trong tab Trận đấu và tab Trực tiếp.
@@ -27,12 +25,6 @@ export default function MatchRow({ match }) {
     if (winner === side) return "font-bold text-info";
     if (isDone) return "text-faint";
     return "text-content-2";
-  };
-
-  const scoreClass = (side) => {
-    if (winner === side) return "text-info";
-    if (isDone) return "text-faint";
-    return "text-content";
   };
 
   return (
@@ -68,24 +60,21 @@ export default function MatchRow({ match }) {
 
       <View className="flex-row items-center gap-2">
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           className={`flex-1 text-sm ${nameClass(1)}`}
         >
           {match.player1?.displayName || "TBD"}
         </Text>
 
-        <View className="flex-row items-center gap-1">
-          <Text className={`text-base font-black ${scoreClass(1)}`}>
-            {scoreText(match.player1Score)}
-          </Text>
-          <Text className="text-xs text-disabled">-</Text>
-          <Text className={`text-base font-black ${scoreClass(2)}`}>
-            {scoreText(match.player2Score)}
-          </Text>
-        </View>
+        <MatchScore
+          score1={match.player1Score}
+          score2={match.player2Score}
+          winner={winner}
+          state={state}
+        />
 
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           className={`flex-1 text-right text-sm ${nameClass(2)}`}
         >
           {match.player2?.displayName || "TBD"}

@@ -152,7 +152,9 @@ export default function MyRegistrationList({ onPressItem }) {
       ItemSeparatorComponent={() => <View className="h-3" />}
       ListHeaderComponent={
         <View className="px-4 pb-4 pt-6">
-          <Text className="text-2xl font-bold text-content">Đăng ký của tôi</Text>
+          <Text className="text-2xl font-display uppercase text-content">
+            Đăng ký của tôi
+          </Text>
           <Text className="mt-1 text-sm text-muted">
             Lịch sử và trạng thái các đăng ký giải đấu
           </Text>

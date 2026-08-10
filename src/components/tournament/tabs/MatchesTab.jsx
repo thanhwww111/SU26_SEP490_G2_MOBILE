@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { BarChart2, List } from "lucide-react-native";
 
+import TabScreen from "./TabScreen";
 import MatchRow from "../MatchRow";
 import StandingTable from "../StandingTable";
 import ChipRow from "../../ChipRow";
@@ -295,22 +296,55 @@ export default function MatchesTab({ tournamentId, locked, active }) {
 
   if (locked) {
     return (
-      <SectionState emptyMessage="Lịch thi đấu chưa được xếp — giải vẫn đang mở đăng ký." />
+      <TabScreen>
+        <SectionState emptyMessage="Lịch thi đấu chưa được xếp — giải vẫn đang mở đăng ký." />
+      </TabScreen>
     );
   }
 
   if (loading || error || stages.length === 0) {
     return (
-      <SectionState
-        loading={loading}
-        error={error}
-        emptyMessage="Chưa có trận đấu nào."
-      />
+      <TabScreen>
+        <SectionState
+          loading={loading}
+          error={error}
+          emptyMessage="Chưa có trận đấu nào."
+        />
+      </TabScreen>
     );
   }
 
+  /*
+   * Chỉ ô tìm kiếm và chip vòng được giữ cố định.
+   *
+   * Nút Lịch đấu/Bảng điểm và chip giai đoạn thì bấm một lần rồi thôi, còn tìm
+   * tên cơ thủ và nhảy vòng là thao tác lặp đi lặp lại giữa chừng danh sách.
+   * Nhét cả bốn cụm lên trên sẽ ăn gần 180 điểm ảnh, tức là hơn một phần năm
+   * màn hình chỉ để bày nút.
+   */
+  const filters =
+    activeView === "list" ? (
+      <>
+        <SearchField
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Tìm tên cơ thủ..."
+        />
+
+        {roundOptions.length > 2 ? (
+          <ChipRow
+            label="Chọn vòng"
+            inset={false}
+            options={roundOptions}
+            value={roundKey}
+            onChange={setRoundKey}
+          />
+        ) : null}
+      </>
+    ) : null;
+
   return (
-    <View className="gap-3">
+    <TabScreen filters={filters}>
       {showStanding ? (
         <ViewToggle view={activeView} onChange={setView} colors={colors} />
       ) : null}
@@ -329,22 +363,6 @@ export default function MatchesTab({ tournamentId, locked, active }) {
         <StandingTable rows={standing} />
       ) : (
         <>
-          <SearchField
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Tìm tên cơ thủ..."
-          />
-
-          {roundOptions.length > 2 ? (
-            <ChipRow
-              label="Chọn vòng"
-              inset={false}
-              options={roundOptions}
-              value={roundKey}
-              onChange={setRoundKey}
-            />
-          ) : null}
-
           <Text className="text-right text-xs text-faint">
             {matchCount} trận
           </Text>
@@ -396,6 +414,6 @@ export default function MatchesTab({ tournamentId, locked, active }) {
           )}
         </>
       )}
-    </View>
+    </TabScreen>
   );
 }

@@ -37,7 +37,7 @@ export default function SectionHeader({
           }`}
         >
           <Text
-            className={`text-xs italic ${dark ? "text-white" : "text-content-2"}`}
+            className={`text-xs font-italic ${dark ? "text-white" : "text-content-2"}`}
           >
             {actionLabel}
           </Text>

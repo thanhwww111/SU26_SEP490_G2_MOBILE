@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  SectionList,
+  Text,
+  View,
+} from "react-native";
 
 import RankingRow from "./RankingRow";
 import RankingFilterBar from "./RankingFilterBar";
@@ -28,6 +34,11 @@ const INITIAL_FILTER = {
  * Khác web một điểm có chủ ý: web ghi bộ lọc vào query string để F5 giữ nguyên
  * kỳ đang xem. Trên mobile không có thao tác F5 và màn này không cần link chia
  * sẻ, nên bộ lọc chỉ nằm trong state.
+ *
+ * Dùng `SectionList` thay `FlatList` chỉ để lấy một thứ: bộ lọc là section
+ * header nên tự dính lại mép trên khi cuộn. Danh sách này dài (mọi cơ thủ có
+ * điểm), cuộn tới hạng 40 rồi muốn đổi kỳ thống kê mà phải vuốt ngược lên đầu
+ * thì quá phiền. Chỉ có một section, `sections` không mang ý nghĩa nhóm.
  */
 export default function RankingList({ onPressPlayer }) {
   const colors = useThemeColors();
@@ -133,39 +144,37 @@ export default function RankingList({ onPressPlayer }) {
 
   const resetToAll = () => setFilter(INITIAL_FILTER);
 
+  const sections = useMemo(() => [{ data: items }], [items]);
+
   return (
-    <FlatList
+    <SectionList
       className="flex-1 bg-canvas"
-      data={items}
+      sections={sections}
       keyExtractor={(item) => String(item.userId)}
       renderItem={({ item }) => (
         <RankingRow entry={item} onPress={() => onPressPlayer?.(item)} />
       )}
       ItemSeparatorComponent={() => <View className="h-px bg-line-soft" />}
+      // Android mặc định TẮT, iOS mặc định bật — phải nói rõ để hai bên giống nhau
+      stickySectionHeadersEnabled
+      renderSectionHeader={() => (
+        <RankingFilterBar {...filter} onChange={handleChangeFilter} />
+      )}
       ListHeaderComponent={
-        <View className="bg-surface">
-          <View className="px-4 pb-2 pt-6">
-            <Text className="text-2xl font-black uppercase text-content">
-              Bảng Xếp Hạng Cơ Thủ
-            </Text>
-            <Text className="mt-1 text-sm text-muted">
-              Điểm tích lũy · {periodLabel(filter)}
-            </Text>
-          </View>
-
-          <RankingFilterBar {...filter} onChange={handleChangeFilter} />
-
-          {!loading && !error && items.length > 0 ? (
-            <View className="bg-canvas px-4 pb-4 pt-6">
-              <Text className="text-sm text-muted">{total} cơ thủ</Text>
-            </View>
-          ) : (
-            <View className="h-4 bg-canvas" />
-          )}
+        <View className="bg-surface px-4 pb-3 pt-6">
+          <Text className="text-2xl font-display uppercase text-content">
+            Bảng Xếp Hạng Cơ Thủ
+          </Text>
+          {/* Số cơ thủ gộp vào dòng phụ đề thay vì đứng riêng dưới bộ lọc: chỗ
+              đó giờ là ranh giới dính, chèn thêm một dải chữ vào sẽ dính theo */}
+          <Text className="mt-1 text-sm text-muted">
+            Điểm tích lũy · {periodLabel(filter)}
+            {!loading && !error && items.length > 0 ? ` · ${total} cơ thủ` : ""}
+          </Text>
         </View>
       }
       ListEmptyComponent={
-        <View className="px-4">
+        <View className="px-4 pt-6">
           <SectionState
             loading={loading}
             error={error}

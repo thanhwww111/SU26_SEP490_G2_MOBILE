@@ -14,11 +14,24 @@ import { Text, View } from "react-native";
  * của bảng này khi giải còn đang chạy.
  */
 
-/** Ô số ở tầng trên: nhãn nhỏ phía trên, số to phía dưới */
+/**
+ * Ô số ở tầng trên: nhãn nhỏ phía trên, số to phía dưới.
+ *
+ * Bề ngang để tối thiểu chứ không cố định. Nhãn "Hiệu số" viết hoa có giãn chữ
+ * gần chạm mép 56 cũ, và hiệu số của giải dài có thể xuống tới ba chữ số kèm
+ * dấu ("-102"); ô cố định thì một trong hai bị bẻ dòng.
+ */
 const StatCell = ({ label, value, tone }) => (
-  <View className="w-14 items-center">
-    <Text className="text-overline font-bold uppercase text-faint">{label}</Text>
-    <Text className={`text-base font-black tabular-nums ${tone}`}>{value}</Text>
+  <View className="min-w-[56px] items-center px-1">
+    <Text
+      numberOfLines={1}
+      className="text-overline font-bold uppercase text-faint"
+    >
+      {label}
+    </Text>
+    <Text numberOfLines={1} className={`text-base font-black tabular-nums ${tone}`}>
+      {value}
+    </Text>
   </View>
 );
 

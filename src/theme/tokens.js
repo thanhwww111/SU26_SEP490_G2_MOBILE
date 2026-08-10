@@ -98,13 +98,16 @@ export const lightColors = {
 };
 
 /**
- * Bảng màu chế độ Tối. Khớp nhánh `.dark:root` trong global.css.
+ * Bảng màu chế độ Tối. Khớp nhánh `.dark:root` trong global.css — SỬA MỘT BÊN
+ * THÌ SỬA CẢ HAI, nếu không màu icon sẽ lệch màu chữ ngay cạnh nó.
  *
- * Ở chế độ tối, độ cao biểu diễn bằng ĐỘ SÁNG bề mặt chứ không bằng bóng — bóng
- * đen chồng nền đen thì không ai thấy. Vì vậy các bậc nền phải cách nhau đủ xa:
- * `canvas` lùi hẳn ra sau, `surface` là thẻ, `surfaceRaised` là lớp phủ nổi lên
- * trên thẻ. Thang cũ để canvas #0A1220 cạnh surface #0D1B2E, gần nhau tới mức
- * thẻ chìm vào nền và cả app trông phẳng.
+ * SỬA 2026-08-10: thang cũ tăng độ sáng chủ yếu ở kênh xanh nên càng lên lớp
+ * cao càng xanh — hiệu B−R của viền đậm lên tới 59 trong khi web giữ khoảng 24
+ * ở mọi lớp, làm app trông "xanh đậm" thay vì "đen sâu".
+ *
+ * Thang hiện tại pha trắng đều cả ba kênh như web, B−R nằm trong 18–28 xuyên
+ * suốt. `canvas` và `surface` lấy đúng giá trị web; chúng cách nhau không nhiều
+ * nên VIỀN mới là thứ tách thẻ khỏi nền — web cũng vậy.
  *
  * `brand` phải sáng lên chứ không giữ navy-700: navy đặt trên nền tối gần như
  * chìm hẳn, icon và spinner sẽ không nhìn ra.
@@ -112,22 +115,23 @@ export const lightColors = {
 export const darkColors = {
   ...constantColors,
 
-  canvas: "#070D18",
-  surface: "#0F1E33",
-  surfaceRaised: "#18293F",
-  sunken: "#16243A",
-  sunkenStrong: "#1F3049",
-  surfaceInverse: "#03070F",
+  canvas: "#0A1220",
+  surface: "#131C2E",
+  surfaceRaised: "#1D2739",
+  sunken: "#1A2333",
+  sunkenStrong: "#232C3D",
+  surfaceInverse: "#05090F",
 
-  lineSoft: "#1A2942",
-  line: "#273B57",
-  lineStrong: "#3A5175",
+  lineSoft: "#1E2839",
+  line: "#2A3446",
+  lineStrong: "#3D4759",
 
-  content: "#F1F5F9",
-  content2: "#C7D2DE",
-  muted: "#94A3B8",
-  faint: "#6B7A8F",
-  disabled: "#3A4A60",
+  content: "#F8FAFC",
+  content2: "#CFD5DE",
+  muted: "#9AA2AF",
+  /* Đạt đúng 4.5:1 trên nền thẻ — mức AA cho chữ thường. Đừng hạ xuống tối hơn */
+  faint: "#7C8491",
+  disabled: "#464E5C",
 
   brand: "#8FB0DC",
   brandPressed: "#A9C4E6",

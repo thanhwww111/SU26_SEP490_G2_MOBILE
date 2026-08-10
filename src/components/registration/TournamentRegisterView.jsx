@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { CheckCircle2, CreditCard, XCircle } from "lucide-react-native";
+import { CheckCircle2, CreditCard, UserCheck, XCircle } from "lucide-react-native";
 
 import Button from "../Button";
 import Input from "../Input";
@@ -10,9 +10,46 @@ import SectionState from "../home/SectionState";
 import RegistrationDynamicForm, { dateFieldToIso } from "./RegistrationDynamicForm";
 import RegistrationStatusBadge from "./RegistrationStatusBadge";
 import * as registrationApi from "../../api/playerRegistrationApi";
+import { getProfile } from "../../api/profileApi";
 import { usePayOsCheckout } from "../../hooks/usePayOsCheckout";
+import { useAuthStore } from "../../store/authStore";
 import { fmtCurrency } from "../../utils/format";
+import { iconSize } from "../../theme/tokens";
 import { useThemeColors } from "../../theme/useThemeColors";
+
+/**
+ * Những trường lấy được từ hồ sơ người đang đăng nhập.
+ *
+ * Khớp bằng `fieldKey` CHÍNH XÁC, không suy từ `uiComponent`. Template giải đôi
+ * có `player2_phone` cũng là `PHONE_INPUT`; đoán theo kiểu ô thì số của người
+ * đăng ký chui thẳng vào ô của đồng đội.
+ *
+ * Hai key này do `DataInitializer` bên backend đặt cho hai template có sẵn.
+ * Owner tự dựng template với key khác thì không tự điền — thà để trống còn hơn
+ * điền nhầm chỗ.
+ *
+ * Họ tên chỉ có ở hồ sơ (`GET /profile`); `GET /auth/me` không trả trường đó,
+ * nên tài khoản chưa tạo hồ sơ thì chỉ điền được số điện thoại.
+ */
+const PREFILL_FROM_PROFILE = {
+  player_full_name: (profile) => profile?.fullName || "",
+  player_phone: (profile, user) => profile?.phone || user?.phone || "",
+};
+
+/** Giá trị điền sẵn cho các trường của giải, bỏ qua trường không có dữ liệu */
+const buildPrefill = (fields, profile, user) => {
+  const prefill = {};
+
+  (fields || []).forEach((field) => {
+    const source = PREFILL_FROM_PROFILE[field.fieldKey];
+    if (!source) return;
+
+    const value = source(profile, user);
+    if (value) prefill[field.fieldKey] = String(value);
+  });
+
+  return prefill;
+};
 
 /**
  * Đăng ký một giải đấu, bám trang `/player/tournaments/:id/register` của web.
@@ -33,12 +70,15 @@ import { useThemeColors } from "../../theme/useThemeColors";
  */
 export default function TournamentRegisterView({ tournamentId, onDone, onBack }) {
   const colors = useThemeColors();
+  const user = useAuthStore((s) => s.user);
 
   const [form, setForm] = useState(null);
   const [values, setValues] = useState({});
   const [touched, setTouched] = useState({});
   const [errors, setErrors] = useState({});
   const [note, setNote] = useState("");
+  /** Có điền hộ được ô nào không — quyết định việc hiện dòng nhắc phía trên form */
+  const [prefilled, setPrefilled] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -48,15 +88,22 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
   const [result, setResult] = useState(null);
 
   const alive = useRef(true);
+  /* Điền hộ đúng MỘT lần cho cả vòng đời màn. `useFocusEffect` gọi lại `load`
+     mỗi lần quay lại màn; điền lại ở đó sẽ xoá sạch những gì người dùng vừa gõ,
+     kể cả khi họ cố ý sửa tên để đăng ký cho người khác. */
+  const prefilledOnce = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError("");
     try {
       // Hỏi song song: đã đăng ký rồi thì khỏi cần dựng form
-      const [existing, preview] = await Promise.all([
+      const [existing, preview, profile] = await Promise.all([
         registrationApi.getMyRegistrationForTournament(tournamentId),
         registrationApi.getTournamentRegistrationForm(tournamentId),
+        // Hồ sơ chỉ dùng để điền hộ. Tài khoản chưa tạo hồ sơ thì backend trả
+        // 404 — nuốt lỗi tại đây, vì không có nó form vẫn phải mở được bình thường
+        getProfile().catch(() => null),
       ]);
       if (!alive.current) return;
 
@@ -65,12 +112,22 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
         setPhase("done");
       }
       setForm(preview);
+
+      if (!prefilledOnce.current) {
+        prefilledOnce.current = true;
+
+        const prefill = buildPrefill(preview?.fields, profile, user);
+        if (Object.keys(prefill).length > 0) {
+          setValues(prefill);
+          setPrefilled(true);
+        }
+      }
     } catch (e) {
       if (alive.current) setLoadError(e.message);
     } finally {
       if (alive.current) setLoading(false);
     }
-  }, [tournamentId]);
+  }, [tournamentId, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -250,7 +307,9 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
   return (
     <ScrollView className="flex-1 bg-canvas" keyboardShouldPersistTaps="handled">
       <View className="px-4 pb-6 pt-6">
-        <Text className="text-2xl font-bold text-content">Đăng ký tham dự</Text>
+        <Text className="text-2xl font-display uppercase text-content">
+          Đăng ký tham dự
+        </Text>
         <Text numberOfLines={2} className="mt-1 text-sm text-muted">
           {form?.tournamentName}
         </Text>
@@ -267,6 +326,18 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
           <Text className="mt-4 text-sm text-danger">
             Ban tổ chức chưa hoàn tất cấu hình form đăng ký cho giải này.
           </Text>
+        ) : null}
+
+        {/* Nói rõ vì sao ô đã có sẵn chữ, và rằng sửa được. Không có dòng này
+            thì người đăng ký hộ bạn mình sẽ tưởng form khoá cứng theo tài khoản */}
+        {prefilled ? (
+          <View className="mt-5 flex-row items-start gap-2.5 rounded-xl border border-line bg-sunken px-3.5 py-3">
+            <UserCheck size={iconSize.sm} color={colors.muted} />
+            <Text className="flex-1 text-xs leading-5 text-muted">
+              Đã điền sẵn từ hồ sơ của bạn — sửa lại nếu bạn đăng ký cho người
+              khác.
+            </Text>
+          </View>
         ) : null}
 
         <View className="mt-5">

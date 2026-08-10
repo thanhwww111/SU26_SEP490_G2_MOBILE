@@ -49,12 +49,12 @@ export default function AuthScreen({ title, children, card = true }) {
             keyboardShouldPersistTaps="handled"
           >
             <View className="mb-5 items-center">
-              <Text className="text-[42px] font-black uppercase italic leading-[44px] tracking-tighter text-white">
+              <Text className="text-[42px] font-display uppercase leading-[44px] tracking-tight text-white">
                 capstone<Text className="text-accent">.</Text>
               </Text>
               <Text className="mt-1.5 text-center text-[13px] text-slate-300">
                 Chào mừng bạn đến với nền tảng tỉ số trực tuyến{" "}
-                <Text className="font-bold uppercase italic text-white">
+                <Text className="font-display uppercase text-white">
                   capstone
                 </Text>
                 .
@@ -69,7 +69,7 @@ export default function AuthScreen({ title, children, card = true }) {
               }
             >
               <Text
-                className={`mb-4 text-[13px] font-bold uppercase italic tracking-[1.5px] ${
+                className={`mb-4 text-[13px] font-display uppercase tracking-[1.5px] ${
                   card ? "text-navy-700" : "text-white"
                 }`}
               >

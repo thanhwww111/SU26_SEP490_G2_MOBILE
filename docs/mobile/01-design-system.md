@@ -181,15 +181,59 @@ Màu trạng thái **chỉ dùng cho trạng thái**. Không dùng `danger` làm
 
 ## Font
 
-Dùng font mặc định của hệ điều hành. Không import font mới khi chưa có quyết định chung của nhóm.
+> **Đổi từ 2026-08-10.** Trước đây mục này ghi "dùng font mặc định của hệ điều hành". Không còn đúng: app nạp font riêng để khớp web.
+
+| Vai trò | Font | Class |
+|---|---|---|
+| Chữ thường | **Be Vietnam Pro** 400/500/600/700/800 | mặc định, không phải gõ gì |
+| Tiêu đề, logo | **Oswald** 500/600, nghiêng sẵn | `font-display`, `font-display-bold` |
+| Tiêu đề đứng thẳng | Oswald 500 | `font-display-upright` |
+| Chữ nghiêng | Be Vietnam Pro Italic 400/700 | `font-italic`, `font-bold-italic` |
+
+### Vì sao không phải Poppins như web
+
+Web khai báo `--font-sans: "Poppins", "Be Vietnam Pro", ...`. Nhưng **Poppins thiếu khoảng U+1EA0–1EF1** — phần lớn nguyên âm có dấu tiếng Việt (ế ộ ữ ầ ắ ị ọ). Trình duyệt thay glyph thiếu bằng font kế tiếp trong stack, nên **chữ có dấu trên web thực chất đang hiện bằng Be Vietnam Pro**.
+
+React Native không có cơ chế thay glyph từng ký tự: `fontFamily` chỉ nhận một tên, ký tự thiếu rơi thẳng xuống font hệ thống. Đặt Poppins sẽ cho ra chữ lệch kiểu ngay giữa một từ. Nội dung app gần như toàn tiếng Việt có dấu, nên mobile dùng thẳng font dự phòng — kết quả trùng với những gì web hiện ra.
+
+Phần tiêu đề thì **web đã theo mobile**: từ 2026-08-10 web bỏ Bebas Neue, dùng Oswald một mình. Bebas cũng thiếu đúng khoảng đó, và vì nó là font display cỡ lớn nên chỗ nối lộ hẳn — tiêu đề tiếng Việt bị thụt lên thụt xuống giữa dòng. Hai bên giờ dùng chung Oswald.
+
+Chi tiết: `src/theme/fonts.js`.
+
+### Tiêu đề nghiêng sẵn
+
+`font-display` đã gói sẵn `skewX(-14deg)` — không phải gõ thêm gì. Web đặt `font-style: italic` cho h1–h6 nhưng Oswald không có bản nghiêng thật, nên trình duyệt tự nghiêng lấy (synthetic oblique, mặc định 14 độ). React Native bỏ qua `fontStyle` với font nạp lúc chạy, nên phải tự làm cùng phép biến hình đó.
+
+`skewX` không đổi kích thước ô chữ, chỉ nghiêng nội dung — chữ có thể ăn lẹm ra ngoài mép vài điểm ảnh. Chỗ nào sát mép màn hoặc nằm trong ô hẹp có cắt nội dung thì dùng `font-display-upright`.
+
+### Độ đậm đổi họ font, không đổi `font-weight`
+
+Expo Go không cho nhúng font ở tầng native, phải nạp lúc chạy, nên **mỗi độ đậm là một họ riêng**. Đặt `font-weight: 700` lên `BeVietnamPro_400Regular` chỉ khiến iOS bôi đậm giả, nét bết lại.
+
+Plugin trong `tailwind.config.js` ghi đè sẵn các lớp Tailwind, nên **viết `font-bold` như bình thường** — không phải nhớ tên font:
+
+| Gõ | Nhận được |
+|---|---|
+| *(không gõ gì)* | `BeVietnamPro_400Regular` — gắn kèm mọi lớp `text-*` |
+| `font-medium` / `font-semibold` | 500 Medium / 600 SemiBold |
+| `font-bold` | 700 Bold |
+| `font-black` | 800 ExtraBold — web cũng chỉ nạp tới 800 |
+
+**Không dùng lớp `italic` của Tailwind.** Với font nạp lúc chạy, React Native bỏ qua `font-style` — chữ vẫn đứng thẳng. Dùng `font-italic` / `font-bold-italic` (họ font nghiêng thật), hoặc `font-display` cho tiêu đề (nghiêng bằng `skewX`).
+
+**Đậm và nghiêng phải gộp một lớp.** Gõ `font-bold font-italic` thì lớp sau đè lớp trước và mất vế kia.
+
+### Chỗ duy nhất font không tự phủ
+
+Plugin móc `fontFamily` vào các lớp `text-*` **cỡ chữ** (`text-sm`, `text-2xl`…), không phải lớp `text-*` **màu** (`text-content`). Một `<Text>` chỉ có màu mà không có cỡ chữ sẽ ra font hệ thống — trừ khi nó lồng trong `<Text>` cha đã có cỡ, vì Text lồng Text thì kế thừa.
 
 ## Thang cỡ chữ
 
 | Vai trò | Class | px | Đậm |
 |---|---|---|---|
-| Display | `text-[32px]` | 32 | `font-black` |
-| Title | `text-3xl` | 30 | `font-bold` |
-| Heading | `text-2xl` | 24 | `font-bold` |
+| Display | `text-[32px]` | 32 | `font-display` |
+| Title | `text-3xl` | 30 | `font-display` |
+| Heading | `text-2xl` | 24 | `font-display` (tiêu đề màn) / `font-bold` (chữ thường) |
 | Sub heading | `text-xl` | 20 | `font-semibold` |
 | Section title | `text-base` | 16 | `font-bold` |
 | Body | `text-base` | 16 | `font-normal` |
@@ -461,35 +505,41 @@ Cả hai phải khớp nhau. Sửa `global.css` thì sửa `src/theme/tokens.js`
 
 | Token | Sáng | Tối | Thay cho |
 |---|---|---|---|
-| `canvas` | `#F8FAFC` | `#070D18` | `bg-slate-50` — nền màn |
-| `surface` | `#FFFFFF` | `#0F1E33` | `bg-white` — nền thẻ, khối |
-| `surface-raised` | `#FFFFFF` | `#18293F` | lớp phủ: drawer, menu, bottom sheet |
-| `sunken` | `#F1F5F9` | `#16243A` | `bg-slate-100` — khối chìm trong thẻ |
-| `sunken-strong` | `#E2E8F0` | `#1F3049` | `bg-slate-200` — nền chờ ảnh |
-| `line-soft` | `#F1F5F9` | `#1A2942` | `border-slate-100` |
-| `line` | `#E2E8F0` | `#273B57` | `border-slate-200` — viền thẻ |
-| `line-strong` | `#CBD5E1` | `#3A5175` | `border-slate-300` — viền ô nhập |
+| `canvas` | `#F8FAFC` | `#0A1220` | `bg-slate-50` — nền màn |
+| `surface` | `#FFFFFF` | `#131C2E` | `bg-white` — nền thẻ, khối |
+| `surface-raised` | `#FFFFFF` | `#1D2739` | lớp phủ: drawer, menu, bottom sheet |
+| `sunken` | `#F1F5F9` | `#1A2333` | `bg-slate-100` — khối chìm trong thẻ |
+| `sunken-strong` | `#E2E8F0` | `#232C3D` | `bg-slate-200` — nền chờ ảnh |
+| `line-soft` | `#F1F5F9` | `#1E2839` | `border-slate-100` |
+| `line` | `#E2E8F0` | `#2A3446` | `border-slate-200` — viền thẻ |
+| `line-strong` | `#CBD5E1` | `#3D4759` | `border-slate-300` — viền ô nhập |
+| `content` | `#0F172A` | `#F8FAFC` | `text-slate-900` — chữ chính |
+| `content-2` | `#334155` | `#CFD5DE` | `text-slate-700`, `slate-600` — chữ phụ |
+| `muted` | `#64748B` | `#9AA2AF` | `text-slate-500` — chú thích |
+| `faint` | `#94A3B8` | `#7C8491` | `text-slate-400` — mờ nhất |
+| `disabled` | `#CBD5E1` | `#464E5C` | `text-slate-300` — bị vô hiệu |
 
-## Chiều sâu ở chế độ tối — sáng dần, không phải bóng
+## Chế độ tối phải ĐEN SÂU, không được ngả xanh
 
-> **Đổi từ 2026-08-06.** Thang tối cũ đặt `canvas` `#0A1220` cạnh `surface` `#0D1B2E`. Hai giá trị đó cách nhau quá ít: thẻ chìm vào nền, và vì bóng đổ cũng vô dụng trên nền tối, cả app mất hết cảm giác phân tầng. Thang hiện tại giãn khoảng cách ra.
+> **Sửa 2026-08-10.** Thang tối trước đó tăng độ sáng chủ yếu ở kênh xanh, nên càng lên lớp cao càng xanh. Đo bằng hiệu **B − R**: viền đậm lệch tới **59** trong khi web giữ khoảng **24** ở mọi lớp. Kết quả là app trông "xanh đậm" chứ không "đen sâu" như web.
 
-Ở chế độ sáng, lớp nổi nhận biết bằng **bóng**. Ở chế độ tối bóng đen chồng nền đen thì không ai thấy, nên lớp nổi nhận biết bằng **độ sáng bề mặt** — càng nổi càng sáng:
+Web tăng độ sáng bằng cách **pha trắng** lên nền — `rgba(255,255,255,.03)`, `dark:border-white/10` (dùng 80 lần), `dark:text-white/60`. Cộng đều cả ba kênh nên sắc độ giữ nguyên xuyên suốt.
+
+**Quy tắc: mọi bậc tối phải có `B − R` nằm trong khoảng 18–28.** Thêm màu tối mới thì kiểm lại con số này trước khi commit. Đừng "làm sáng lên" bằng cách tăng riêng kênh xanh.
+
+`canvas` và `surface` lấy **đúng** giá trị của web (`src/styles/global.css` bên FE, dòng 168 và 224). Hai giá trị đó chỉ cách nhau khoảng 11 điểm độ sáng, nên thứ tách thẻ khỏi nền là **viền**, không phải chênh lệch nền — đúng như web vẫn làm.
+
+Thứ tự các lớp, sáng dần:
 
 ```
-canvas (#070D18)  ← nền màn, lùi xa nhất
-  surface (#0F1E33)      ← thẻ, khối nội dung
-    surface-raised (#18293F)  ← drawer, menu hồ sơ, bottom sheet
+canvas (#0A1220)  ← nền màn, lùi xa nhất
+  surface (#131C2E)      ← thẻ, khối nội dung
+    surface-raised (#1D2739)  ← drawer, menu hồ sơ, bottom sheet
 ```
-
-Viền cũng là tín hiệu phân tầng thứ hai, nên `line` ở chế độ tối phải đủ sáng để thấy được cạnh thẻ.
 
 **Khi dựng lớp phủ mới** (menu, sheet, popover) thì dùng `bg-surface-raised`, đừng dùng `bg-surface` — bằng không nó sẽ cùng màu với thẻ nằm dưới và trông như dán phẳng vào trang.
-| `content` | `#0F172A` | `#F1F5F9` | `text-slate-900` — chữ chính |
-| `content-2` | `#334155` | `#C7D2DE` | `text-slate-700`, `slate-600` — chữ phụ |
-| `muted` | `#64748B` | `#94A3B8` | `text-slate-500` — chú thích |
-| `faint` | `#94A3B8` | `#6B7A8F` | `text-slate-400` — mờ nhất |
-| `disabled` | `#CBD5E1` | `#3A4A60` | `text-slate-300` — bị vô hiệu |
+
+Bốn bậc chữ trên nền thẻ đều đạt **WCAG AA** (≥ 4.5:1). `faint` đúng 4.51 — đừng hạ tối hơn nữa, bản trước chỉ được 3.83 nên chú thích và mốc thời gian khó đọc.
 | `tint-danger/success/warning` | thang `50` | nền sẫm | `bg-red-50`, `bg-green-50`… |
 
 Bên JS, tên viết kiểu camelCase: `colors.sunkenStrong`, `colors.lineStrong`, `colors.content2`.

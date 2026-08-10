@@ -10,6 +10,124 @@
  * Màu trung tính KHÔNG định nghĩa lại ở đây: web dùng đúng thang `slate` mặc
  * định của Tailwind, nên mobile dùng thẳng slate-50 → slate-900.
  */
+
+const plugin = require("tailwindcss/plugin");
+
+/*
+ * Ánh xạ độ đậm → tên font, vì React Native không tự chọn được.
+ *
+ * Trên web, `font-bold` chỉ cần đặt `font-weight: 700` rồi trình duyệt tìm bản
+ * đậm trong cùng họ font. React Native không làm vậy: font nạp lúc chạy (bắt
+ * buộc, vì Expo Go không cho nhúng font ở tầng native) thì MỖI ĐỘ ĐẬM LÀ MỘT
+ * HỌ RIÊNG. Đặt `font-weight: 700` lên `BeVietnamPro_400Regular` chỉ khiến iOS
+ * tự bôi đậm giả, nét bết lại.
+ *
+ * Nên các lớp `font-*` ở đây bị ghi đè để đổi `fontFamily` thay vì `fontWeight`,
+ * và `fontWeight` bị ép về "normal" để chặn bôi đậm giả. Nhờ vậy 190 chỗ đang
+ * gõ `font-bold` / `font-black` trong repo không phải sửa một dòng nào.
+ *
+ * `font-black` (900) cố tình trỏ tới bản 800: web chỉ nạp Be Vietnam Pro tới
+ * weight 800, nên 900 trên web vốn đã rơi xuống 800.
+ */
+const SANS = {
+  normal: "BeVietnamPro_400Regular",
+  medium: "BeVietnamPro_500Medium",
+  semibold: "BeVietnamPro_600SemiBold",
+  bold: "BeVietnamPro_700Bold",
+  extrabold: "BeVietnamPro_800ExtraBold",
+  italic: "BeVietnamPro_400Regular_Italic",
+  boldItalic: "BeVietnamPro_700Bold_Italic",
+};
+
+/*
+ * Tiêu đề. Web đặt `font-style: italic` cho h1–h6 và dùng Oswald 500.
+ *
+ * Oswald KHÔNG có bản nghiêng thật. Trên web trình duyệt tự nghiêng lấy
+ * (synthetic oblique, mặc định 14 độ); React Native thì bỏ qua `fontStyle` với
+ * font nạp lúc chạy, chữ vẫn đứng thẳng. Nên nghiêng bằng `skewX` đúng góc mà
+ * trình duyệt dùng — cùng một phép biến hình, ra cùng một kết quả.
+ */
+const DISPLAY_SKEW = "skewX(-14deg)";
+
+const DISPLAY = {
+  normal: "Oswald_500Medium",
+  bold: "Oswald_600SemiBold",
+};
+
+const fontPlugin = plugin(({ addUtilities, theme }) => {
+  /*
+   * 1) Font mặc định gắn kèm từng bậc cỡ chữ.
+   *
+   * React Native không có kế thừa font: `<Text>` nằm trong `<View>` đã đặt font
+   * vẫn ra font hệ thống. Mà gần như mọi `<Text>` trong repo đều có một lớp
+   * `text-*`, nên đây là chỗ móc vào rẻ nhất để phủ hết những chỗ không gõ
+   * `font-*`.
+   */
+  const sizeUtilities = {};
+
+  Object.entries(theme("fontSize")).forEach(([name, value]) => {
+    const [size, extra] = Array.isArray(value) ? value : [value, {}];
+
+    sizeUtilities[`.text-${name}`] = {
+      fontSize: size,
+      ...(extra?.lineHeight ? { lineHeight: extra.lineHeight } : {}),
+      ...(extra?.letterSpacing ? { letterSpacing: extra.letterSpacing } : {}),
+      fontFamily: SANS.normal,
+    };
+  });
+
+  addUtilities(sizeUtilities);
+
+  /*
+   * 2) Độ đậm. Phải khai báo SAU nhóm cỡ chữ ở trên: hai nhóm cùng nằm trong
+   * layer utilities và cùng độ ưu tiên, nên cái viết sau thắng.
+   */
+  addUtilities({
+    ".font-normal": { fontFamily: SANS.normal, fontWeight: "normal" },
+    ".font-medium": { fontFamily: SANS.medium, fontWeight: "normal" },
+    ".font-semibold": { fontFamily: SANS.semibold, fontWeight: "normal" },
+    ".font-bold": { fontFamily: SANS.bold, fontWeight: "normal" },
+    ".font-extrabold": { fontFamily: SANS.extrabold, fontWeight: "normal" },
+    ".font-black": { fontFamily: SANS.extrabold, fontWeight: "normal" },
+
+    /* Nghiêng phải là họ font riêng chứ không phải `font-style: italic` — đặt
+       fontStyle lên font không có bản nghiêng thì iOS làm nghiêng giả. */
+    ".font-italic": {
+      fontFamily: SANS.italic,
+      fontStyle: "normal",
+      fontWeight: "normal",
+    },
+    ".font-bold-italic": {
+      fontFamily: SANS.boldItalic,
+      fontStyle: "normal",
+      fontWeight: "normal",
+    },
+
+    /* Tiêu đề màn và logo — thay cho `font-black uppercase italic` kiểu cũ.
+       Nghiêng sẵn trong lớp, khỏi phải nhớ gõ kèm gì. */
+    ".font-display": {
+      fontFamily: DISPLAY.normal,
+      fontStyle: "normal",
+      fontWeight: "normal",
+      transform: DISPLAY_SKEW,
+    },
+    ".font-display-bold": {
+      fontFamily: DISPLAY.bold,
+      fontStyle: "normal",
+      fontWeight: "normal",
+      transform: DISPLAY_SKEW,
+    },
+
+    /* Bản đứng thẳng, cho chỗ nghiêng gây hại: chữ dài sát mép màn (nghiêng ăn
+       lẹm sang hai bên), hoặc tiêu đề nằm trong ô hẹp có cắt nội dung */
+    ".font-display-upright": {
+      fontFamily: DISPLAY.normal,
+      fontStyle: "normal",
+      fontWeight: "normal",
+    },
+  });
+});
+
 module.exports = {
   content: ["./app/**/*.{js,jsx}", "./src/**/*.{js,jsx}"],
   presets: [require("nativewind/preset")],
@@ -93,5 +211,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [fontPlugin],
 };

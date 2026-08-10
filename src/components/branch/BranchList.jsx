@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  SectionList,
+  Text,
+  View,
+} from "react-native";
 
 import BranchCard from "./BranchCard";
 import SearchField from "../SearchField";
@@ -121,24 +127,41 @@ export default function BranchList({ onPressItem }) {
     setSearchApplied(next);
   };
 
+  /* Một section duy nhất — dùng SectionList chỉ để ô tìm kiếm dính lại mép trên
+     khi cuộn, `sections` không mang ý nghĩa nhóm */
+  const sections = useMemo(() => [{ data: items }], [items]);
+
   return (
-    <FlatList
+    <SectionList
       className="flex-1 bg-canvas"
-      data={items}
+      sections={sections}
       keyExtractor={(item) => String(item.id)}
-      renderItem={({ item }) => (
-        <View className="px-4">
+      renderItem={({ item, index }) => (
+        // Item đầu tự chừa khoảng dưới ô tìm kiếm: khoảng đó không thể nằm trong
+        // section header, vì header dính lại thì nó dính theo
+        <View className={`px-4 ${index === 0 ? "pt-4" : ""}`}>
           <BranchCard branch={item} onPress={() => onPressItem?.(item)} />
         </View>
       )}
       ItemSeparatorComponent={() => <View className="h-3" />}
+      stickySectionHeadersEnabled
+      renderSectionHeader={() => (
+        <View className="border-b border-line bg-surface px-4 pb-4">
+          <SearchField
+            value={searchInput}
+            onChangeText={setSearchInput}
+            onSubmit={handleSubmitSearch}
+            placeholder="Tìm theo tên hoặc địa chỉ..."
+          />
+        </View>
+      )}
       ListHeaderComponent={
         <View className="bg-surface">
           <View className="px-4 pb-4 pt-6">
             <Text className="text-overline font-bold uppercase text-faint">
               Hệ thống cơ sở
             </Text>
-            <Text className="mt-1 text-2xl font-black text-content">
+            <Text className="mt-1 text-2xl font-display uppercase text-content">
               Tìm cơ sở gần bạn
             </Text>
             <Text className="mt-2 text-sm leading-6 text-muted">
@@ -147,16 +170,7 @@ export default function BranchList({ onPressItem }) {
             </Text>
           </View>
 
-          <View className="border-b border-line px-4 pb-4">
-            <SearchField
-              value={searchInput}
-              onChangeText={setSearchInput}
-              onSubmit={handleSubmitSearch}
-              placeholder="Tìm theo tên hoặc địa chỉ..."
-            />
-          </View>
-
-          <View className="flex-row items-center justify-between bg-canvas px-4 pb-4 pt-6">
+          <View className="flex-row items-center justify-between bg-surface px-4 pb-3">
             <Text className="text-base font-bold text-content">
               Tất cả cơ sở
             </Text>
@@ -167,7 +181,7 @@ export default function BranchList({ onPressItem }) {
         </View>
       }
       ListEmptyComponent={
-        <View className="px-4">
+        <View className="px-4 pt-6">
           <SectionState
             loading={loading}
             error={error}

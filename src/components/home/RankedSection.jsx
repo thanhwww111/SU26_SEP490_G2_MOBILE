@@ -23,14 +23,26 @@ const RankBadge = ({ rank, size = "md" }) => (
     >
       {DEFAULT_COUNTRY.flag}
     </Text>
-    <Text
-      className={`absolute right-2 top-2 font-black text-content ${
-        size === "lg" ? "text-3xl" : "text-xl"
-      }`}
-    >
-      <Text className={size === "lg" ? "text-xl" : "text-xs"}>#</Text>
-      {rank}
-    </Text>
+
+    {/* Dấu # và số hạng phải là hai Text ANH EM, không lồng nhau: React Native
+        gộp cả đoạn thành một dòng rồi lấy chiều cao dòng theo Text con nhỏ hơn,
+        nên chữ số to bị cắt mất phần trên. */}
+    <View className="absolute right-2 top-2 flex-row items-baseline">
+      <Text
+        className={`font-black text-content ${
+          size === "lg" ? "text-xl" : "text-xs"
+        }`}
+      >
+        #
+      </Text>
+      <Text
+        className={`font-black text-content ${
+          size === "lg" ? "text-3xl" : "text-xl"
+        }`}
+      >
+        {rank}
+      </Text>
+    </View>
   </>
 );
 
@@ -60,7 +72,7 @@ const TopPlayerCard = ({ player, accent, onPress }) => {
         </Text>
         <Text
           numberOfLines={1}
-          className="text-3xl font-black uppercase leading-8 text-content"
+          className="text-3xl font-display uppercase leading-8 text-content"
         >
           {last}
         </Text>

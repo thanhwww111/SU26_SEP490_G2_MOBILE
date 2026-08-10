@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  SectionList,
+  Text,
+  View,
+} from "react-native";
 
 import NewsCard from "./NewsCard";
 import NewsFilterBar from "./NewsFilterBar";
@@ -138,48 +144,47 @@ export default function NewsList({ onPressItem }) {
 
   const hasFilter = Boolean(categoryId || searchApplied);
 
+  /* Một section duy nhất — dùng SectionList chỉ để bộ lọc dính lại mép trên
+     khi cuộn, `sections` không mang ý nghĩa nhóm */
+  const sections = useMemo(() => [{ data: items }], [items]);
+
   return (
-    <FlatList
+    <SectionList
       className="flex-1 bg-canvas"
-      data={items}
+      sections={sections}
       keyExtractor={(item) => String(item.id)}
-      renderItem={({ item }) => (
-        <View className="px-4">
+      renderItem={({ item, index }) => (
+        // Item đầu tự chừa khoảng dưới bộ lọc: khoảng đó không thể nằm trong
+        // section header, vì header dính lại thì nó dính theo
+        <View className={`px-4 ${index === 0 ? "pt-4" : ""}`}>
           <NewsCard post={item} onPress={() => onPressItem?.(item)} />
         </View>
       )}
       ItemSeparatorComponent={() => <View className="h-3" />}
+      stickySectionHeadersEnabled
+      renderSectionHeader={() => (
+        <NewsFilterBar
+          categories={categories}
+          categoryId={categoryId}
+          onChangeCategory={setCategoryId}
+          searchInput={searchInput}
+          onChangeSearchInput={setSearchInput}
+          onSubmitSearch={handleSubmitSearch}
+        />
+      )}
       ListHeaderComponent={
-        <View className="bg-surface">
-          <View className="px-4 pb-2 pt-6">
-            <Text className="text-2xl font-black uppercase text-content">
-              Tin Tức & Bài Viết
-            </Text>
-            <Text className="mt-1 text-sm text-muted">
-              Cập nhật mới nhất từ thế giới bi-a
-            </Text>
-          </View>
-
-          <NewsFilterBar
-            categories={categories}
-            categoryId={categoryId}
-            onChangeCategory={setCategoryId}
-            searchInput={searchInput}
-            onChangeSearchInput={setSearchInput}
-            onSubmitSearch={handleSubmitSearch}
-          />
-
-          {!loading && !error && items.length > 0 ? (
-            <View className="bg-canvas px-4 pb-4 pt-6">
-              <Text className="text-sm text-muted">{total} bài viết</Text>
-            </View>
-          ) : (
-            <View className="h-4 bg-canvas" />
-          )}
+        <View className="bg-surface px-4 pb-3 pt-6">
+          <Text className="text-2xl font-display uppercase text-content">
+            Tin Tức & Bài Viết
+          </Text>
+          <Text className="mt-1 text-sm text-muted">
+            Cập nhật mới nhất từ thế giới bi-a
+            {!loading && !error && items.length > 0 ? ` · ${total} bài viết` : ""}
+          </Text>
         </View>
       }
       ListEmptyComponent={
-        <View className="px-4">
+        <View className="px-4 pt-6">
           <SectionState
             loading={loading}
             error={error}

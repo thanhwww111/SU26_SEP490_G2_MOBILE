@@ -1,19 +1,9 @@
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  CreditCard,
-  FileText,
-  LogOut,
-  Monitor,
-  Moon,
-  Sun,
-  Swords,
-  User,
-} from "lucide-react-native";
+import { CreditCard, FileText, LogOut, Swords, User } from "lucide-react-native";
 
 import { ROLES } from "../../constants/auth";
 import { normalizeRole } from "../../utils/auth";
 import { useOverlay } from "./useOverlay";
-import { useThemeStore } from "../../store/themeStore";
 import { useThemeColors } from "../../theme/useThemeColors";
 
 /**
@@ -34,27 +24,8 @@ const PLAYER_MENU = [
  *
  * Không dùng <Modal> vì lý do nêu ở useOverlay.js.
  */
-/**
- * Ba chế độ giao diện, xếp theo đúng thứ tự chạm để xoay vòng:
- * Tự động → Sáng → Tối → Tự động.
- *
- * Web chỉ có hai trạng thái bật/tắt; mobile thêm "Tự động" vì trên điện thoại
- * người dùng hay bật dark mode toàn máy theo giờ.
- *
- * Gộp thành MỘT dòng trong menu chứ không tách thành khối ba nút riêng: menu
- * này toàn là dòng chạm-để-làm-gì-đó, một khối lựa chọn nằm chen vào giữa làm
- * gãy nhịp đọc và chiếm chỗ gấp ba.
- */
-const THEME_CYCLE = [
-  { mode: "system", label: "Tự động", Icon: Monitor },
-  { mode: "light", label: "Sáng", Icon: Sun },
-  { mode: "dark", label: "Tối", Icon: Moon },
-];
-
 export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogout }) {
   const colors = useThemeColors();
-  const themeMode = useThemeStore((s) => s.mode);
-  const setThemeMode = useThemeStore((s) => s.setMode);
   const { mounted, progress } = useOverlay(visible, 140);
 
   if (!mounted) return null;
@@ -82,17 +53,6 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
       </Pressable>
     );
   };
-
-  const themeIndex = Math.max(
-    0,
-    THEME_CYCLE.findIndex((choice) => choice.mode === themeMode)
-  );
-  const theme = THEME_CYCLE[themeIndex];
-  const nextTheme = THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length];
-
-  // Không đóng menu sau khi đổi: người dùng thường chạm vài lần để so sánh
-  // sáng/tối, đóng lại mỗi lần thì phải mở menu ba lượt mới xem hết
-  const cycleTheme = () => setThemeMode(nextTheme.mode);
 
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 40 }]}>
@@ -138,23 +98,9 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
             </>
           ) : null}
 
-          <View className="h-px bg-sunken" />
-
-          {/* Giao diện: một dòng như mọi mục khác, chạm để xoay vòng trạng thái.
-              Trạng thái hiện tại nằm bên phải để biết đang ở chế độ nào mà
-              không phải mở thêm gì. */}
-          <Pressable
-            onPress={cycleTheme}
-            accessibilityRole="button"
-            accessibilityLabel={`Giao diện: ${theme.label}. Chạm để chuyển sang ${nextTheme.label}`}
-            className="flex-row items-center gap-2.5 px-3 py-2.5 active:bg-sunken"
-          >
-            <theme.Icon size={15} color={colors.content2} />
-            <Text className="flex-1 text-[13px] text-content-2">Giao diện</Text>
-            <Text className="text-[13px] font-semibold text-accent">
-              {theme.label}
-            </Text>
-          </Pressable>
+          {/* Dòng chọn giao diện đã chuyển ra nút riêng trên header, cạnh chuông
+              — giống Header của web. Đừng thêm lại vào đây: hai chỗ đổi cùng
+              một thứ thì người dùng phải đoán chỗ nào mới là chỗ đúng. */}
 
           <View className="h-px bg-sunken" />
 

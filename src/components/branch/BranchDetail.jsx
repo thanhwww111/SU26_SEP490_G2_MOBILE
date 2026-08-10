@@ -138,7 +138,7 @@ export default function BranchDetail({ id }) {
               {region}
             </Text>
           ) : null}
-          <Text className="text-2xl font-black leading-8 text-content">
+          <Text className="text-2xl font-display leading-8 text-content">
             {branch.name}
           </Text>
           {branch.description ? (

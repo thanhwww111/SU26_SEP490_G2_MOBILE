@@ -24,7 +24,7 @@ export default function HomeBanner() {
       />
 
       <View className="flex-1 justify-end p-4">
-        <Text className="text-2xl font-black uppercase italic leading-7 text-white">
+        <Text className="text-2xl font-display uppercase leading-7 text-white">
           Nền tảng tỉ số{"\n"}trực tuyến
         </Text>
       </View>

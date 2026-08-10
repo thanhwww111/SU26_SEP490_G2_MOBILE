@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
+import TabScreen from "./TabScreen";
 import PlayerAvatar from "../PlayerAvatar";
 import PlayerName from "../PlayerName";
 import SearchField from "../../SearchField";
@@ -63,11 +64,13 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
 
   if (loading || error || entries.length === 0) {
     return (
-      <SectionState
-        loading={loading}
-        error={error}
-        emptyMessage="Chưa có kết quả xếp hạng."
-      />
+      <TabScreen>
+        <SectionState
+          loading={loading}
+          error={error}
+          emptyMessage="Chưa có kết quả xếp hạng."
+        />
+      </TabScreen>
     );
   }
 
@@ -78,33 +81,37 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
     : filtered;
 
   return (
-    <View className="gap-3">
-      <View className="flex-row items-center justify-between gap-3">
-        <View
-          className={`rounded-full border px-3 py-1 ${
-            isOfficial
-              ? "border-emerald-200 bg-tint-success"
-              : "border-amber-200 bg-tint-warning"
-          }`}
-        >
-          <Text
-            className={`text-overline font-bold uppercase ${
-              isOfficial ? "text-emerald-700" : "text-amber-700"
-            }`}
-          >
-            {isOfficial ? "Kết quả chính thức" : "Xếp hạng tạm thời"}
-          </Text>
-        </View>
+    <TabScreen
+      filters={
+        <>
+          <View className="flex-row items-center justify-between gap-3">
+            <View
+              className={`rounded-full border px-3 py-1 ${
+                isOfficial
+                  ? "border-emerald-200 bg-tint-success"
+                  : "border-amber-200 bg-tint-warning"
+              }`}
+            >
+              <Text
+                className={`text-overline font-bold uppercase ${
+                  isOfficial ? "text-emerald-700" : "text-amber-700"
+                }`}
+              >
+                {isOfficial ? "Kết quả chính thức" : "Xếp hạng tạm thời"}
+              </Text>
+            </View>
 
-        <Text className="text-xs text-faint">{filtered.length} cơ thủ</Text>
-      </View>
+            <Text className="text-xs text-faint">{filtered.length} cơ thủ</Text>
+          </View>
 
-      <SearchField
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Tìm cơ thủ..."
-      />
-
+          <SearchField
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Tìm cơ thủ..."
+          />
+        </>
+      }
+    >
       {champion ? (
         <Pressable
           onPress={() => onPressParticipant?.(champion.participantId)}
@@ -115,7 +122,7 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
           <PlayerAvatar name={champion.displayName} size="lg" />
 
           <View className="flex-1">
-            <Text className="text-2xl font-black italic text-gold">
+            <Text className="text-2xl font-display text-gold">
               {champion.rankLabel}
             </Text>
             <Text numberOfLines={1} className="mt-1 text-base font-bold uppercase text-white">
@@ -140,7 +147,12 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
               accessibilityLabel={`Hồ sơ ${entry.displayName}`}
               className="flex-row items-center gap-3 border-b border-line-soft px-4 py-3 active:bg-sunken"
             >
-              <Text className="w-14 text-base font-bold italic text-muted">
+              {/* Hạng đồng vị trả về dạng "#5-8" nên bề ngang để tối thiểu,
+                  không cố định — xem docs/mobile/10-data-contracts.md */}
+              <Text
+                numberOfLines={1}
+                className="min-w-[48px] text-base font-bold-italic text-muted"
+              >
                 {entry.rankLabel}
               </Text>
 
@@ -166,6 +178,6 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
           </Text>
         </View>
       ) : null}
-    </View>
+    </TabScreen>
   );
 }

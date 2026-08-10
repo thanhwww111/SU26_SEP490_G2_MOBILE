@@ -43,13 +43,14 @@ const InfoCell = ({ label, value }) => (
  * Hero và thẻ tên giải chỉ hiện ở tab Thông tin, giống web — ba tab danh sách
  * cần trọn chiều cao màn hình cho dữ liệu, không phải cho ảnh bìa.
  *
- * Các tab dùng chung một ScrollView thay vì mỗi tab một FlatList: hero phải
- * cuộn cùng nội dung, mà FlatList lồng trong ScrollView thì cuộn xung đột.
- * Đánh đổi: danh sách dài (giải 128 cơ thủ) render hết một lượt, không ảo hoá.
- * Chấp nhận được ở quy mô hiện tại — xem spec ngày 2026-07-29.
+ * Vùng cuộn chia theo tab chứ không dùng chung một `ScrollView` như trước:
+ * tab Thông tin cần hero cuộn cùng nội dung nên `ScrollView` dựng ở đây, còn
+ * bốn tab danh sách tự lo lấy qua `TabScreen` để giữ được bộ lọc ở trên cùng.
+ * Danh sách dài (giải 128 cơ thủ) vẫn render hết một lượt, không ảo hoá —
+ * chấp nhận được ở quy mô hiện tại, xem spec ngày 2026-07-29.
  *
  * Tab đã mở thì được giữ lại (ẩn bằng `display: none`) để chuyển qua chuyển lại
- * không gọi lại API.
+ * không gọi lại API — và nhờ vậy mỗi tab giữ nguyên vị trí cuộn của nó.
  */
 export default function TournamentDetail({
   id,
@@ -106,9 +107,10 @@ export default function TournamentDetail({
   const handleChangeTab = (tabId) => {
     setActiveTab(tabId);
     setVisited((prev) => (prev[tabId] ? prev : { ...prev, [tabId]: true }));
-    // Đổi tab mà giữ nguyên vị trí cuộn thì nội dung mới hiện ra giữa chừng;
-    // web cũng scrollTo(0,0) mỗi lần đổi tab
-    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    // Chỉ kéo tab Thông tin về đầu. Bốn tab danh sách có vùng cuộn riêng và cố
+    // ý giữ nguyên chỗ đang đọc: quay lại tab Trận đấu mà bị ném về đầu danh
+    // sách thì phải dò lại từ vòng 1.
+    if (tabId === "info") scrollRef.current?.scrollTo({ y: 0, animated: false });
   };
 
   if (loading) {
@@ -177,76 +179,87 @@ export default function TournamentDetail({
 
   return (
     <View className="flex-1 bg-canvas">
-      <ScrollView
-        ref={scrollRef}
-        className="flex-1"
-        // Chừa chỗ cho thanh tab nổi ở đáy, nếu không nó che mất phần cuối nội dung
-        contentContainerClassName="pb-28"
-      >
-        {showHero ? (
-          <View>
-            <View className="h-48 w-full">
-              <RemoteImage uri={tournament.thumbnailUrl} className="h-full w-full" />
-              <View
-                style={[
-                  StyleSheet.absoluteFill,
-                  { backgroundColor: "rgba(12, 21, 39, 0.45)" },
-                ]}
-              />
-              <View className="absolute right-4 top-4">
-                <TournamentStatusBadge tournament={tournament} />
-              </View>
-            </View>
-
-            <View className="border-b border-line bg-surface px-4 pb-2 pt-4">
-              <Text className="text-xl font-black uppercase italic leading-7 text-content">
-                {tournament.name}
-              </Text>
-
-              <View className="mt-3 flex-row flex-wrap border-t border-line-soft">
-                <InfoCell
-                  label="Ngày diễn ra"
-                  value={fmtDateRange(tournament.startAt, tournament.endAt)}
-                />
-                <InfoCell label="Loại bi" value={tournament.gameType} />
-              </View>
-              <View className="flex-row flex-wrap">
-                <InfoCell
-                  label="Thể thức"
-                  value={`${tournament.formatName || tournament.format || "—"} · ${participantTypeLabel(
-                    tournament.participantType
-                  )}`}
-                />
-                <InfoCell
-                  label="Tổng giải thưởng"
-                  value={fmtCurrency(tournament.prizePool)}
-                />
-              </View>
-            </View>
-          </View>
-        ) : (
-          /* Tab danh sách bỏ hero để nhường chiều cao cho dữ liệu, nhưng vẫn
-             phải nhắc người dùng đang xem giải nào */
-          <View className="border-b border-line bg-surface px-4 py-3">
-            <Text numberOfLines={1} className="text-sm font-bold text-content">
-              {tournament.name}
-            </Text>
-          </View>
-        )}
-
-        <View className="px-4 pt-4">
-          {tabs.map((tab) =>
-            visited[tab.id] ? (
-              <View
-                key={tab.id}
-                style={tab.id === activeTab ? undefined : styles.hidden}
-              >
-                {renderTab(tab.id)}
-              </View>
-            ) : null
-          )}
+      {/* Tab danh sách bỏ hero để nhường chiều cao cho dữ liệu, nhưng vẫn phải
+          nhắc người dùng đang xem giải nào. Dải này nằm ngoài mọi vùng cuộn nên
+          không trôi đi mất. */}
+      {showHero ? null : (
+        <View className="border-b border-line bg-surface px-4 py-3">
+          <Text numberOfLines={1} className="text-sm font-bold text-content">
+            {tournament.name}
+          </Text>
         </View>
-      </ScrollView>
+      )}
+
+      {tabs.map((tab) => {
+        if (!visited[tab.id]) return null;
+
+        const active = tab.id === activeTab;
+
+        return (
+          <View
+            key={tab.id}
+            style={active ? styles.fill : styles.hidden}
+            // Tab ẩn vẫn nằm trong cây để giữ dữ liệu đã tải; cắt nó khỏi luồng
+            // đọc màn hình để trình đọc không xướng nội dung đang không hiện
+            aria-hidden={!active}
+          >
+            {tab.id === "info" ? (
+              <ScrollView
+                ref={scrollRef}
+                className="flex-1"
+                // Chừa chỗ cho thanh tab nổi ở đáy, nếu không nó che mất phần cuối
+                contentContainerClassName="pb-28"
+              >
+                <View className="h-48 w-full">
+                  <RemoteImage
+                    uri={tournament.thumbnailUrl}
+                    className="h-full w-full"
+                  />
+                  <View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      { backgroundColor: "rgba(12, 21, 39, 0.45)" },
+                    ]}
+                  />
+                  <View className="absolute right-4 top-4">
+                    <TournamentStatusBadge tournament={tournament} />
+                  </View>
+                </View>
+
+                <View className="border-b border-line bg-surface px-4 pb-2 pt-4">
+                  <Text className="text-xl font-display uppercase leading-7 text-content">
+                    {tournament.name}
+                  </Text>
+
+                  <View className="mt-3 flex-row flex-wrap border-t border-line-soft">
+                    <InfoCell
+                      label="Ngày diễn ra"
+                      value={fmtDateRange(tournament.startAt, tournament.endAt)}
+                    />
+                    <InfoCell label="Loại bi" value={tournament.gameType} />
+                  </View>
+                  <View className="flex-row flex-wrap">
+                    <InfoCell
+                      label="Thể thức"
+                      value={`${tournament.formatName || tournament.format || "—"} · ${participantTypeLabel(
+                        tournament.participantType
+                      )}`}
+                    />
+                    <InfoCell
+                      label="Tổng giải thưởng"
+                      value={fmtCurrency(tournament.prizePool)}
+                    />
+                  </View>
+                </View>
+
+                <View className="px-4 pt-4">{renderTab("info")}</View>
+              </ScrollView>
+            ) : (
+              renderTab(tab.id)
+            )}
+          </View>
+        );
+      })}
 
       <TournamentTabBar
         tabs={tabs}
@@ -258,5 +271,6 @@ export default function TournamentDetail({
 }
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
   hidden: { display: "none" },
 });

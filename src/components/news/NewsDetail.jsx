@@ -83,7 +83,7 @@ export default function NewsDetail({ slug }) {
           </Text>
         ) : null}
 
-        <Text className="text-2xl font-black leading-8 text-content">
+        <Text className="text-2xl font-display leading-8 text-content">
           {post.title}
         </Text>
 

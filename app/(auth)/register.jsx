@@ -217,12 +217,12 @@ export default function RegisterScreen() {
 
       <View className="my-5 h-px bg-white/20" />
 
-      <Text className="mb-2 text-[13px] font-bold uppercase italic tracking-[1.5px] text-white">
+      <Text className="mb-2 text-[13px] font-display uppercase tracking-[1.5px] text-white">
         Đã có tài khoản?
       </Text>
       <Text className="mb-4 text-xs text-slate-300">
         Đăng nhập để truy cập{" "}
-        <Text className="font-bold uppercase italic text-white">capstone</Text>.
+        <Text className="font-display uppercase text-white">capstone</Text>.
       </Text>
       <Button
         title="Đăng nhập"

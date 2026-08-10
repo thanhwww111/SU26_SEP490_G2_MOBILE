@@ -455,6 +455,23 @@ Request — `SubmitTournamentRegistrationRequest`
 
 **Mọi `value` đều là chuỗi**, kể cả số và boolean. `fieldKey` phải khớp `fieldKey` từ form template.
 
+### Bốn giới hạn khiến nhiều ý tưởng về màn này không làm được
+
+Ghi lại ở đây (khảo sát 2026-08-10) để khỏi phải dò lại backend mỗi lần có người đề xuất.
+
+**1. Một tài khoản chỉ đăng ký được MỘT lần cho một giải.**
+`RegistrationServiceImpl.java:102` — `existsByTournamentIdAndUserId` ném `REGISTRATION_ALREADY_EXISTS`. Nên **không có cách nào đăng ký hộ nhiều người** bằng một tài khoản.
+
+**2. Số người chơi cố định theo template, không thêm động được.**
+Hai template có sẵn (`DataInitializer.java:412-440`) chỉ có bốn key: `player_full_name`, `player_phone`, `player2_full_name`, `player2_phone`. **Không có key nào cho người thứ ba**, và gửi key lạ thì `RegistrationFormServiceImpl.java:122` từ chối cả đơn.
+
+**3. Mọi trường của hai template đó đều bắt buộc.**
+`DataInitializer.java:455` đặt `isRequired(true)` cho tất cả; `RegistrationFormServiceImpl.java:132` ném `REG_FORM_VALIDATION_FAILED` nếu thiếu. Ẩn bớt ô trên giao diện không giúp bỏ qua được — người dùng vẫn phải điền đủ mới gửi được.
+
+**4. `registrationType` chỉ nhận `SINGLE` hoặc `DOUBLE`.**
+
+> Muốn vượt qua bốn giới hạn này thì phải thêm bảng và endpoint mới bên backend. Sửa bảng hay service cũ là vi phạm ràng buộc đặt từ 2026-08-07.
+
 ## GET `/player/registrations` — `TournamentRegistrationResponse`
 
 ```jsonc

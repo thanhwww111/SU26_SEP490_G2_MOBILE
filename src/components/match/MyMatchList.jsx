@@ -4,9 +4,11 @@ import { useFocusEffect } from "expo-router";
 import { Calendar, ChevronRight, Swords } from "lucide-react-native";
 
 import MatchDetailSheet from "./MatchDetailSheet";
+import MatchScore from "./MatchScore";
 import SectionState from "../home/SectionState";
 import AppFooter from "../layout/AppFooter";
 import * as matchApi from "../../api/matchApi";
+import { getMatchState, getWinnerSide } from "../../constants/tournament";
 import { fmtDateTime } from "../../utils/date";
 import { iconSize } from "../../theme/tokens";
 import { useThemeColors } from "../../theme/useThemeColors";
@@ -46,9 +48,10 @@ const StatusChip = ({ status }) => {
 const MatchCard = ({ item, onPress, onOpenTournament }) => {
   const colors = useThemeColors();
 
-  const done = item.status === "COMPLETED" || item.status === "WALKOVER";
-  const winner1 = item.winner?.id && item.winner.id === item.player1?.id;
-  const winner2 = item.winner?.id && item.winner.id === item.player2?.id;
+  /* Dùng chung cách suy ra bên thắng với tab Trận đấu: backend không phải lúc
+     nào cũng gửi `winner` cho trận đã xong, `getWinnerSide` có nhánh so tỷ số */
+  const state = getMatchState(item.status);
+  const winner = getWinnerSide(item);
 
   return (
     <Pressable
@@ -70,22 +73,25 @@ const MatchCard = ({ item, onPress, onOpenTournament }) => {
         {/* Người thắng in đậm — lướt qua là biết kết quả mà không phải so điểm */}
         <View className="flex-row items-center gap-2">
           <Text
-            numberOfLines={1}
+            numberOfLines={2}
             className={`flex-1 text-sm ${
-              winner1 ? "font-bold text-content" : "text-content-2"
+              winner === 1 ? "font-bold text-content" : "text-content-2"
             }`}
           >
             {item.player1?.displayName ?? "TBD"}
           </Text>
 
-          <Text className="text-sm font-bold text-content">
-            {done ? `${item.player1Score ?? 0} — ${item.player2Score ?? 0}` : "vs"}
-          </Text>
+          <MatchScore
+            score1={item.player1Score}
+            score2={item.player2Score}
+            winner={winner}
+            state={state}
+          />
 
           <Text
-            numberOfLines={1}
+            numberOfLines={2}
             className={`flex-1 text-right text-sm ${
-              winner2 ? "font-bold text-content" : "text-content-2"
+              winner === 2 ? "font-bold text-content" : "text-content-2"
             }`}
           >
             {item.player2?.displayName ?? "TBD"}
@@ -226,7 +232,9 @@ export default function MyMatchList({ onOpenTournament }) {
         }
         ListHeaderComponent={
           <View className="px-4 pb-2 pt-6">
-            <Text className="text-2xl font-bold text-content">Lịch thi đấu</Text>
+            <Text className="text-2xl font-display uppercase text-content">
+              Lịch thi đấu
+            </Text>
             <Text className="mt-1 text-sm text-muted">
               Các trận của bạn ở mọi giải đang tham dự
             </Text>

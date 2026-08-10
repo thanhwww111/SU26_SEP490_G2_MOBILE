@@ -30,7 +30,7 @@ export default function TournamentHero() {
         <Text className="text-overline font-bold uppercase text-accent">
           World Nineball Tour
         </Text>
-        <Text className="mt-1 text-2xl font-black uppercase italic text-white">
+        <Text className="mt-1 text-2xl font-display uppercase text-white">
           Giải Đấu Bi-a
         </Text>
       </View>

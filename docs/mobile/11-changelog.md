@@ -6,6 +6,119 @@ Không ghi ở đây: chi tiết cách dùng component (xem [08](08-reusable-pat
 
 ---
 
+# 2026-08-10 (c) — Chế độ tối hết ngả xanh
+
+Phản hồi: "dark mode mobile chỉ là nền xanh đậm, không đen sâu có chiều sâu như web".
+
+Đúng, và đo được. Hiệu **B − R** của từng bậc trong thang cũ: nền 17 → thẻ 36 → nền chờ 42 → viền 48 → viền đậm **59**. Web giữ khoảng **22–27** ở mọi lớp. Càng lên lớp cao mobile càng xanh, nên tổng thể ra tông navy chứ không ra đen.
+
+**Nguyên nhân:** thang cũ làm sáng bằng cách tăng riêng kênh xanh. Web làm sáng bằng cách **pha trắng** (`rgba(255,255,255,.03)`, `dark:border-white/10`, `dark:text-white/60`) — cộng đều ba kênh nên sắc độ không đổi.
+
+Thang mới pha trắng như web, **B − R nằm trong 21–28 ở mọi bậc**. `canvas` và `surface` lấy đúng giá trị web (`#0A1220`, `#131C2E`). Hai giá trị đó gần nhau nên việc tách thẻ khỏi nền chuyển sang trông cậy vào **viền** — cũng là cách web làm.
+
+> Ghi chú này thay thế phần "Đổi từ 2026-08-06" trong [01 — Phần 9](01-design-system.md), chỗ giãn khoảng cách nền cho khỏi "phẳng lì". Vấn đề đó có thật nhưng cách chữa sai hướng: giãn bằng cách bơm thêm xanh. Lần này giãn bằng viền.
+
+Nhân tiện sửa hai thứ:
+
+- `faint` từ 3.83:1 lên **4.51:1** trên nền thẻ — bản cũ dưới ngưỡng AA nên chú thích và mốc thời gian khó đọc.
+- Bảng token ở [01 — Phần 9](01-design-system.md) bị vỡ cấu trúc: năm dòng chữ (`content`, `muted`, `faint`…) nằm lạc sau đoạn văn thay vì trong bảng.
+
+**Sửa màu tối thì sửa CẢ HAI file** — `global.css` và `src/theme/tokens.js` — nếu không màu icon lệch màu chữ ngay cạnh nó.
+
+---
+
+# 2026-08-10 (b) — Nút sáng/tối lên header, form đăng ký tự điền
+
+## 1. Đổi giao diện chuyển từ menu hồ sơ ra header
+
+`src/components/layout/ThemeToggle.jsx` mới, đặt cạnh chuông theo đúng thứ tự của web: đổi giao diện → thông báo → hồ sơ. Dòng "Giao diện" trong `ProfileMenu` bỏ hẳn — hai chỗ đổi cùng một thứ thì người dùng phải đoán chỗ nào mới đúng.
+
+**Còn hai trạng thái Sáng ⇄ Tối như web**, không xoay vòng ba trạng thái nữa. Icon chỉ chỗ SẼ ĐẾN chứ không phải chỗ đang đứng (đang tối thì hiện mặt trời) — quy ước của `Header.jsx` bên web, đảo lại thì người quen web bấm nhầm.
+
+Nút đọc chế độ đang hiển thị THẬT qua `useIsDarkMode()`, không đọc `mode` trong store. Hai thứ khác nhau khi `mode` là `"system"`: lúc đó store không biết máy đang sáng hay tối, mà nút thì phải hiện đúng icon ngay lần đầu mở app.
+
+**`"system"` vẫn nằm trong store và vẫn là mặc định** — chỉ biến khỏi giao diện. Mở app lần đầu vẫn khớp cài đặt của máy; bấm nút một lần là chốt tường minh. Bỏ hẳn thì người để máy ở chế độ tối bị chói ngay lần mở đầu tiên.
+
+Ba vùng của `AppHeader` nới từ `w-20` lên `w-[120px]` cho đủ ba nút, nếu không logo lệch khỏi tâm.
+
+## 2. Form đăng ký giải tự điền thông tin người đăng ký
+
+`TournamentRegisterView` gọi thêm `GET /profile` trong cụm `Promise.all` sẵn có, **bọc `.catch(() => null)` riêng** — tài khoản chưa tạo hồ sơ thì backend trả 404, mà thiếu hồ sơ thì form vẫn phải mở được.
+
+Điền `player_full_name` và `player_phone`, **khớp bằng `fieldKey` chính xác chứ không suy từ `uiComponent`**: template giải đôi có `player2_phone` cũng là `PHONE_INPUT`, đoán theo kiểu ô thì số của người đăng ký chui thẳng vào ô đồng đội.
+
+Điền đúng MỘT lần cho cả vòng đời màn (`prefilledOnce` ref). `useFocusEffect` gọi lại `load` mỗi lần quay lại màn; điền lại ở đó sẽ xoá sạch những gì người dùng vừa gõ — kể cả khi họ cố ý sửa tên để đăng ký hộ.
+
+Ô vẫn sửa được bình thường, kèm một dòng nhắc "Đã điền sẵn từ hồ sơ của bạn — sửa lại nếu bạn đăng ký cho người khác". Không có dòng đó thì người đăng ký hộ sẽ tưởng form khoá cứng theo tài khoản.
+
+**KHÔNG làm nút "Đăng ký hộ" và nút "Thêm người chơi"** dù ban đầu có yêu cầu. Backend chặn cả hai: một tài khoản chỉ đăng ký được một lần cho một giải, và số người chơi cố định theo template. Bốn giới hạn đầy đủ kèm file:line: [10 — POST /player/tournaments/{id}/registrations](10-data-contracts.md).
+
+> **Repo FE đã port y hệt** (`src/pages/Player/TournamentRegisterPage.jsx`): cùng bảng `PREFILL_FROM_PROFILE`, cùng cách nuốt 404 của `getProfile`, cùng dòng nhắc. Sửa một bên thì sửa cả hai — lệch nhau thì cùng một người đăng ký trên hai thiết bị lại gặp hai form khác nhau. Bên web hồ sơ còn đè lên `defaultValue` của template, vì giá trị mặc định do Owner đặt là ví dụ chung cho mọi người.
+
+---
+
+# 2026-08-10 — Phông chữ riêng, bộ lọc dính, tỷ số to
+
+Năm việc theo phản hồi khi dùng thử. **Thêm ba thư viện** — pull về nhớ `npm install`.
+
+## 1. App có phông chữ riêng, thôi dùng font hệ điều hành
+
+`expo-font` + `@expo-google-fonts/be-vietnam-pro` + `@expo-google-fonts/oswald`, nạp trong `app/_layout.jsx` bằng `useFonts`, gộp vào cổng chờ sẵn có nên không thêm màn chờ mới. Font hỏng thì vẫn cho vào app — chặn ở đó sẽ thành màn quay vô tận.
+
+**Mobile KHÔNG dùng Poppins và Bebas Neue như web khai báo**, mà dùng thẳng hai font dự phòng Be Vietnam Pro và Oswald. Lý do và cách đổi độ đậm: [01 — Phần 3](01-design-system.md). Tóm tắt: hai font kia thiếu glyph tiếng Việt, web chỉ chạy được nhờ trình duyệt thay glyph từng ký tự — cơ chế mà React Native không có.
+
+Không phải sửa 190 chỗ đang gõ `font-bold` / `font-black`: một plugin trong `tailwind.config.js` ghi đè các lớp đó để đổi `fontFamily` thay vì `fontWeight`.
+
+**`src/theme/fonts.js` trỏ thẳng vào từng file `.ttf`, đừng đổi sang import theo tên gói.** `index.js` của `@expo-google-fonts/*` `require` sẵn mọi độ đậm kể cả bản nghiêng, nên import theo tên gói kéo cả 24 file vào bản dựng — đã đo bằng `expo export`: **2,95 MB thay vì 1,13 MB**.
+
+**Tiêu đề nghiêng bằng `skewX(-14deg)` gói sẵn trong `font-display`.** React Native bỏ qua `fontStyle` với font nạp lúc chạy, mà Oswald cũng không có bản nghiêng thật — nên phải làm đúng phép biến hình trình duyệt dùng cho synthetic oblique. Chỗ nào nghiêng gây lẹm mép thì có `font-display-upright`.
+
+### Kéo theo: repo FE bỏ Bebas Neue
+
+Cùng ngày, `SU26_SEP490_G2_FE` đổi `--font-display` từ `"Bebas Neue", "Oswald", ...` sang `"Oswald", ...` và ngưng nạp Bebas Neue. Lý do giống hệt phần trên — Bebas thiếu glyph tiếng Việt — nhưng bên web hậu quả nhìn thấy rõ hơn vì tiêu đề cỡ lớn: trong "SÂN CHƠI BILLIARDS" thì Â và Ơ rơi sang Oswald, lệch cap-height nên chữ thụt lên thụt xuống.
+
+Bên đó còn một lỗi thứ hai tự khỏi theo: Bebas Neue là font toàn chữ hoa, nên tiêu đề viết thường mà không có lớp `uppercase` (`Quản lý nhân viên`) hiện ra `QUảN Lý NHâN VIêN` — ký tự có dấu rơi sang Oswald nên giữ nguyên chữ thường. Dùng Oswald một mình thì hiện đúng như nội dung viết.
+
+**Hai repo giờ dùng chung Oswald cho tiêu đề.** Chữ thường thì vẫn lệch tên font (web Poppins, mobile Be Vietnam Pro) nhưng trùng kết quả với chữ có dấu — xem [01](01-design-system.md).
+
+**Nợ:** chưa chạy thử trên máy thật. Thứ tự ưu tiên giữa lớp `text-*` và `font-*` đã kiểm bằng cách dựng CSS ra xem, nhưng cách NativeWind nạp font lúc chạy thì chỉ thiết bị mới nói được. Cũng chưa đo lại chiều cao dòng: font mới có metrics khác font hệ thống nên mọi khối đo theo chiều cao chữ sẽ xê dịch nhẹ, Android có thể cần `includeFontPadding: false`.
+
+## 2. Số thứ tự bị cắt cụt đầu
+
+`RankingRow` và `RankedSection` đặt `<Text>` cỡ 12 cho dấu `#` **lồng trong** `<Text>` cỡ 24 cho số hạng. React Native gộp cả đoạn thành một dòng rồi lấy chiều cao dòng theo Text con nhỏ hơn, nên chữ số to bị cắt mất phần trên — hạng 1, 2, 3 cụt đầu còn hạng 4 thì không, vì nét chữ 4 nằm thấp hơn.
+
+Sửa: tách thành hai `<Text>` anh em trong `<View className="flex-row items-baseline">`.
+
+Bỏ luôn các bề ngang cố định quanh đó (`w-12`, `w-14` ở `StandingTable` và `RankingTab`) — giải đông người có hạng ba chữ số, và nhãn "Hiệu số" viết hoa có giãn chữ vốn đã gần chạm mép.
+
+> Quét cả repo tìm mọi `<Text>` lồng lệch cỡ chữ, chỉ có đúng hai chỗ trên. **Đây là cái bẫy, không phải lỗi lẻ** — Text lồng Text mà khác cỡ chữ thì bao giờ cũng có nguy cơ này.
+
+## 3. Tỷ số trận đấu: một hình thức cho cả ba màn
+
+`src/components/match/MatchScore.jsx` mới. Trước đó tab Trận đấu dùng `3 - 1` cỡ 16, còn Lịch thi đấu của tôi dùng `3 — 1` cỡ 14 và chữ "vs" — cùng một dữ liệu mà mỗi màn một kiểu.
+
+Nay cỡ 24, tách thành khối nền riêng, bên thắng tô màu. Tên cơ thủ cho xuống hai dòng vì khối tỷ số rộng hơn trước.
+
+`MyMatchList` chuyển sang dùng chung `getWinnerSide` với tab Trận đấu — hàm đó có nhánh so tỷ số khi backend không gửi `winner`. Kèm theo đó, điểm khuyết hiện dấu gạch chứ không hiện `0` nữa; `0` là một kết quả thật.
+
+## 4. Bộ lọc dính lại mép trên khi cuộn
+
+**Bốn màn danh sách** (Bảng xếp hạng cơ thủ, Tin tức, Giải đấu, Chi nhánh) đổi `FlatList` → `SectionList`, bộ lọc làm section header nên tự dính. Chỉ có một section, `sections` không mang ý nghĩa nhóm. Nhớ bật `stickySectionHeadersEnabled` — Android mặc định tắt.
+
+Hai điều chỉnh kéo theo: dòng đếm tổng ("64 cơ thủ") gộp vào phụ đề vì chỗ cũ của nó giờ là ranh giới dính; khoảng cách dưới bộ lọc chuyển thành `pt-4` của item đầu, vì để trong header thì nó dính theo.
+
+## 5. Vùng cuộn của màn chi tiết giải chia lại theo tab
+
+Trước: cả năm tab dùng chung một `ScrollView` ở `TournamentDetail`, nên bộ lọc nằm lọt trong vùng cuộn, không có cách nào giữ lại.
+
+Nay `src/components/tournament/tabs/TabScreen.jsx` dựng khung hai tầng cho tab danh sách — bộ lọc trên, nội dung cuộn dưới — và `TournamentDetail` chỉ còn dựng `ScrollView` cho tab Thông tin, nơi ảnh bìa phải cuộn cùng nội dung. Thanh tên giải ở ba tab danh sách chuyển ra ngoài mọi vùng cuộn.
+
+Hai hệ quả có lợi: mỗi tab nhớ vị trí cuộn riêng (đổi tab không bị ném về đầu danh sách — `scrollTo(0)` giờ chỉ chạy cho tab Thông tin), và hết cảnh danh sách dài nằm trong `ScrollView` của người khác.
+
+Ở tab Trận đấu **chỉ ô tìm kiếm và chip vòng được giữ cố định**. Nút Lịch đấu/Bảng điểm và chip giai đoạn bấm một lần rồi thôi; nhét cả bốn cụm lên trên sẽ ăn gần 180 điểm ảnh.
+
+---
+
 # 2026-08-08 (b) — Ba khác biệt cuối cùng bị xoá bỏ
 
 Ba chỗ trước đây được ghi là "khác web có chủ ý" nay làm cho giống hẳn, theo yêu cầu của nhóm. **Thêm hai thư viện** — pull về nhớ `npm install`.
