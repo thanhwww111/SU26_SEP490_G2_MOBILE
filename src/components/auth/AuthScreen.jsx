@@ -16,7 +16,7 @@ const OVERLAY_COLOR = "rgba(13, 27, 62, 0.76)";
 
 /**
  * Khung dùng chung cho cả 4 màn auth, bám layout trang Auth của FE web:
- * ảnh nền phủ lớp navy tối, logo CAPSTONE, câu chào, rồi nội dung.
+ * ảnh nền phủ lớp navy tối, logo BTMS, câu chào, rồi nội dung.
  *
  * `card = false` bỏ nền trắng, đặt form thẳng lên nền tối — khi đó màn con phải
  * dùng Input tone="dark" và Button variant="light" cho đọc được.
@@ -50,12 +50,12 @@ export default function AuthScreen({ title, children, card = true }) {
           >
             <View className="mb-5 items-center">
               <Text className="text-[42px] font-display uppercase leading-[44px] tracking-tight text-white">
-                capstone<Text className="text-accent">.</Text>
+                btms<Text className="text-accent">.</Text>
               </Text>
               <Text className="mt-1.5 text-center text-[13px] text-slate-300">
                 Chào mừng bạn đến với nền tảng tỉ số trực tuyến{" "}
                 <Text className="font-display uppercase text-white">
-                  capstone
+                  btms
                 </Text>
                 .
               </Text>

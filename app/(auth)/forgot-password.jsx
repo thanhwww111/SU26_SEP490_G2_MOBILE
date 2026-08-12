@@ -68,7 +68,7 @@ export default function ForgotPasswordScreen() {
         value={email}
         onChangeText={handleChange}
         onBlur={() => setTouched(true)}
-        placeholder="Nhập email đã đăng ký với Capstone"
+        placeholder="Nhập email đã đăng ký với BTMS"
         error={errors.email}
         touched={touched}
         tone="dark"

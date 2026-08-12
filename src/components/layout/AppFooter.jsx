@@ -104,7 +104,7 @@ export default function AppFooter() {
         ) : null}
 
         <Text className="mt-5 text-xs text-content-2">
-          © {new Date().getFullYear()} CAPSTONE — Nền tảng quản lý giải và tỉ số
+          © {new Date().getFullYear()} BTMS — Nền tảng quản lý giải và tỉ số
           bi-a.
         </Text>
       </View>

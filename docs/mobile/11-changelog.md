@@ -317,11 +317,23 @@ Danh sách dựng lại từ `email_send_logs` lọc theo `recipient_user_id` �
 
 Trạng thái đã đọc là một mốc thời gian trong SecureStore, không phải cột trong DB. Vì vậy hai máy của cùng một người đếm chưa đọc độc lập nhau, và gỡ app cài lại thì mọi thứ thành chưa đọc.
 
-## Thông báo đẩy không chạy trong Expo Go
+## Thông báo đẩy trong Expo Go: iOS được, Android không
 
-Từ SDK 53 Expo đã gỡ remote push khỏi Expo Go. `usePushNotifications.js` được viết để thất bại trong im lặng ở mọi nhánh không lấy được token — Expo Go, máy ảo, người dùng từ chối quyền, chưa chạy `eas init`. App vẫn chạy đủ, chỉ là thông báo chỉ thấy khi mở màn thông báo.
+**Đính chính ngày 2026-08-10.** Bản ghi trước ở đây nói push "không chạy trong Expo Go" — đúng với Android, **sai với iOS**, và chính câu đó khiến nhóm đi tìm lỗi ở điện thoại khi iPhone không nhận được thông báo.
 
-Muốn thử push thật cần development build EAS, và cần `extra.eas.projectId` trong `app.json` (chưa có).
+Giới hạn của SDK 53 chỉ gỡ remote push khỏi Expo Go **trên Android**. Kiểm chứng ngay trong `node_modules/expo-notifications/src/warnOfExpoGoPushUsage.ts`: thông báo ghi rõ chữ "Android", và chỉ `console.error` khi `Platform.OS === "android"`, còn iOS chỉ `console.warn`. `getDevicePushTokenAsync.ts` không có nhánh nào chặn theo platform, `getExpoPushTokenAsync` cũng không kiểm tra Expo Go — nó chỉ ném lỗi khi thiếu `projectId`.
+
+Nên trên **iPhone thật + Expo Go, push chạy được**, không cần development build EAS, không cần Apple Developer account.
+
+Điều kiện bắt buộc duy nhất là **`extra.eas.projectId` trong `app.json`** — thiếu nó thì `resolveProjectId()` trả null và hook thoát trước khi kịp xin token, nên bảng `device_tokens` trống và backend không có gì để gửi.
+
+**Đã cấu hình ngày 2026-08-10:** project `@thanhdinh203s-team/SU26_SEP490_G2_MOBILE`, id `a5fb7778-74dc-42a5-ba3d-aa807a534b00`. Tạo dưới **team account** chứ không phải account cá nhân, để cả nhóm mời nhau vào build được; `app.json` vì thế có thêm `"owner": "thanhdinh203s-team"`. **Đừng chạy lại `eas init`** — projectId là immutable, chạy lại chỉ sinh project trùng và token sẽ cấp theo id khác.
+
+Bằng chứng chuỗi này đúng, lấy từ log thật hôm 2026-08-10 trước khi có projectId: console mobile in `[push] ... thiếu extra.eas.projectId`, còn backend in `ExpoPushServiceImpl: Không có thiết bị nào đăng ký cho 1 người nhận — bỏ qua push` ngay cạnh `MailDispatcher: Email sent ... logId=28`. Email đi được nhưng push thì không, đúng vì `device_tokens` trống — chứ không phải rule email thiếu.
+
+Muốn thử trên Android thì mới cần development build, kèm FCM V1 credentials (Firebase project + service account key upload qua `eas credentials`).
+
+`usePushNotifications.js` trước đây thất bại hoàn toàn im lặng ở mọi nhánh. Giờ mỗi nhánh đều log lý do qua `bail()` khi `__DEV__` — thiếu projectId, máy ảo, chưa cấp quyền, lỗi mạng. Đừng bỏ lớp log này: nó là thứ duy nhất phân biệt "máy không hỗ trợ" với "cấu hình còn thiếu".
 
 Huy hiệu chưa đọc vì thế **không** dựa vào push: `_layout.jsx` đếm lại mỗi lần đổi màn.
 

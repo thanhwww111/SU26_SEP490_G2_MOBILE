@@ -13,14 +13,33 @@ import { getItem, removeItem, setItem } from "../utils/storage";
 /**
  * Thông báo đẩy: xin quyền, ghi danh máy với backend, và xử lý lúc thông báo tới.
  *
- * KHÔNG chạy được trong Expo Go. Từ SDK 53 Expo đã gỡ remote push khỏi Expo Go, nên
- * `getExpoPushTokenAsync` sẽ ném lỗi ở đó. Toàn bộ hook được viết để thất bại trong im lặng:
- * không có token thì app vẫn chạy đủ, chỉ là thông báo chỉ thấy được khi mở màn thông báo.
- * Muốn thử push thật phải dùng development build của EAS.
+ * **Expo Go: iOS chạy được, Android thì không.** Giới hạn của SDK 53 chỉ gỡ remote push khỏi
+ * Expo Go trên Android — xem `warnOfExpoGoPushUsage.ts` trong expo-notifications, thông báo ở đó
+ * ghi rõ "Android" và chỉ `console.error` khi `Platform.OS === "android"`, còn iOS chỉ cảnh báo.
+ * Trên iPhone thật với Expo Go vẫn xin được APNs token, nên **không cần development build EAS
+ * để thử push trên iOS** — chỉ cần `extra.eas.projectId` trong `app.json`.
+ *
+ * Không lấy được token thì app vẫn chạy đủ, chỉ là thông báo chỉ thấy được khi mở màn thông báo.
+ * Nhưng mọi nhánh thất bại đều phải nói ra lý do (xem `bail`) — trước đây hook thất bại hoàn toàn
+ * im lặng, và cả nhóm mất thời gian đi tìm lỗi ở điện thoại trong khi nguyên nhân chỉ là thiếu
+ * `projectId` trong `app.json`.
  *
  * Push và JWT không liên quan nhau — backend gửi tới máy bằng push token, nên thông báo vẫn tới
  * kể cả khi phiên đăng nhập đã hết hạn.
  */
+
+/**
+ * Ghi lý do không lấy được push token rồi trả null.
+ *
+ * Chỉ nói trong `__DEV__`: người dùng cuối không làm gì được với những lý do này, còn khi chạy
+ * `expo start` thì đây là thứ duy nhất phân biệt "máy không hỗ trợ" với "cấu hình còn thiếu".
+ */
+const bail = (reason) => {
+  if (__DEV__) {
+    console.warn(`[push] Không ghi danh được thiết bị: ${reason}`);
+  }
+  return null;
+};
 
 /**
  * Thông báo tới lúc app đang mở vẫn hiện lên trên cùng, thay vì rơi thẳng vào khay.
@@ -60,14 +79,14 @@ const resolveProjectId = () =>
  * Lấy push token của máy này.
  *
  * Trả null thay vì ném lỗi ở mọi nhánh không lấy được — máy ảo, người dùng từ chối quyền,
- * đang chạy Expo Go, chưa cấu hình EAS project. Không nhánh nào trong số đó đáng để chặn
- * người dùng vào app.
+ * Expo Go trên Android, chưa cấu hình EAS project. Không nhánh nào trong số đó đáng để chặn
+ * người dùng vào app, nhưng nhánh nào cũng phải ghi lý do lại.
  */
 const fetchExpoPushToken = async () => {
-  if (Platform.OS === "web") return null;
+  if (Platform.OS === "web") return bail("đang chạy trên web, không có push");
 
   // Máy ảo không có dịch vụ đẩy thật, Expo cũng từ chối cấp token
-  if (!Device.isDevice) return null;
+  if (!Device.isDevice) return bail("đang chạy trên máy ảo, cần điện thoại thật");
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let status = existing;
@@ -77,16 +96,24 @@ const fetchExpoPushToken = async () => {
     status = asked.status;
   }
 
-  if (status !== "granted") return null;
+  // Trên iOS, từ chối một lần là popup không hiện lại nữa — phải tự bật trong Cài đặt
+  if (status !== "granted") {
+    return bail(
+      `chưa được cấp quyền thông báo (trạng thái "${status}"). Trên iOS phải bật tay ở` +
+        " Cài đặt > Expo Go > Thông báo, vì popup chỉ hiện đúng một lần"
+    );
+  }
 
   const projectId = resolveProjectId();
   if (!projectId) {
-    // Chưa chạy `eas init` thì chưa có projectId — in-app vẫn dùng được bình thường
-    return null;
+    return bail(
+      "thiếu extra.eas.projectId trong app.json. Chạy `npx eas init` để tạo project trên" +
+        " expo.dev và ghi id vào app.json — đây là điều kiện bắt buộc, kể cả trên Expo Go iOS"
+    );
   }
 
   const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
-  return data ?? null;
+  return data ?? bail("Expo trả về token rỗng");
 };
 
 /**
@@ -108,10 +135,15 @@ export const registerPushToken = async () => {
     });
     await setItem(BTMS_PUSH_TOKEN_KEY, token);
 
+    if (__DEV__) {
+      console.log(`[push] Đã ghi danh thiết bị với backend: ${token}`);
+    }
+
     return token;
-  } catch {
-    // Expo Go, mất mạng, hay backend chưa bật — không nhánh nào đáng làm phiền người dùng
-    return null;
+  } catch (error) {
+    // Expo Go trên Android, mất mạng, hay backend chưa bật — không nhánh nào đáng làm phiền
+    // người dùng, nhưng lý do phải ra được console để còn lần theo
+    return bail(error?.message ?? String(error));
   }
 };
 

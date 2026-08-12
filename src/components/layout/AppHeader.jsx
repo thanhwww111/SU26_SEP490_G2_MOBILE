@@ -55,7 +55,7 @@ export default function AppHeader({
           {/* Chữ logo dùng token chữ chính chứ không phải navy cứng: ở chế độ tối
               nền header là navy sẫm, chữ navy sẽ chìm hẳn vào nền */}
           <Text className="text-xl font-display uppercase tracking-tight text-content">
-            capstone<Text className="text-accent">.</Text>
+            btms<Text className="text-accent">.</Text>
           </Text>
         </Pressable>
       </View>

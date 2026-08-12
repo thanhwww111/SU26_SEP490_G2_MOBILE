@@ -136,7 +136,7 @@ export default function LoginScreen() {
       </Text>
       <Text className="mb-4 text-xs text-slate-300">
         Đăng ký ngay để cập nhật tỉ số trực tiếp từ{" "}
-        <Text className="font-display uppercase text-white">capstone</Text>.
+        <Text className="font-display uppercase text-white">btms</Text>.
       </Text>
       <Button
         title="Đăng ký ngay"

@@ -86,7 +86,7 @@ export default function NewsSection({ onPressPost, onPressAll }) {
   return (
     <View className="px-4 pt-6">
       <SectionHeader
-        title="Tin mới nhất từ CAPSTONE"
+        title="Tin mới nhất từ BTMS"
         actionLabel="Tất cả"
         onPressAction={onPressAll}
       />

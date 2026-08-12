@@ -2,6 +2,7 @@
   "expo": {
     "name": "BTMS Mobile",
     "slug": "SU26_SEP490_G2_MOBILE",
+    "owner": "thanhdinh203s-team",
     "scheme": "btms",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -36,6 +37,12 @@
       "expo-web-browser",
       "@react-native-community/datetimepicker",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a5fb7778-74dc-42a5-ba3d-aa807a534b00"
+      }
+    }
   }
 }

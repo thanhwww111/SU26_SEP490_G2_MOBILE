@@ -44,7 +44,7 @@ Không dùng `localhost` (điện thoại hiểu là chính nó). Không có h�
 
 - **`expo-image-picker` thêm ngày 2026-07-29** (màn hồ sơ cần chọn ảnh đại diện). Pull về nhớ chạy `npm install`.
 - **`expo-notifications` + `expo-device` + `expo-web-browser` thêm ngày 2026-08-07** (thông báo đẩy, thanh toán PayOS). Pull về nhớ chạy `npm install`.
-- **Thông báo đẩy không chạy trong Expo Go** — Expo đã gỡ remote push khỏi Expo Go từ SDK 53. Cần development build EAS, và cần `extra.eas.projectId` trong `app.json` (chưa có). Phần thông báo trong app thì chạy bình thường. Chi tiết: `docs/mobile/11-changelog.md`, mục ngày 2026-08-07.
+- **Thông báo đẩy trong Expo Go: iOS chạy được, Android không.** Giới hạn SDK 53 chỉ áp cho Android. Điều kiện bắt buộc là `extra.eas.projectId` trong `app.json` — **đã có từ 2026-08-10**: project `@thanhdinh203s-team/SU26_SEP490_G2_MOBILE`, id `a5fb7778-74dc-42a5-ba3d-aa807a534b00`, kèm `owner` để cả nhóm build được. Đừng chạy lại `eas init`, sẽ tạo project trùng. Android thì mới cần development build + FCM credentials. Chi tiết và cách kiểm chứng: `docs/mobile/11-changelog.md`, mục ngày 2026-08-07.
 - **`@stomp/stompjs` + `@react-native-community/datetimepicker` thêm ngày 2026-08-08** (tỷ số trực tiếp realtime, ô chọn ngày). Pull về nhớ chạy `npm install`.
 - **`expo-font` + `@expo-google-fonts/be-vietnam-pro` + `@expo-google-fonts/oswald` thêm ngày 2026-08-10** (phông chữ riêng thay font hệ điều hành). Pull về nhớ chạy `npm install`.
 - **Viết `font-bold` như bình thường, đừng gõ tên font.** Plugin trong `tailwind.config.js` đã ánh xạ độ đậm sang họ font. Nhưng **không dùng lớp `italic`** — dùng `font-italic` / `font-bold-italic`. Lý do: `docs/mobile/01-design-system.md`, Phần 3.

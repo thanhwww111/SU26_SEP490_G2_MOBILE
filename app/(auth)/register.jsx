@@ -222,7 +222,7 @@ export default function RegisterScreen() {
       </Text>
       <Text className="mb-4 text-xs text-slate-300">
         Đăng nhập để truy cập{" "}
-        <Text className="font-display uppercase text-white">capstone</Text>.
+        <Text className="font-display uppercase text-white">btms</Text>.
       </Text>
       <Button
         title="Đăng nhập"

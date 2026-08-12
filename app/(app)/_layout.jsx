@@ -50,8 +50,8 @@ export default function AppLayout() {
   /**
    * Đếm lại số chưa đọc mỗi lần đổi màn.
    *
-   * Không dựa vào push để cập nhật huy hiệu: trong Expo Go push không tới được, và ngay cả khi
-   * có development build thì người dùng vẫn có thể từ chối quyền thông báo. Đổi màn là nhịp tự
+   * Không dựa vào push để cập nhật huy hiệu: push cần `extra.eas.projectId`, trên Expo Go Android
+   * thì không tới được, và người dùng vẫn có thể từ chối quyền thông báo. Đổi màn là nhịp tự
    * nhiên và đủ thưa để một lời gọi đếm không thành gánh nặng.
    */
   const routeKey = segments.join("/");
