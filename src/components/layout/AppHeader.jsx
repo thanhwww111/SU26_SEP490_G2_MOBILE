@@ -18,9 +18,13 @@ import { iconSize } from "../../theme/tokens";
  *
  * Ba nút bên phải xếp đúng thứ tự của web: đổi giao diện → thông báo → hồ sơ.
  *
- * Ba vùng có bề rộng cố định bằng nhau (`w-[120px]` = đúng ba nút) thay vì
- * `justify-between`: mép phải có ba nút còn mép trái chỉ một, để chúng tự co
- * giãn thì logo bị đẩy lệch khỏi tâm header.
+ * Ba vùng có bề rộng cố định bằng nhau thay vì `justify-between`: mép phải có
+ * ba nút còn mép trái chỉ một, để chúng tự co giãn thì logo bị đẩy lệch khỏi
+ * tâm header.
+ *
+ * `w-[132px]` là bề rộng thật của cụm bên phải: công tắc giao diện 48px cộng
+ * hai nút tròn 40px. Trước đây là 120px vì cả ba đều là nút tròn — giữ nguyên
+ * số cũ thì công tắc bị bóp lại.
  */
 export default function AppHeader({
   showBack = false,
@@ -35,7 +39,7 @@ export default function AppHeader({
 
   return (
     <View className="h-14 flex-row items-center border-b border-line bg-surface px-2">
-      <View className="w-[120px] flex-row items-center">
+      <View className="w-[132px] flex-row items-center">
         <Pressable
           onPress={showBack ? onPressBack : onPressMenu}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -60,7 +64,7 @@ export default function AppHeader({
         </Pressable>
       </View>
 
-      <View className="w-[120px] flex-row items-center justify-end">
+      <View className="w-[132px] flex-row items-center justify-end">
         <ThemeToggle />
 
         <NotificationBell count={unreadCount} onPress={onPressNotifications} />

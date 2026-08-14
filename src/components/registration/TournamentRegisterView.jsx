@@ -32,7 +32,10 @@ import { useThemeColors } from "../../theme/useThemeColors";
  * nên tài khoản chưa tạo hồ sơ thì chỉ điền được số điện thoại.
  */
 const PREFILL_FROM_PROFILE = {
-  player_full_name: (profile) => profile?.fullName || "",
+  /* `displayName` là đường lùi: hồ sơ tạo qua màn chơi có thể chỉ có tên hiển
+     thị mà bỏ trống họ tên đầy đủ. Điền tên hiển thị vẫn hơn để trống, vì dù
+     sao người dùng cũng sửa được. */
+  player_full_name: (profile) => profile?.fullName || profile?.displayName || "",
   player_phone: (profile, user) => profile?.phone || user?.phone || "",
 };
 

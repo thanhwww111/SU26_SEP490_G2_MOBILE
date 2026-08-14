@@ -82,7 +82,7 @@ export default function AppFooter() {
           className="self-start active:opacity-60"
         >
           <Text className="text-5xl font-display leading-none tracking-tight text-content">
-            caps<Text className="text-accent">.</Text>
+            btms<Text className="text-accent">.</Text>
           </Text>
         </Pressable>
 
