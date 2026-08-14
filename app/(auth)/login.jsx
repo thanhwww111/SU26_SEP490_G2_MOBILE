@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import AuthScreen from "../../src/components/auth/AuthScreen";
 import Button from "../../src/components/Button";
 import Input from "../../src/components/Input";
 import FormError from "../../src/components/auth/FormError";
+import FormSuccess from "../../src/components/auth/FormSuccess";
 import TextLink from "../../src/components/auth/TextLink";
 import * as authApi from "../../src/api/authApi";
 import { useAuthStore } from "../../src/store/authStore";
@@ -18,8 +19,20 @@ import {
 export default function LoginScreen() {
   const router = useRouter();
   const loginFromResponse = useAuthStore((s) => s.loginFromResponse);
+  /* Màn Đăng ký chuyển sang đây bằng `replace` kèm cờ `registered`. Đọc một lần
+     lúc mount rồi giữ trong state: người dùng phải tắt được lời chúc mừng, mà
+     params thì còn nguyên suốt vòng đời màn hình nên không tắt theo được. */
+  const params = useLocalSearchParams();
+  const [notice, setNotice] = useState(
+    params.registered === "1"
+      ? "Đăng ký tài khoản thành công. Vui lòng đăng nhập để tiếp tục."
+      : ""
+  );
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: typeof params.email === "string" ? params.email : "",
+    password: "",
+  });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +69,9 @@ export default function LoginScreen() {
       return;
     }
     setErrors({});
+    // Đã bắt tay vào đăng nhập thì lời chúc mừng đăng ký xong không còn chỗ đứng —
+    // nhất là khi lát nữa có lỗi hiện ra, hai khung xanh/đỏ cạnh nhau rất khó hiểu
+    setNotice("");
     setIsLoading(true);
 
     try {
@@ -79,6 +95,7 @@ export default function LoginScreen() {
 
   return (
     <AuthScreen title="Đăng nhập." card={false}>
+      <FormSuccess message={notice} tone="dark" />
       <FormError message={errors.submit} tone="dark" />
 
       <Input

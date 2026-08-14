@@ -115,7 +115,15 @@ export default function RegisterScreen() {
       if (!data.success) {
         throw new Error(data.message || "Đăng ký thất bại. Vui lòng thử lại.");
       }
-      router.replace("/login");
+      /* Báo thành công ở màn đăng nhập chứ không phải ở đây: màn này biến mất
+         ngay sau `replace`, người dùng không kịp đọc. Truyền cờ chứ không truyền
+         cả câu thông báo — params của expo-router nằm trên URL, nhét tiếng Việt
+         có dấu vào đó chỉ tổ phải lo chuyện mã hoá. Câu chữ để màn kia giữ.
+         Gửi kèm email để bên đó điền sẵn, đỡ phải gõ lại. */
+      router.replace({
+        pathname: "/login",
+        params: { registered: "1", email: form.email },
+      });
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {

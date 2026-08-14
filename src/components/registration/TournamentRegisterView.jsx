@@ -10,6 +10,7 @@ import SectionState from "../home/SectionState";
 import RegistrationDynamicForm, { dateFieldToIso } from "./RegistrationDynamicForm";
 import RegistrationStatusBadge from "./RegistrationStatusBadge";
 import * as registrationApi from "../../api/playerRegistrationApi";
+import * as authApi from "../../api/authApi";
 import { getProfile } from "../../api/profileApi";
 import { usePayOsCheckout } from "../../hooks/usePayOsCheckout";
 import { useAuthStore } from "../../store/authStore";
@@ -101,12 +102,17 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
     setLoadError("");
     try {
       // Hỏi song song: đã đăng ký rồi thì khỏi cần dựng form
-      const [existing, preview, profile] = await Promise.all([
+      const [existing, preview, profile, me] = await Promise.all([
         registrationApi.getMyRegistrationForTournament(tournamentId),
         registrationApi.getTournamentRegistrationForm(tournamentId),
         // Hồ sơ chỉ dùng để điền hộ. Tài khoản chưa tạo hồ sơ thì backend trả
         // 404 — nuốt lỗi tại đây, vì không có nó form vẫn phải mở được bình thường
         getProfile().catch(() => null),
+        /* Số điện thoại có ngay từ lúc đăng ký tài khoản, nhưng `POST /auth/login`
+           chỉ trả token — store auth không có `phone` cho tới lần `hydrateAuth`
+           kế tiếp (mở lại app). Hỏi thẳng ở đây để người vừa đăng nhập xong, chưa
+           kịp tạo hồ sơ, vẫn được điền hộ số của mình. */
+        authApi.getMe().catch(() => null),
       ]);
       if (!alive.current) return;
 
@@ -119,7 +125,9 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
       if (!prefilledOnce.current) {
         prefilledOnce.current = true;
 
-        const prefill = buildPrefill(preview?.fields, profile, user);
+        /* `me` mới nhất nên đứng trước; `user` trong store là lối lùi khi
+           `/auth/me` hỏng (mất sóng giữa chừng) mà store đã có sẵn dữ liệu */
+        const prefill = buildPrefill(preview?.fields, profile, me || user);
         if (Object.keys(prefill).length > 0) {
           setValues(prefill);
           setPrefilled(true);
