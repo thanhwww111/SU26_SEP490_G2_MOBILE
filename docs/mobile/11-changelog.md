@@ -16,6 +16,185 @@ Gác lại vì nhóm đang tập trung hoàn thiện sản phẩm. **Đã chốt
 
 ---
 
+# 2026-08-17 (c) — Bảng điểm dựng được cả hai hướng màn hình
+
+Khoá ngang **không đáng tin để dựa vào**. Trên máy thật, `lockAsync(LANDSCAPE)` có lúc không ăn:
+iPad bật multitasking bỏ qua nó, một số máy khoá xoay ở mức hệ thống cũng vậy. Khi đó bố cục
+ngang bị nhét vào khổ dọc và vỡ — dòng thể thức bị cắt cụt, badge "Đang đánh" tràn khỏi panel,
+tên cơ thủ mất đuôi.
+
+Nên hướng màn hình giờ là thứ để **đọc** chứ không phải để ép. `[matchId].jsx` gọi
+`useWindowDimensions()` và dựng hai bố cục đầy đủ, không cái nào là bản dự phòng méo mó:
+
+| | Ngang | Dọc |
+|---|---|---|
+| Hai panel | cạnh nhau | xếp chồng |
+| Đồng hồ | nổi ở tâm, panel chừa `centerGap` để né | một dải riêng giữa hai panel, không đè lên gì |
+| Dòng thể thức ở thanh trên | cùng hàng với tên bàn | xuống hàng riêng |
+| Nhãn chỉ báo kết nối | hiện đủ chữ | chỉ icon (`accessibilityLabel` vẫn giữ câu đầy đủ) |
+| Thứ tự nút +1 / −1 | đối xứng gương | giống nhau ở cả hai panel |
+
+Đối xứng gương chỉ có nghĩa khi hai panel nằm cạnh nhau, mỗi người một bên. Xếp chồng mà vẫn đảo
+thì nút "+1" của hai cơ thủ nằm hai đầu khác nhau, trọng tài phải nhìn mới bấm đúng.
+
+Khoá ngang vẫn giữ trong `(scoring)/_layout.jsx` vì ngang cho số to hơn — nhưng giờ nó là **ưu
+tiên, không phải điều kiện**.
+
+## Sheet chốt kết quả bị cắt mất nút xác nhận
+
+Ở khổ ngang màn chỉ cao hơn 300pt, mà sheet có tiêu đề, tỷ số, hai lựa chọn, cảnh báo chốt sớm và
+hai nút. `maxHeight: "92%"` không đủ: thẻ bên trong vẫn lấy chiều cao theo nội dung rồi tràn ra
+ngoài, đẩy hai nút xuống dưới mép màn.
+
+Phải có `flexShrink: 1` ở **cả** thẻ nội dung lẫn `ScrollView` bên trong — thiếu một trong hai thì
+chuỗi cha-con không chỗ nào chịu co, và `maxHeight` chỉ cắt phần thừa chứ không ép co lại.
+
+---
+
+# 2026-08-17 (b) — WebSocket không bao giờ nối được với server deploy
+
+Triệu chứng: màn chấm điểm treo ở "Đang kết nối…" mãi không đổi. Nghi tài khoản trước tiên —
+nhưng `POST /auth/login` với `staff1@gmail.com` trả 200 và màn hình hiện đủ dữ liệu trận, nên
+JWT, quyền STAFF lẫn phân công trận đều đúng. Lỗi nằm chỗ khác.
+
+**Nguyên nhân: React Native tự thêm header `Origin`, và server từ chối đúng cái origin đó.**
+
+`WebSocketModule.kt` (dòng 121-123) gọi `getDefaultOrigin()` khi lời gọi không tự đặt sẵn header
+`origin`; hàm đó đổi `wss://api.biliardtournament.cloud/ws` thành `https://api.biliardtournament.cloud`.
+Backend profile `prod` chỉ cho phép đúng một origin — của web FE, **không có nhãn `api.`**
+(`application-prod.yml`, biến `CORS_ALLOWED_ORIGIN`). Spring chặn ở tầng CORS filter, trước cả
+WebSocket handler.
+
+Đo bằng `curl` ngày 2026-08-17:
+
+| Origin gửi lên `/ws` | Kết quả |
+|---|---|
+| `https://biliardtournament.cloud` | **101** Switching Protocols |
+| `https://api.biliardtournament.cloud` (RN tự thêm) | **403** |
+| không gửi Origin | 101 |
+
+**Không phải lỗi riêng của màn trọng tài.** `useTournamentSocket` dùng chung với tab Trực tiếp và
+tab Trận đấu ở màn chi tiết giải — hai màn đó cũng chết lặng từ lúc app trỏ vào server deploy,
+chỉ là chúng không có chỉ báo kết nối nên không ai nhận ra. Sửa ở hook là cả ba màn sống lại.
+
+**Cách sửa:** `useTournamentSocket` tự dựng socket qua `webSocketFactory` để đặt được header
+`origin`, giá trị lấy từ `getWebSocketOrigin()` — bỏ nhãn `api.` khỏi `EXPO_PUBLIC_API_URL`, hoặc
+đọc thẳng `EXPO_PUBLIC_WS_ORIGIN` nếu quy ước tên miền khác đi. Bản web không đụng tới: trình
+duyệt cấm script đặt `Origin`, và nó vốn đã gửi origin thật nằm trong allowlist.
+
+Backend chạy trên máy (profile `dev`, allowlist `*`) không dính lỗi này — nên **thử trên máy local
+sẽ không tái hiện được**, phải trỏ vào server deploy mới thấy.
+
+> Cách xử lý căn cơ hơn là thêm `https://api.biliardtournament.cloud` vào `CORS_ALLOWED_ORIGIN` của
+> server deploy, hoặc miễn CORS cho riêng `/ws`. Cả hai đều đụng cấu hình backend nên chưa làm —
+> phía mobile tự lo được thì không cần chờ.
+
+---
+
+# 2026-08-17 — Khu vực trọng tài (STAFF)
+
+Hai màn của web được đưa lên: **Trận của tôi** (`app/(app)/staff/matches.jsx`) và **Bảng điểm**
+(`app/(scoring)/[matchId].jsx`). Đây là khu vực theo role đầu tiên của app — trước đó chỉ có nhóm
+công khai và PLAYER.
+
+Thiết kế đầy đủ: [`docs/superpowers/specs/2026-08-17-staff-screens-design.md`](../superpowers/specs/2026-08-17-staff-screens-design.md).
+
+## Phải `npm install` sau khi pull
+
+Thêm `expo-screen-orientation` (~9.0.9). Không cài thì màn chấm điểm không mở được.
+
+## `app.json` đổi `orientation` từ `portrait` sang `default` — đừng đổi ngược lại
+
+Cùng kiểu bẫy với `userInterfaceStyle` ghi ở [06](06-agent.md): khai `"portrait"` là bảo hệ điều
+hành app chỉ hỗ trợ chế độ dọc, Info.plist và Manifest chỉ đăng ký đúng hướng đó, và
+`lockAsync(LANDSCAPE)` **không có tác dụng trên bản build thật**. Trong Expo Go vẫn xoay được vì
+Info.plist lúc đó là của chính Expo Go — nên nếu chỉ thử trên Expo Go thì tưởng chạy tốt, build ra
+mới hỏng.
+
+Đổi lại, `app/(app)/_layout.jsx` phải tự khoá `PORTRAIT_UP`. **Đừng gỡ lệnh đó** — 16 màn còn lại
+đều dựng cho khổ dọc.
+
+## Lỗi của web đã tránh: thiếu `confirmEarlyEnd`
+
+`MatchServiceImpl.java:643-653` bắt buộc gửi `confirmEarlyEnd: true` khi chốt trận lúc chưa ai đạt
+`raceTo`. `StaffScoringPage.jsx:376` bên web chỉ gửi `winnerParticipantId`, nên nút "Kết thúc trận"
+của web khi chưa đủ điểm luôn trả lỗi `MATCH_EARLY_END_NOT_CONFIRMED`.
+
+Mobile gửi đúng field và cảnh báo trước trong sheet. **Đây là chỗ mobile khớp API còn web thì
+chưa** — nếu sau này ai sửa web, đừng "sửa cho giống web" theo chiều ngược lại.
+
+## Ba chỗ cố ý không sao chép từ web
+
+| Web có | Mobile bỏ | Vì sao |
+|---|---|---|
+| Ảnh cơ thủ tràn nền bảng điểm | bỏ hẳn | web làm mềm biên bằng giao hai gradient trong CSS mask (`maskComposite: intersect`); React Native không có `mask-image`, dựng lại sẽ ra đúng cái rìa chữ nhật web đã cố tránh. Trên màn 6 inch ảnh nền cũng chỉ làm số điểm khó đọc |
+| Quầng sáng radial sau lưng cơ thủ | bỏ | cùng lý do — cần gradient |
+| Tiếng bíp WebAudio của đồng hồ | đổi thành rung | chưa cài thư viện âm thanh; điện thoại nằm trên thành bàn giữa tiếng ồn của quán thì rung đáng tin hơn tiếng |
+
+Trạng thái "đang tới lượt" và "đã thắng" vẫn phân biệt được bằng vạch nhấn mép trên và badge — hai
+thứ web cũng có và không dựa vào gradient.
+
+## Chỉ báo kết nối hiện ở mọi trạng thái
+
+Bản đầu chỉ hiện chỉ báo khi đường truyền có vấn đề. Sai: lúc chạy tốt và lúc đã rớt từ lâu trông
+y hệt nhau, trọng tài không có cách nào biết tỷ số vừa bấm đã sang tới màn hình khán giả chưa.
+Giờ hiện luôn, **xanh lục khi đã kết nối** — bám `SocketConnectionBadge` của web, chỉ lấy bậc màu
+sáng hơn vì thanh này nền tối.
+
+Dùng icon sóng chứ không phải chấm tròn, và nhãn là "Đã kết nối" chứ không phải "Trực tiếp" của
+`SOCKET_STATE_LABELS`: ngay cạnh đã có badge "Đang đấu" của trận, cũng chấm tròn cũng xanh lục —
+hai tín hiệu giống hệt nhau nằm sát nhau thì phải đọc chữ mới phân biệt, mất luôn cái lợi của màu.
+
+Chỉ báo này lập tức có ích: nó là thứ phơi ra lỗi CORS ở mục (b) bên trên, vốn đã âm thầm làm hỏng
+tab Trực tiếp từ trước mà không ai biết.
+
+## Tên và điểm căn giữa nửa panel, không dồn vào trong
+
+Bản đầu bê nguyên cách web dồn nội dung về phía giữa màn, nên hai con số ríu vào mặt đồng hồ.
+Web dồn vào giữa là vì mép ngoài đã có ảnh cơ thủ chiếm chỗ — mobile bỏ ảnh đó thì lý do cũng mất
+theo. Giờ căn giữa, `centerGap` vẫn trừ vào cạnh phía trong trước khi căn nên tâm nội dung tự dịch
+ra ngoài đúng nửa bề rộng đồng hồ, tên cơ thủ dài cũng không chui xuống dưới mặt đồng hồ.
+
+## Thêm mới, dùng lại được cho role sau
+
+- `getHomeRouteForRole` trong `src/utils/auth.js` — đích đến sau đăng nhập theo role, dùng ở cả
+  `login.jsx` lẫn `app/index.jsx`.
+- `useRequireStaff` (`src/hooks/`) — khuôn guard theo role, port từ `StaffRoute` của web.
+- `STAFF_MENU` trong `ProfileMenu.jsx` — cùng quy tắc với `PLAYER_MENU`.
+
+Thêm màn cho OWNER / MANAGER thì đi theo đúng ba chỗ này, đừng dựng lớp phân quyền thứ hai.
+
+## Đồng hồ mỗi cú đánh
+
+`src/utils/shotClock.js` port nguyên từ web (hàm thuần, dùng chung một bộ luật). Hook
+`src/hooks/useShotClock.js` khác ba chỗ vì nền tảng: lưu trạng thái bất đồng bộ qua
+`src/utils/storage.js` (có cờ `hydrated`, ghi gộp nhịp 400ms), rung thay tiếng bíp, và đọc lại
+`Date.now()` khi app về tiền cảnh vì `setInterval` bị hệ điều hành bóp lúc xuống nền.
+
+Mốc `endsAt` là thời điểm tuyệt đối chứ không phải bộ đếm lùi — nhờ vậy app xuống nền rồi quay lại
+vẫn ra đúng giờ còn lại.
+
+`expo-keep-awake` hoá ra **đã có sẵn** trong `node_modules` (dependency của `expo`), nên giữ sáng
+màn hình suốt trận không tốn thư viện nào.
+
+## Test
+
+```
+node scripts/test-referee-match.js
+```
+
+30 test cho `src/utils/refereeMatch.js` và `src/utils/shotClock.js`: thứ tự sắp xếp, cách nhóm, lọc
+theo ngày, nhãn giờ, và luật đồng hồ. Chạy lại nếu sửa thứ tự hiển thị — nó phải khớp
+`FE/src/utils/refereeMatch.js`, vì trọng tài nhìn cùng một danh sách trên hai thiết bị.
+
+## Chưa chạy trên máy thật
+
+Bundle sạch (`npx expo export --platform web`), 55 test xanh, nhưng **chưa mở trên thiết bị**.
+Những chỗ chỉ kiểm được trên máy: khoá xoay ngang và trả về dọc, rung cảnh báo, giữ sáng màn hình,
+WebSocket nhận bản tin từ máy khác chấm cùng trận, và trạng thái đồng hồ sau khi app xuống nền.
+
+---
+
 # 2026-08-10 (d) — Chế độ tối lấy đúng mốc: TRANG CHỦ, không phải `.dark body`
 
 Bản (c) bên dưới chữa đúng cơ chế nhưng **lấy sai mốc**, nên app vẫn ngả xanh so với trang chủ web.

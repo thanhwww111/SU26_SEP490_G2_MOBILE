@@ -127,6 +127,24 @@ export const buildSessionFromAuthPayload = (apiResponse, fallbackEmail) => {
   };
 };
 
+export const isStaffUser = (user) => extractRoleFromUser(user) === ROLES.STAFF;
+
+/**
+ * Màn đầu tiên sau khi đăng nhập, theo role.
+ *
+ * Port `getHomeRouteForRole` của web (`FE/src/utils/auth.js`) — trọng tài mở app là để chấm
+ * trận, bắt họ đi qua trang chủ rồi tự tìm menu là thêm một lượt chạm mỗi ca làm.
+ *
+ * Ba role quản trị chưa có màn nào trên mobile (xem `docs/mobile/07-web-mapping.md`), nên tạm
+ * rơi về trang chủ thay vì trỏ tới route không tồn tại — expo-router sẽ văng lỗi "unmatched
+ * route" chứ không im lặng bỏ qua như react-router.
+ */
+export const getHomeRouteForRole = (role) => {
+  const r = normalizeRole(role);
+  if (r === ROLES.STAFF) return "/(app)/staff/matches";
+  return "/(app)/home";
+};
+
 /** Nhãn tiếng Việt của role, dùng để hiển thị */
 export const getRoleLabel = (role) => {
   const r = normalizeRole(role);

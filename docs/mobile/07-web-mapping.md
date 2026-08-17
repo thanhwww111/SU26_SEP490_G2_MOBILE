@@ -75,16 +75,35 @@ Menu hồ sơ của web (PLAYER): Hồ sơ, Đăng ký của tôi, Lịch thi đ
 
 Mobile khai lại đúng menu này trong `PLAYER_MENU` của `src/components/layout/ProfileMenu.jsx` — **không** nằm trong `navItems.js`. Màn của PLAYER thì điền `path` ở đó, màn công khai thì điền ở `navItems.js`.
 
+Từ 2026-08-17, file đó còn có `STAFF_MENU` (một mục: Trận của tôi), khai đúng `STAFF_NAV` của web. Cùng quy tắc phân chia: màn theo role nằm ở `ProfileMenu`, màn công khai nằm ở `navItems.js`.
+
+**Đích đến sau khi đăng nhập phụ thuộc role.** `getHomeRouteForRole` trong `src/utils/auth.js` (port từ web) đưa STAFF thẳng vào `/(app)/staff/matches`, các role còn lại về trang chủ. Dùng ở cả `login.jsx` lẫn `app/index.jsx` — thêm màn cho role mới thì sửa đúng một chỗ đó.
+
 ---
 
-# Nhóm STAFF — làm sau PLAYER
+# Nhóm STAFF — xong 2026-08-17
 
-| Màn | Route web | File web | Mobile |
-|---|---|---|---|
-| Trận của tôi | `/staff/matches` | `pages/Staff/Matches/StaffMatchListPage.jsx` | ⏳ |
-| Bảng điểm | `/staff/matches/:matchId` | `pages/Staff/Matches/StaffScoringPage.jsx` + `components/staff/ShotClock.jsx` | ⏳ |
+| Màn | Route web | File web | Mobile | Route mobile |
+|---|---|---|---|---|
+| Trận của tôi | `/staff/matches` | `pages/Staff/Matches/StaffMatchListPage.jsx` | ✅ | `app/(app)/staff/matches.jsx` |
+| Bảng điểm | `/staff/matches/:matchId` | `pages/Staff/Matches/StaffScoringPage.jsx` + `ScorePanel.jsx` + `components/staff/ShotClock.jsx` | ✅ | `app/(scoring)/[matchId].jsx` |
 
-Đây là nhóm hưởng lợi nhiều nhất từ mobile — trọng tài cầm điện thoại ngay tại bàn. Nhưng màn bảng điểm dùng WebSocket realtime, cần thiết kế riêng trước khi làm.
+Đây là nhóm hưởng lợi nhiều nhất từ mobile — trọng tài cầm điện thoại ngay tại bàn.
+
+**Màn bảng điểm nằm ngoài nhóm `(app)`.** Nó cần trọn màn hình và chạy ngang, nên có nhóm route
+riêng `(scoring)` với layout không header, không drawer. Web cũng tách đúng như vậy: màn danh sách
+đi qua `withStaffPage` còn màn chấm điểm là route trần (`FE/src/constants/routes.js`, dòng 268–280).
+
+**App giờ khai `orientation: "default"` trong `app.json`.** Bắt buộc, nếu không màn chấm điểm không
+xoay ngang được trên bản build thật. Bù lại, `app/(app)/_layout.jsx` tự khoá dọc cho mọi màn khác —
+**đừng gỡ lệnh khoá đó**, không thì bảng xếp hạng và chi tiết giải sẽ giãn hết cỡ khi người dùng
+nằm nghiêng cầm máy.
+
+**Xử thắng do vắng mặt (walkover) là hành động mobile có mà web chưa có.** Backend đã sẵn sàng từ
+trước (`POST /staff/matches/{id}/walkover`). Nó cố ý dùng lại đúng sheet chốt kết quả, chỉ đổi chữ,
+để lúc web làm màn này thì hai bên vẫn khớp.
+
+Thiết kế đầy đủ, kèm ba chỗ cố ý không sao chép từ web: `docs/superpowers/specs/2026-08-17-staff-screens-design.md`.
 
 ---
 

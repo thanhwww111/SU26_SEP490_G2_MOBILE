@@ -1,5 +1,5 @@
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { CreditCard, FileText, LogOut, Swords, User } from "lucide-react-native";
+import { CreditCard, FileText, LogOut, Swords, Trophy, User } from "lucide-react-native";
 
 import { ROLES } from "../../constants/auth";
 import { normalizeRole } from "../../utils/auth";
@@ -17,6 +17,16 @@ const PLAYER_MENU = [
 ];
 
 /**
+ * Mục riêng của trọng tài, khai đúng `STAFF_NAV` của web (`FE/src/constants/staffNav.js`).
+ *
+ * Không nằm trong `navItems.js`: file đó là bốn mục công khai ai cũng thấy, còn đây là màn theo
+ * role — cùng cách phân chia mà `PLAYER_MENU` đang theo.
+ */
+const STAFF_MENU = [
+  { key: "staff-matches", label: "Trận của tôi", path: "/(app)/staff/matches", Icon: Trophy },
+];
+
+/**
  * Menu xổ ra khi bấm icon hồ sơ ở góc phải header, bám dropdown của Header web.
  *
  * Đặt trong phần body của layout nên mép trên của nó đã nằm ngay dưới header —
@@ -31,7 +41,9 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
   if (!mounted) return null;
 
   // Web chỉ cho player thấy ba mục đăng ký / lịch thi đấu / thanh toán
-  const isPlayer = normalizeRole(user?.role) === ROLES.PLAYER;
+  const role = normalizeRole(user?.role);
+  const isPlayer = role === ROLES.PLAYER;
+  const isStaff = role === ROLES.STAFF;
 
   // Bung ra từ phía nút hồ sơ thay vì hiện đứng yên
   const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] });
@@ -95,6 +107,13 @@ export default function ProfileMenu({ visible, onClose, user, onNavigate, onLogo
             <>
               <View className="h-px bg-sunken" />
               {PLAYER_MENU.map(renderItem)}
+            </>
+          ) : null}
+
+          {isStaff ? (
+            <>
+              <View className="h-px bg-sunken" />
+              {STAFF_MENU.map(renderItem)}
             </>
           ) : null}
 

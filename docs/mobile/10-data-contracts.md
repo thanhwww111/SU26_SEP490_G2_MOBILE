@@ -338,6 +338,42 @@ Có cả `tableNo`, `tableName`, `tableNumber` — trùng lặp. Ưu tiên `tabl
 { "id": 5, "displayName": "Nguyễn Văn A", "seedNo": 1, "avatarUrl": "..." }
 ```
 
+## Nhóm `/staff/**` — trọng tài
+
+Toàn nhóm bị `SecurityConfig` chặn bằng `hasRole("STAFF")`, và mỗi lời gọi còn qua
+`assertStaffAssigned`: trọng tài chỉ thao tác được trên trận mà `assignedStaff` đúng là mình.
+Sai người thì nhận `MATCH_NOT_ASSIGNED` chứ không phải 403.
+
+| Endpoint | Body | Trả về |
+|---|---|---|
+| `GET /staff/matches` | — (query `status`, `tournamentName`, `tournamentId`) | `MatchResponse[]` |
+| `PATCH /staff/matches/{id}/start` | — | `MatchResponse` |
+| `PATCH /staff/matches/{id}/score/increment` | `{ playerSlot: 1\|2, delta: 1\|-1 }` | `IncrementScoreResponse` |
+| `POST /staff/matches/{id}/complete` | `{ winnerParticipantId, confirmEarlyEnd }` | `MatchResponse` |
+| `POST /staff/matches/{id}/walkover` | `{ winnerParticipantId }` | `MatchResponse` |
+
+```jsonc
+// IncrementScoreResponse
+{
+  "match": { /* MatchResponse */ },
+  "suggestComplete": true,        // đã có người đạt raceTo
+  "suggestedWinnerId": 5          // participantId, null khi hoà
+}
+```
+
+Ba ràng buộc của backend mà client phải biết trước, nếu không sẽ đâm vào lỗi khó hiểu:
+
+- **`delta` chỉ nhận `1` hoặc `-1`.** Gửi tỷ số tuyệt đối là sai API — dùng delta để hai máy cùng
+  chấm một trận không ghi đè nhau.
+- **Đã có người đạt `raceTo` thì không cộng thêm được** (`MATCH_SCORE_LOCKED`), nhưng vẫn trừ được
+  để hoàn tác. Điểm ngoài khoảng `0..raceTo` trả `MATCH_SCORE_OUT_OF_RANGE`.
+- **`confirmEarlyEnd` bắt buộc `true` khi chưa ai đạt `raceTo`**, nếu không nhận
+  `MATCH_EARLY_END_NOT_CONFIRMED`. Bản web đang quên field này — xem
+  [11-changelog.md](11-changelog.md), mục 2026-08-17.
+
+Ngoài ra mọi thao tác đều đòi giải đang chạy (`assertMatchPlayable`): trạng thái giải phải là
+`IN_PROGRESS` hoặc `FINAL_BRACKET_READY`, riêng thể thức loại kép còn chấp nhận `DRAW_DONE`.
+
 ## GET `/tournaments/{id}/standings` — `StandingsEntryResponse[]`
 
 ```jsonc

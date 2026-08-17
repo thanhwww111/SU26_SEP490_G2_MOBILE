@@ -73,6 +73,10 @@ Kiểm chứng bằng `package.json`, đừng đoán. Tính tới 2026-07-29:
 | Chọn ngày | **Có** (`@react-native-community/datetimepicker`, từ 2026-08-08). Dùng qua `src/components/DateField.jsx`, giá trị vào/ra là chuỗi `dd/mm/yyyy` |
 | Date picker | **Chưa có.** Ngày sinh trong hồ sơ dùng ô nhập `dd/mm/yyyy` tự validate |
 | Gradient | **Chưa có.** Chỗ nào web dùng gradient thì mobile dùng nền đặc |
+| Xoay màn hình | **Có** (`expo-screen-orientation`, từ 2026-08-17). App khai `orientation: "default"`; `(app)/_layout.jsx` khoá dọc, chỉ nhóm `(scoring)` khoá ngang |
+| Giữ sáng màn hình | **Có sẵn, không phải cài** — `expo-keep-awake` là dependency của `expo`. Dùng `activateKeepAwakeAsync` / `deactivateKeepAwake` |
+| Âm thanh | **Chưa có.** Cần báo hiệu thì dùng `Vibration` của React Native (màn chấm điểm đang làm vậy) |
+| CSS mask | **Không có trên native.** `mask-image` / `maskComposite` của web không port được — xem cách xử lý ở `src/components/staff/ScorePanel.jsx` |
 
 Thêm thư viện là đổi kiến trúc — xem quy tắc 3 bên dưới. Hỏi người dùng trước, đừng tự cài.
 
@@ -206,4 +210,8 @@ D:\HocTap\SEP490_G2_BiliardsManager\
 
 Mobile dùng chung backend với web. Thứ tự phụ thuộc: **Backend → Web FE → Mobile**. Mobile không tự định nghĩa nghiệp vụ hay hành vi API.
 
-Role của hệ thống: ADMIN, OWNER, MANAGER, STAFF, PLAYER. Mobile hướng tới đủ 5 role, nhưng **ưu tiên hoàn thiện luồng PLAYER trước**.
+Role của hệ thống: ADMIN, OWNER, MANAGER, STAFF, PLAYER.
+
+Luồng PLAYER và nhóm màn công khai đã xong. **STAFF xong 2026-08-17** — hai màn trọng tài, kèm lớp phân quyền dùng chung (`getHomeRouteForRole`, `useRequireStaff`, `STAFF_MENU`). OWNER / MANAGER / ADMIN chưa làm; xem [07](07-web-mapping.md) để biết màn nào đáng đưa lên mobile.
+
+**Thêm màn cho role mới thì đi theo khuôn của STAFF**, đừng dựng lớp phân quyền thứ hai: thêm nhánh vào `getHomeRouteForRole`, viết một hook guard cùng kiểu `useRequireStaff`, thêm menu vào `ProfileMenu`.

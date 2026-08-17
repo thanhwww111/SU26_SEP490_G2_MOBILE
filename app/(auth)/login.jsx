@@ -10,6 +10,7 @@ import FormSuccess from "../../src/components/auth/FormSuccess";
 import TextLink from "../../src/components/auth/TextLink";
 import * as authApi from "../../src/api/authApi";
 import { useAuthStore } from "../../src/store/authStore";
+import { getHomeRouteForRole } from "../../src/utils/auth";
 import {
   collectErrors,
   validateEmail,
@@ -84,8 +85,9 @@ export default function LoginScreen() {
           data.message || "Đăng nhập thất bại. Sai email hoặc mật khẩu."
         );
       }
-      await loginFromResponse(data, form.email, form.password);
-      router.replace("/(app)/home");
+      const user = await loginFromResponse(data, form.email, form.password);
+      // Trọng tài vào thẳng màn chấm trận thay vì trang chủ — bám `getHomeRouteForRole` của web
+      router.replace(getHomeRouteForRole(user?.role));
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {

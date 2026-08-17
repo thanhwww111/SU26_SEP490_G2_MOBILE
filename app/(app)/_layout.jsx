@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { Redirect, Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 import AppHeader from "../../src/components/layout/AppHeader";
 import AppDrawer from "../../src/components/layout/AppDrawer";
@@ -42,6 +43,19 @@ export default function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+
+  /**
+   * Khoá dọc cho toàn bộ nhóm này.
+   *
+   * `app.json` phải khai `orientation: "default"` để màn chấm điểm của trọng tài xoay ngang được
+   * trên bản build thật (xem `app/(scoring)/_layout.jsx`). Nhưng "default" nghĩa là MỌI màn đều
+   * xoay theo máy, mà 16 màn ở đây đều dựng cho khổ dọc — bảng xếp hạng và chi tiết giải nằm
+   * ngang sẽ giãn hết cỡ và vỡ hàng. Nên hướng được khoá lại ngay tại lớp layout này.
+   */
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }, []);
 
   // Gọi trước nhánh Redirect bên dưới: hook không được nằm sau một lệnh return có điều kiện,
   // nếu không thứ tự hook sẽ đổi giữa hai lần render. Cờ enabled lo phần "chỉ chạy khi đã đăng nhập".

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { Client } from "@stomp/stompjs";
 
 import {
+  getWebSocketOrigin,
   getWebSocketUrl,
   tournamentBracketTopic,
   tournamentMatchesTopic,
@@ -109,6 +110,26 @@ export function useTournamentSocket(tournamentId, options = {}) {
     setConnectionState("connecting");
 
     const client = new Client({
+      /**
+       * Tự dựng socket thay vì để stompjs làm, chỉ để đặt được header `Origin`.
+       *
+       * Không đặt thì React Native tự điền origin suy từ URL (`https://api.…`), mà server deploy
+       * chỉ cho phép origin của web FE (`https://…` không có nhãn `api.`) — bắt tay trả 403 và
+       * socket không bao giờ mở. Lý do đầy đủ kèm số liệu kiểm chứng: `constants/websocket.js`,
+       * hàm `getWebSocketOrigin`.
+       *
+       * Trên bản web thì KHÔNG đụng tới: trình duyệt cấm script đặt `Origin`, và cũng không cần
+       * — nó tự gửi origin thật của trang, vốn đã nằm trong allowlist.
+       */
+      webSocketFactory:
+        Platform.OS === "web"
+          ? undefined
+          : () =>
+              // Danh sách subprotocol lấy từ chính client, không gõ tay: đây đúng là thứ stompjs
+              // truyền vào khi nó tự dựng socket, nên bỏ hoặc gõ sai là đổi hành vi bắt tay.
+              new WebSocket(getWebSocketUrl(), client.stompVersions.protocolVersions(), {
+                headers: { origin: getWebSocketOrigin() },
+              }),
       brokerURL: getWebSocketUrl(),
       reconnectDelay: 3000,
       heartbeatIncoming: 10000,
