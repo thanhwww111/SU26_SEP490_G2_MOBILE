@@ -16,6 +16,44 @@ Gác lại vì nhóm đang tập trung hoàn thiện sản phẩm. **Đã chốt
 
 ---
 
+# 2026-08-17 (d) — Tải ảnh trên mobile chưa bao giờ chạy: axios biến FormData thành `"null"`
+
+Triệu chứng: đổi ảnh đại diện trên app không ăn, kể cả khi đã trỏ sang backend deploy. Nghi server
+trước — nhưng upload thẳng bằng `curl` lên deploy trả **HTTP 200 trong 0,34s**, MinIO qua
+`cdn.biliardtournament.cloud` chạy tốt. Lỗi nằm hoàn toàn ở client.
+
+**Chuỗi nguyên nhân**, bốn mắt xích đều kiểm chứng được:
+
+1. `src/api/axiosClient.js` khai `Content-Type: application/json` cho **toàn instance**.
+2. axios 1.18.1 `transformRequest`: gặp FormData **mà header là JSON** thì không gửi nguyên trạng,
+   nó chạy `JSON.stringify(formDataToJSON(data))`.
+3. `formDataToJSON` chỉ làm việc khi FormData có `entries()`. Bản của React Native chỉ có
+   `append`, `getAll`, `getParts` → hàm trả `null`.
+4. Body gửi đi đúng bằng chuỗi `"null"`, Content-Type `application/json`. Backend không thấy part
+   nào, `@RequestParam("file") MultipartFile` báo thiếu tham số.
+
+Không chỗ nào ném lỗi để lần ra — đây là loại hỏng im lặng tệ nhất: mã vẫn chạy, request vẫn đi,
+chỉ là nội dung rỗng.
+
+**Web không dính** vì `FE/src/api/storageApi.js` ghi đè `Content-Type: multipart/form-data` ngay
+tại lời gọi. Bản mobile thiếu đúng dòng đó — mà comment trong file lại còn dặn "KHÔNG tự đặt header
+Content-Type", một lời khuyên đúng cho `fetch` thuần nhưng sai khi instance đã cài sẵn header JSON.
+
+**Sửa hai lớp:**
+
+- `src/api/storageApi.js` khai header multipart tại lời gọi, khớp với web.
+- `src/api/axiosClient.js` thêm lưới an toàn: request nào có body là FormData thì tự đặt
+  `Content-Type: multipart/form-data`. Nhận diện qua `getParts` chứ không phải `instanceof FormData`
+  — bản web chạy FormData của trình duyệt, hai lớp khác nhau.
+
+Giữ cả hai là cố ý: nơi gọi tự khai thì đọc code là hiểu, còn interceptor lo cho lần sau có ai thêm
+một chỗ tải file mới mà quên.
+
+**Cách tái hiện** (không cần chạy app): nạp `axios.defaults.transformRequest[0]` với một FormData
+giả lập kiểu RN — header JSON cho ra `"null"`, header multipart giữ nguyên FormData.
+
+---
+
 # 2026-08-17 (c) — Bảng điểm dựng được cả hai hướng màn hình
 
 Khoá ngang **không đáng tin để dựa vào**. Trên máy thật, `lockAsync(LANDSCAPE)` có lúc không ăn:

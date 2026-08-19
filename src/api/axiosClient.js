@@ -12,12 +12,36 @@ const axiosClient = axios.create({
   timeout: 15000,
 });
 
+/**
+ * Nhận ra FormData qua `getParts` — bản FormData của React Native có method này, còn plain object
+ * thì không. Không dùng `instanceof FormData` vì bản web (`npm run web`) chạy FormData của trình
+ * duyệt, hai lớp khác nhau.
+ */
+const isFormDataBody = (data) =>
+  data != null && typeof data === "object" && typeof data.getParts === "function";
+
 axiosClient.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().token;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    /**
+     * Không để header JSON mặc định của instance dính vào request tải file.
+     *
+     * Gặp FormData mà `Content-Type` là `application/json`, axios KHÔNG gửi nguyên trạng: nó chạy
+     * `JSON.stringify(formDataToJSON(data))`. Mà `formDataToJSON` chỉ làm việc khi FormData có
+     * `entries()` — bản của React Native không có, nên nó trả `null` và body gửi đi đúng bằng
+     * chuỗi `"null"`. Backend không thấy part nào, `@RequestParam("file")` báo thiếu tham số, và
+     * không chỗ nào ném lỗi để lần ra. Đã mất một buổi vì đúng lỗi này (2026-08-17).
+     *
+     * Nơi gọi vẫn nên tự khai header cho tường minh (xem `storageApi.js`, và `FE/src/api/storageApi.js`
+     * cũng làm vậy); dòng này là lưới an toàn cho lần sau có ai thêm một chỗ tải file mới.
+     */
+    if (isFormDataBody(config.data)) {
+      config.headers["Content-Type"] = "multipart/form-data";
     }
 
     return config;
