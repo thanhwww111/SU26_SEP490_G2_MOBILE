@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { Calendar, ChevronRight, Swords } from "lucide-react-native";
 
@@ -8,6 +8,7 @@ import MatchScore from "./MatchScore";
 import SectionState from "../home/SectionState";
 import AppFooter from "../layout/AppFooter";
 import * as matchApi from "../../api/matchApi";
+import { useTournamentSocket } from "../../hooks/useTournamentSocket";
 import { getMatchState, getWinnerSide } from "../../constants/tournament";
 import { fmtDateTime } from "../../utils/date";
 import { iconSize } from "../../theme/tokens";
@@ -125,6 +126,10 @@ export default function MyMatchList({ onOpenTournament }) {
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
 
+  /* Màn nằm trong stack nên vẫn còn gắn khi người dùng đi sang màn khác. Cờ này để socket ngắt
+     lúc đó: giữ kết nối cho một màn không ai nhìn là tốn pin và 3G không đổi lấy gì. */
+  const [focused, setFocused] = useState(false);
+
   const alive = useRef(true);
   const loadedOnce = useRef(false);
 
@@ -134,9 +139,70 @@ export default function MyMatchList({ onOpenTournament }) {
     setMatches(Array.isArray(data) ? data : []);
   }, []);
 
+  /* --- Tỷ số trực tiếp qua WebSocket (từ 2026-08-25) --- */
+
+  /* Chỉ nghe giải còn trận chưa xong. `GET /player/matches` trả cả lịch sử, nên một cơ thủ chơi
+     lâu năm có thể dính hàng chục giải — đăng ký nghe hết là mấy chục lượt bắt tay để nhận về
+     những trận không bao giờ đổi nữa. */
+  const liveTournamentIds = useMemo(
+    () =>
+      matches
+        .filter((m) => getMatchState(m.status) !== "done")
+        .map((m) => m.tournamentId)
+        .filter((id) => id != null),
+    [matches]
+  );
+
+  /**
+   * Vá một trận trong danh sách khi socket báo tỷ số hoặc trạng thái mới.
+   *
+   * Bản tin gửi về đúng DTO `MatchResponse` mà `GET /player/matches` trả (cùng
+   * `bracketHelper.toMatchResponse` ở backend), nên trải lên nhau là khớp field.
+   *
+   * Trận không có trong danh sách thì bỏ qua: cùng một giải còn trận của người khác, nhét vào
+   * đây là hiện lịch thi đấu của cả giải thay vì của riêng mình.
+   */
+  const applyMatchUpdate = useCallback((incoming) => {
+    if (!alive.current || incoming?.id == null) return;
+
+    setMatches((prev) => {
+      const index = prev.findIndex((m) => m.id === incoming.id);
+      if (index === -1) return prev;
+
+      const next = [...prev];
+      next[index] = { ...next[index], ...incoming };
+      return next;
+    });
+  }, []);
+
+  /** Đồng bộ cả bracket: gộp một lượt thay vì gọi `applyMatchUpdate` cho từng trận */
+  const applyBracketSync = useCallback((list) => {
+    if (!alive.current || !Array.isArray(list)) return;
+
+    const byId = new Map(
+      list.filter((m) => m?.id != null).map((m) => [m.id, m])
+    );
+
+    setMatches((prev) =>
+      prev.map((m) => (byId.has(m.id) ? { ...m, ...byId.get(m.id) } : m))
+    );
+  }, []);
+
+  useTournamentSocket(liveTournamentIds, {
+    enabled: focused,
+    onMatchUpdate: applyMatchUpdate,
+    onBracketSync: applyBracketSync,
+    /* Đứt kết nối thì có thể đã lỡ bản tin. Nuốt lỗi: danh sách đang hiện vẫn đúng, và người
+       dùng còn vuốt xuống được. */
+    onReconnect: () => {
+      load().catch(() => {});
+    },
+  });
+
   useFocusEffect(
     useCallback(() => {
       alive.current = true;
+      setFocused(true);
 
       (async () => {
         if (!loadedOnce.current) setLoading(true);
@@ -153,6 +219,7 @@ export default function MyMatchList({ onOpenTournament }) {
 
       return () => {
         alive.current = false;
+        setFocused(false);
       };
     }, [load])
   );
@@ -255,8 +322,15 @@ export default function MyMatchList({ onOpenTournament }) {
             <AppFooter />
           </View>
         }
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.brand}
+            colors={[colors.brand]}
+            progressBackgroundColor={colors.surface}
+          />
+        }
       />
 
       <MatchDetailSheet

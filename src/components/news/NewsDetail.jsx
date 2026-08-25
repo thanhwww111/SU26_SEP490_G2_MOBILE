@@ -5,6 +5,7 @@ import RichText from "./RichText";
 import RemoteImage from "../home/RemoteImage";
 import AppFooter from "../layout/AppFooter";
 import * as newsApi from "../../api/newsApi";
+import { useRefresh } from "../../hooks/useRefresh";
 import { fmtDateShort } from "../../utils/date";
 import { useThemeColors } from "../../theme/useThemeColors";
 
@@ -27,14 +28,21 @@ export default function NewsDetail({ slug }) {
 
   const alive = useRef(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading`. Nhánh loading thay cả màn bằng vòng
+   *   quay, trong khi bài viết đang đọc vẫn đúng cho tới lúc có bản mới; RefreshControl đã báo
+   *   là đang tải rồi, không cần báo lần hai bằng cách xoá trắng nội dung.
+   */
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const data = await newsApi.getPostBySlug(slug);
       if (alive.current) setPost(data);
     } catch (e) {
-      if (alive.current) setError(e.message);
+      // Vuốt làm mới mà hỏng thì im lặng giữ nội dung cũ. Đổi bài đang đọc thành màn lỗi chỉ vì
+      // mạng chập một nhịp là tệ hơn hẳn — cùng lựa chọn với `app/(app)/staff/matches.jsx`.
+      if (alive.current && !silent) setError(e.message);
     } finally {
       if (alive.current) setLoading(false);
     }
@@ -47,6 +55,9 @@ export default function NewsDetail({ slug }) {
       alive.current = false;
     };
   }, [slug, load]);
+
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   if (loading) {
     return (
@@ -75,7 +86,7 @@ export default function NewsDetail({ slug }) {
   const publishedAt = fmtDateShort(post.publishedAt);
 
   return (
-    <ScrollView className="flex-1 bg-surface">
+    <ScrollView className="flex-1 bg-surface" refreshControl={refreshControl}>
       <View className="gap-3 px-4 pt-6">
         {post.categoryName ? (
           <Text className="text-overline font-bold uppercase text-accent">

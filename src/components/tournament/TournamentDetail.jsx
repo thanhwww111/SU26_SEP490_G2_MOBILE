@@ -11,6 +11,7 @@ import TournamentTabBar from "./TournamentTabBar";
 import TournamentStatusBadge from "./TournamentStatusBadge";
 import RemoteImage from "../home/RemoteImage";
 import * as publicTournamentApi from "../../api/publicTournamentApi";
+import { useRefresh } from "../../hooks/useRefresh";
 import { participantTypeLabel } from "../../constants/tournament";
 import { fmtCurrency } from "../../utils/format";
 import { fmtDateRange } from "../../utils/date";
@@ -69,14 +70,18 @@ export default function TournamentDetail({
   const scrollRef = useRef(null);
   const alive = useRef(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading`, và hỏng cũng đừng dựng màn lỗi: giải
+   *   đang xem vẫn đúng cho tới khi có bản mới. Cùng lựa chọn với `app/(app)/staff/matches.jsx`.
+   */
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const data = await publicTournamentApi.getPublicTournamentDetail(id);
       if (alive.current) setTournament(data);
     } catch (e) {
-      if (alive.current) setError(e.message);
+      if (alive.current && !silent) setError(e.message);
     } finally {
       if (alive.current) setLoading(false);
     }
@@ -89,6 +94,11 @@ export default function TournamentDetail({
       alive.current = false;
     };
   }, [load]);
+
+  /* Chỉ tab Thông tin dùng vòng cuộn dựng ở đây, nên chỉ nó nhận `refreshControl` này. Bốn tab
+     còn lại tự lo phần vuốt làm mới của mình qua `TabScreen`. */
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   const tabs = useMemo(() => {
     if (!tournament) return [];
@@ -128,7 +138,7 @@ export default function TournamentDetail({
           {error || "Không tìm thấy giải đấu."}
         </Text>
         <Pressable
-          onPress={load}
+          onPress={() => load()}
           className="rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
         >
           <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
@@ -209,6 +219,7 @@ export default function TournamentDetail({
                 className="flex-1"
                 // Chừa chỗ cho thanh tab nổi ở đáy, nếu không nó che mất phần cuối
                 contentContainerClassName="pb-28"
+                refreshControl={refreshControl}
               >
                 <View className="h-48 w-full">
                   <RemoteImage

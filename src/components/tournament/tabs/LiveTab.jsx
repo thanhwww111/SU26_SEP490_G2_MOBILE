@@ -127,7 +127,7 @@ export default function LiveTab({ tournamentId, active }) {
 
   if (loading || error || matches.length === 0) {
     return (
-      <TabScreen>
+      <TabScreen onRefresh={load}>
         <SectionState
           loading={loading}
           error={error}
@@ -156,8 +156,11 @@ export default function LiveTab({ tournamentId, active }) {
     );
   }
 
+  /* Vuốt xuống gọi thẳng `load` chứ không phải `handleManualRefresh`: nút "Làm mới" có nhãn riêng
+     nên cần state `refreshing` của nó, còn cử chỉ vuốt đã có vòng xoay của hệ điều hành. Socket
+     vẫn là nguồn chính, đây chỉ là lối thoát khi kết nối đứt. */
   return (
-    <TabScreen>
+    <TabScreen onRefresh={load}>
       <View className="overflow-hidden rounded-xl border border-line bg-surface">
         <View className="flex-row items-center justify-between bg-band px-4 py-2.5">
           <View className="flex-row items-center gap-2">

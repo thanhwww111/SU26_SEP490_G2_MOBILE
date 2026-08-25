@@ -2,8 +2,10 @@ import { Platform } from "react-native";
 
 import {
   BTMS_CREDENTIALS_KEY,
+  BTMS_KNOWN_EMAILS_KEY,
   BTMS_TOKEN_KEY,
   BTMS_USER_KEY,
+  MAX_KNOWN_EMAILS,
   ROLES,
 } from "../constants/auth";
 import { getItem, removeItem, setItem } from "./storage";
@@ -214,4 +216,104 @@ export const readStoredCredentials = async () => {
 
 export const clearStoredCredentials = async () => {
   await removeItem(BTMS_CREDENTIALS_KEY);
+};
+
+/* --- Email đã từng đăng nhập, để gợi ý ở màn Đăng nhập --- */
+
+/**
+ * So email theo kiểu "cùng một tài khoản": bỏ khoảng trắng thừa và không phân biệt hoa thường.
+ *
+ * Backend coi `A@x.com` và `a@x.com` là một, nên danh sách gợi ý cũng phải vậy — nếu không, đăng
+ * nhập hai lần với hai cách viết hoa khác nhau sẽ đẻ ra hai dòng gợi ý cho cùng một người.
+ */
+const sameEmail = (a, b) =>
+  String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+
+/**
+ * Đọc danh sách email đã lưu, mới nhất đứng đầu.
+ *
+ * Mọi lỗi đều trả mảng rỗng: đây là tính năng tiện lợi, hỏng thì màn đăng nhập chỉ mất phần gợi ý
+ * chứ không được phép chặn người dùng gõ tay.
+ */
+export const readKnownEmails = async () => {
+  try {
+    const raw = await getItem(BTMS_KNOWN_EMAILS_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((entry) => entry?.email);
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Ghi nhớ một email vừa đăng nhập thành công.
+ *
+ * Trùng email thì đẩy bản ghi cũ lên đầu thay vì thêm dòng mới — người dùng đăng nhập lần thứ mười
+ * vẫn chỉ thấy một dòng. Tên hiển thị lấy bản mới nhất vì hồ sơ có thể đã đổi tên.
+ *
+ * Nuốt lỗi ghi: đăng nhập đã thành công rồi, không thể vì lưu gợi ý hỏng mà đá người dùng ra.
+ */
+export const rememberEmail = async ({ email, name, role }) => {
+  const clean = String(email || "").trim();
+  if (!clean) return;
+
+  try {
+    const current = await readKnownEmails();
+    const rest = current.filter((entry) => !sameEmail(entry.email, clean));
+    const next = [
+      { email: clean, name: name || "", role: role || "", lastLoginAt: new Date().toISOString() },
+      ...rest,
+    ].slice(0, MAX_KNOWN_EMAILS);
+
+    await setItem(BTMS_KNOWN_EMAILS_KEY, JSON.stringify(next));
+  } catch {
+    /* gợi ý là thứ phụ — không được làm hỏng luồng đăng nhập */
+  }
+};
+
+/**
+ * Quên một email (người dùng bấm × trên dòng gợi ý).
+ *
+ * Xoá hẳn key khi danh sách rỗng thay vì lưu `"[]"`: lần đọc sau đi thẳng vào nhánh `!raw`,
+ * và máy không giữ lại dấu vết của tài khoản người dùng vừa bảo quên.
+ *
+ * @returns {Promise<Array>} danh sách còn lại, để nơi gọi dựng lại UI mà không phải đọc lần nữa
+ */
+export const forgetEmail = async (email) => {
+  try {
+    const current = await readKnownEmails();
+    const next = current.filter((entry) => !sameEmail(entry.email, email));
+
+    if (next.length === 0) await removeItem(BTMS_KNOWN_EMAILS_KEY);
+    else await setItem(BTMS_KNOWN_EMAILS_KEY, JSON.stringify(next));
+
+    return next;
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Lọc danh sách gợi ý theo những gì người dùng đã gõ.
+ *
+ * Khớp cả tiền tố email lẫn tên hiển thị — trọng tài nhớ tên mình nhanh hơn nhớ email công ty cấp.
+ * Ô rỗng thì trả cả danh sách, đúng như cách trình duyệt gợi ý khi vừa chạm vào ô.
+ *
+ * Loại luôn dòng trùng khít với thứ đang gõ: gợi ý đúng bằng nội dung ô nhập thì chạm vào cũng
+ * chẳng thay đổi gì, chỉ tổ che mất ô mật khẩu.
+ */
+export const filterKnownEmails = (entries, query) => {
+  const q = String(query || "").trim().toLowerCase();
+  if (!q) return entries;
+
+  return entries.filter((entry) => {
+    const email = String(entry.email || "").toLowerCase();
+    if (email === q) return false;
+
+    return email.includes(q) || String(entry.name || "").toLowerCase().includes(q);
+  });
 };

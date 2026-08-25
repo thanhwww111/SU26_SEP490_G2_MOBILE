@@ -294,6 +294,9 @@ export default function MatchesTab({ tournamentId, locked, active }) {
   const showStanding = hasLeagueStage(stages);
   const activeView = showStanding ? view : "list";
 
+  /* Nhánh `locked` cố ý không nhận vuốt làm mới: `locked` suy từ trạng thái giải chứ không phải
+     từ endpoint trận, gọi lại `load` ở đây cũng không đổi được gì. Muốn thấy lịch mới thì vuốt ở
+     tab Thông tin — nơi trạng thái giải được tải lại. */
   if (locked) {
     return (
       <TabScreen>
@@ -304,7 +307,7 @@ export default function MatchesTab({ tournamentId, locked, active }) {
 
   if (loading || error || stages.length === 0) {
     return (
-      <TabScreen>
+      <TabScreen onRefresh={load}>
         <SectionState
           loading={loading}
           error={error}
@@ -344,7 +347,7 @@ export default function MatchesTab({ tournamentId, locked, active }) {
     ) : null;
 
   return (
-    <TabScreen filters={filters}>
+    <TabScreen onRefresh={load} filters={filters}>
       {showStanding ? (
         <ViewToggle view={activeView} onChange={setView} colors={colors} />
       ) : null}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   SectionList,
   Text,
   View,
@@ -213,8 +214,15 @@ export default function RankingList({ onPressPlayer }) {
           <AppFooter />
         </View>
       }
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colors.brand}
+          colors={[colors.brand]}
+          progressBackgroundColor={colors.surface}
+        />
+      }
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
     />

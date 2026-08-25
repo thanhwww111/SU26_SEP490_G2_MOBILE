@@ -1,5 +1,11 @@
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { useFocusEffect } from "expo-router";
 import { CheckCircle2, Clock, XCircle } from "lucide-react-native";
 
@@ -189,8 +195,15 @@ export default function PaymentList() {
           <AppFooter />
         </View>
       }
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colors.brand}
+          colors={[colors.brand]}
+          progressBackgroundColor={colors.surface}
+        />
+      }
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
     />

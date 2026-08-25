@@ -11,8 +11,13 @@ import { useThemeColors } from "../theme/useThemeColors";
  * đã đỏ lòm dù người dùng chưa gõ gì.
  *
  * `secure` bật kiểu mật khẩu kèm nút con mắt để hiện/ẩn.
+ *
+ * `ref` nhận thẳng trong danh sách prop, KHÔNG cần `forwardRef`: từ React 19 `ref` là prop
+ * thường của component hàm. Có nó để màn Đăng nhập đưa con trỏ sang ô mật khẩu sau khi người
+ * dùng chọn một email gợi ý (`app/(auth)/login.jsx`).
  */
 export default function Input({
+  ref,
   label,
   value,
   onChangeText,
@@ -53,6 +58,7 @@ export default function Input({
 
       <View className="relative justify-center">
         <TextInput
+          ref={ref}
           value={value}
           onChangeText={onChangeText}
           onBlur={onBlur}

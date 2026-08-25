@@ -18,6 +18,7 @@ import {
   EMPTY_PROFILE_FORM,
   MAX_AVATAR_BYTES,
 } from "../../constants/profile";
+import { useRefresh } from "../../hooks/useRefresh";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeColors } from "../../theme/useThemeColors";
 
@@ -72,8 +73,16 @@ export default function ProfileContent() {
     [user?.email]
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading`: nhánh loading thay cả màn bằng vòng
+   *   quay, mà hồ sơ đang hiện vẫn đúng cho tới khi có bản mới.
+   *
+   * Lưu ý: `applyProfile` ghi đè form bằng dữ liệu vừa tải, nên vuốt làm mới giữa chừng sẽ mất
+   * những gì đang gõ dở. Đó đúng là ý nghĩa của cử chỉ này — F5 trên web cũng vậy — và vì nó do
+   * người dùng chủ động làm chứ không tự xảy ra nên không cần hỏi lại.
+   */
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setFormError("");
     try {
       const data = await profileApi.getProfile();
@@ -88,8 +97,10 @@ export default function ProfileContent() {
         setForm({ ...EMPTY_PROFILE_FORM, fullName: user?.fullName || "" });
         setMode(isPlayer ? "create" : "empty");
       } else {
+        // Hỏng khi vuốt làm mới thì báo bằng dải lỗi trong form, đừng chuyển sang `mode="error"`:
+        // nhánh đó thay cả màn bằng một trang lỗi, mất luôn hồ sơ vẫn đang hiển thị đúng.
         setFormError(e.message);
-        setMode("error");
+        if (!silent) setMode("error");
       }
     } finally {
       if (alive.current) setLoading(false);
@@ -103,6 +114,9 @@ export default function ProfileContent() {
       alive.current = false;
     };
   }, [load]);
+
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   const patchForm = (patch) => {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -264,7 +278,7 @@ export default function ProfileContent() {
           {formError || "Không thể tải hồ sơ."}
         </Text>
         <Pressable
-          onPress={load}
+          onPress={() => load()}
           className="rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
         >
           <Text className="text-sm font-semibold text-content-2">Thử lại</Text>
@@ -276,7 +290,11 @@ export default function ProfileContent() {
   const showForm = mode === "edit" || mode === "create";
 
   return (
-    <ScrollView className="flex-1 bg-canvas" keyboardShouldPersistTaps="handled">
+    <ScrollView
+      className="flex-1 bg-canvas"
+      keyboardShouldPersistTaps="handled"
+      refreshControl={refreshControl}
+    >
       <View className="gap-4 p-4">
         <ProfileAvatarCard
           avatarUrl={form.avatarPreviewUrl}

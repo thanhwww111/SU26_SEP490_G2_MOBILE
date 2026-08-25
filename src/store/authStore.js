@@ -8,6 +8,7 @@ import {
   persistAuth,
   persistCredentials,
   readStoredAuth,
+  rememberEmail,
 } from "../utils/auth";
 
 let hydratePromise = null;
@@ -51,6 +52,14 @@ export const useAuthStore = create((set, get) => ({
       await persistCredentials({ email: fallbackEmail || session.user?.email, password });
     }
 
+    // Ghi nhớ email để lần sau gợi ý ở màn Đăng nhập. Đứng ngoài nhánh `password` vì hai việc này
+    // độc lập nhau: mật khẩu chỉ lưu trên native, còn email thì lưu cả trên bản web.
+    await rememberEmail({
+      email: fallbackEmail || session.user?.email,
+      name: session.user?.fullName || session.user?.name,
+      role: session.user?.role,
+    });
+
     return session.user;
   },
 
@@ -68,6 +77,12 @@ export const useAuthStore = create((set, get) => ({
     const next = { ...user, ...patch };
     if (token) await persistAuth({ token, user: next });
     set({ user: next });
+
+    // Đổi tên ở màn Hồ sơ xong thì dòng gợi ý ở màn Đăng nhập cũng phải mang tên mới, nếu không
+    // lần đăng nhập sau người dùng vẫn thấy tên cũ mà không hiểu nó lấy từ đâu ra.
+    if (patch?.fullName && next.email) {
+      await rememberEmail({ email: next.email, name: next.fullName, role: next.role });
+    }
   },
 
   logout: async () => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
 import RegistrationStatusBadge from "./RegistrationStatusBadge";
@@ -9,6 +9,7 @@ import ConfirmSheet from "../ConfirmSheet";
 import FormError from "../auth/FormError";
 import * as registrationApi from "../../api/playerRegistrationApi";
 import { usePayOsCheckout } from "../../hooks/usePayOsCheckout";
+import { useRefresh } from "../../hooks/useRefresh";
 import { canCancelRegistration } from "../../constants/registration";
 import { fmtDateTime } from "../../utils/date";
 
@@ -56,6 +57,8 @@ export default function RegistrationDetailSection({
 
   const [payError, setPayError] = useState("");
 
+  const alive = useRef(true);
+
   /** Tải lại đăng ký để thấy trạng thái mới sau khi đối chiếu xong với PayOS */
   const refreshDetail = useCallback(async () => {
     try {
@@ -79,28 +82,41 @@ export default function RegistrationDetailSection({
     }
   }, [pay, registrationId]);
 
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      setLoading(true);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading` và hỏng cũng đừng dựng màn lỗi: đăng
+   *   ký đang hiện vẫn đúng cho tới khi có bản mới.
+   */
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
       setError("");
 
       try {
         const data = await registrationApi.getMyRegistrationDetail(registrationId);
-        if (alive) setDetail(data);
+        if (alive.current) setDetail(data);
       } catch (e) {
-        if (alive) setError(e.message);
+        if (alive.current && !silent) setError(e.message);
       } finally {
-        if (alive) setLoading(false);
+        if (alive.current) setLoading(false);
       }
-    })();
+    },
+    [registrationId]
+  );
+
+  useEffect(() => {
+    alive.current = true;
+    load();
 
     // Người dùng có thể bấm quay lại trước khi request xong
     return () => {
-      alive = false;
+      alive.current = false;
     };
-  }, [registrationId]);
+  }, [load]);
+
+  /* Vuốt để tải lại: trạng thái đăng ký đổi ở phía backend sau khi PayOS báo đã thu tiền, mà
+     người dùng đang đứng ở đúng màn này chờ nó đổi. */
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   const handleConfirmCancel = useCallback(async () => {
     setCancelling(true);
@@ -136,7 +152,7 @@ export default function RegistrationDetailSection({
 
   return (
     <View className="flex-1 bg-canvas">
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" refreshControl={refreshControl}>
         <View className="gap-5 px-4 pb-8 pt-6">
           {/* Khối đầu: giải nào, đang ở trạng thái gì */}
           <View className="rounded-xl border border-line bg-surface p-4">

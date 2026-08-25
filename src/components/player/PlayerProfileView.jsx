@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Award, Star, Trophy } from "lucide-react-native";
 
@@ -13,6 +13,7 @@ import { MEDAL_COLORS, rankingNoteLabel } from "../../constants/leaderboard";
 import { BILLIARD_RANK_LABELS } from "../../constants/profile";
 import { fmtCurrency, splitName } from "../../utils/format";
 import { iconSize } from "../../theme/tokens";
+import { useRefresh } from "../../hooks/useRefresh";
 import { useThemeColors } from "../../theme/useThemeColors";
 
 /** Hạng chưa khai báo thì không dựng badge trống. */
@@ -123,13 +124,21 @@ export default function PlayerProfileView({
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => {
-    let alive = true;
+  const alive = useRef(true);
 
-    (async () => {
-      setLoading(true);
+  /* `onRedirectToUser` giữ trong ref chứ không đưa vào deps của `load`: component cha truyền hàm
+     mũi tên mới mỗi lần render, đưa vào deps là tải lại hồ sơ vô tận. */
+  const onRedirectRef = useRef(onRedirectToUser);
+  onRedirectRef.current = onRedirectToUser;
+
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading` và hỏng cũng đừng dựng màn lỗi: hồ sơ
+   *   đang hiện vẫn đúng cho tới khi có bản mới.
+   */
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
       setError("");
 
       // Màn sắp bị thay bằng nhánh userId thì giữ nguyên vòng quay: tắt loading
@@ -141,33 +150,39 @@ export default function PlayerProfileView({
           ? await getPlayerProfileByUserId(userId)
           : await getParticipantProfile(participantId);
 
-        if (!alive) return;
+        if (!alive.current) return;
 
-        if (!userId && data?.userId && onRedirectToUser) {
+        if (!userId && data?.userId && onRedirectRef.current) {
           redirected = true;
-          onRedirectToUser(data.userId);
+          onRedirectRef.current(data.userId);
           return;
         }
 
         setProfile(data);
       } catch (e) {
-        if (alive) setError(e.message);
+        if (alive.current && !silent) setError(e.message);
       } finally {
-        if (alive && !redirected) setLoading(false);
+        if (alive.current && !redirected) setLoading(false);
       }
-    })();
+    },
+    [userId, participantId]
+  );
+
+  useEffect(() => {
+    alive.current = true;
+    load();
 
     return () => {
-      alive = false;
+      alive.current = false;
     };
-    // `onRedirectToUser` cố ý không nằm trong deps: component cha truyền hàm mũi
-    // tên mới mỗi lần render, đưa vào đây là tải lại hồ sơ vô tận
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, participantId, reloadKey]);
+  }, [load]);
+
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   if (loading || error || !profile) {
     return (
-      <ScrollView className="flex-1 bg-canvas">
+      <ScrollView className="flex-1 bg-canvas" refreshControl={refreshControl}>
         <View className="px-4 pt-6">
           <SectionState
             loading={loading}
@@ -177,7 +192,7 @@ export default function PlayerProfileView({
 
           {!loading && error ? (
             <Pressable
-              onPress={() => setReloadKey((k) => k + 1)}
+              onPress={() => load()}
               className="self-center rounded-full border border-line-strong bg-surface px-5 py-2.5 active:bg-sunken"
             >
               <Text className="text-sm font-semibold text-content-2">
@@ -201,7 +216,7 @@ export default function PlayerProfileView({
     : (BILLIARD_RANK_LABELS[profile.billiardRank] ?? profile.billiardRank);
 
   return (
-    <ScrollView className="flex-1 bg-canvas">
+    <ScrollView className="flex-1 bg-canvas" refreshControl={refreshControl}>
       <PlayerPortrait
         uri={profile.avatarUrl}
         name={primaryName}

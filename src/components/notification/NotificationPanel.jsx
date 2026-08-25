@@ -13,6 +13,7 @@ import {
 import NotificationRow from "./NotificationRow";
 import { useOverlay } from "../layout/useOverlay";
 import * as notificationApi from "../../api/notificationApi";
+import { useRefresh } from "../../hooks/useRefresh";
 import { useNotificationStore } from "../../store/notificationStore";
 import { NOTIFICATION_POPUP_SIZE } from "../../constants/notification";
 import { useThemeColors } from "../../theme/useThemeColors";
@@ -44,26 +45,39 @@ export default function NotificationPanel({ visible, onClose, onOpenItem }) {
 
   const alive = useRef(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await notificationApi.getMyNotifications({
-        page: 0,
-        size: NOTIFICATION_POPUP_SIZE,
-      });
-      if (!alive.current) return;
-      setItems(res.content);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading`, và hỏng cũng đừng dựng dải lỗi thay
+   *   cho danh sách đang hiện. Mốc "đã đọc" vẫn được cập nhật như thường.
+   */
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
+      setError("");
+      try {
+        const res = await notificationApi.getMyNotifications({
+          page: 0,
+          size: NOTIFICATION_POPUP_SIZE,
+        });
+        if (!alive.current) return;
+        setItems(res.content);
 
-      // Đánh dấu SAU khi tải xong: tải hỏng mà vẫn xoá huy hiệu thì người dùng
-      // tưởng đã xem hết trong khi chưa thấy gì
-      await markAllRead();
-    } catch (e) {
-      if (alive.current) setError(e.message);
-    } finally {
-      if (alive.current) setLoading(false);
-    }
-  }, [markAllRead]);
+        // Đánh dấu SAU khi tải xong: tải hỏng mà vẫn xoá huy hiệu thì người dùng
+        // tưởng đã xem hết trong khi chưa thấy gì
+        await markAllRead();
+      } catch (e) {
+        if (alive.current && !silent) setError(e.message);
+      } finally {
+        if (alive.current) setLoading(false);
+      }
+    },
+    [markAllRead]
+  );
+
+  /* Chuông không có realtime — backend chỉ bắn WebSocket cho tỷ số trận, thông báo thì đi bằng
+     push. Vuốt xuống là cách duy nhất người dùng chủ động hỏi lại danh sách mà không phải đóng
+     rồi mở lại bảng. */
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   useEffect(() => {
     if (!visible) return undefined;
@@ -130,7 +144,11 @@ export default function NotificationPanel({ visible, onClose, onOpenItem }) {
             <Text className="text-[13px] font-semibold text-content">Thông báo</Text>
           </View>
 
-          <ScrollView style={{ maxHeight }} contentContainerStyle={{ flexGrow: 1 }}>
+          <ScrollView
+            style={{ maxHeight }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            refreshControl={refreshControl}
+          >
             {loading ? (
               <View className="items-center py-10">
                 <ActivityIndicator size="small" color={colors.brand} />

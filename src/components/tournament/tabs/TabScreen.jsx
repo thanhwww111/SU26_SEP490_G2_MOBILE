@@ -1,5 +1,7 @@
 import { ScrollView, View } from "react-native";
 
+import { useRefresh } from "../../../hooks/useRefresh";
+
 /**
  * Khung của một tab danh sách trong màn chi tiết giải.
  *
@@ -18,8 +20,15 @@ import { ScrollView, View } from "react-native";
  *
  * @param {React.ReactNode} [filters] — cụm lọc giữ cố định; bỏ trống thì không
  *   dựng dải trên cùng, tab chỉ có vùng cuộn
+ * @param {() => Promise<any> | any} [onRefresh] — vuốt xuống để tải lại; bỏ trống
+ *   thì tab không nhận cử chỉ đó
  */
-export default function TabScreen({ filters, children }) {
+export default function TabScreen({ filters, onRefresh, children }) {
+  /* Hook phải chạy ở mọi lần render nên gọi vô điều kiện, rồi mới quyết định có gắn hay không.
+     Tab không truyền `onRefresh` thì đừng gắn: kéo ra một vòng xoay chớp rồi tắt mà dữ liệu y
+     nguyên là lời hứa suông, thà không nhận cử chỉ ngay từ đầu. */
+  const { refreshControl } = useRefresh(onRefresh);
+
   return (
     <View className="flex-1">
       {filters ? (
@@ -33,6 +42,7 @@ export default function TabScreen({ filters, children }) {
         // Chừa chỗ cho thanh tab nổi ở đáy, nếu không nó che mất phần cuối
         contentContainerClassName="gap-3 px-4 pb-28 pt-4"
         keyboardShouldPersistTaps="handled"
+        refreshControl={onRefresh ? refreshControl : undefined}
       >
         {children}
       </ScrollView>

@@ -1,21 +1,30 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import AuthScreen from "../../src/components/auth/AuthScreen";
 import Button from "../../src/components/Button";
 import Input from "../../src/components/Input";
+import EmailSuggestions from "../../src/components/auth/EmailSuggestions";
 import FormError from "../../src/components/auth/FormError";
 import FormSuccess from "../../src/components/auth/FormSuccess";
 import TextLink from "../../src/components/auth/TextLink";
 import * as authApi from "../../src/api/authApi";
 import { useAuthStore } from "../../src/store/authStore";
-import { getHomeRouteForRole } from "../../src/utils/auth";
+import {
+  filterKnownEmails,
+  forgetEmail,
+  getHomeRouteForRole,
+  readKnownEmails,
+} from "../../src/utils/auth";
 import {
   collectErrors,
   validateEmail,
   validatePassword,
 } from "../../src/utils/validators";
+
+/** Chờ bao lâu trước khi ẩn gợi ý lúc ô email mất tiêu điểm — xem `handleEmailBlur` */
+const SUGGESTION_HIDE_MS = 150;
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -37,6 +46,30 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  /* --- Gợi ý email đã từng đăng nhập trên máy này --- */
+  const [knownEmails, setKnownEmails] = useState([]);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const passwordRef = useRef(null);
+  const hideTimerRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    readKnownEmails().then((entries) => {
+      if (alive) setKnownEmails(entries);
+    });
+
+    return () => {
+      alive = false;
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, []);
+
+  const suggestions = useMemo(
+    () => (emailFocused ? filterKnownEmails(knownEmails, form.email) : []),
+    [emailFocused, knownEmails, form.email]
+  );
 
   const runValidation = () =>
     collectErrors({
@@ -62,7 +95,40 @@ export default function LoginScreen() {
   const markTouched = (name) => () =>
     setTouched((prev) => ({ ...prev, [name]: true }));
 
+  const closeSuggestions = () => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    setEmailFocused(false);
+  };
+
+  /**
+   * Ẩn gợi ý sau một nhịp ngắn thay vì ngay lập tức.
+   *
+   * Chạm vào một dòng gợi ý làm ô email mất tiêu điểm TRƯỚC khi cú chạm được xử lý. Ẩn ngay ở
+   * đây là gỡ dòng đó khỏi cây giao diện giữa chừng, và cú chạm rơi vào khoảng không — người
+   * dùng bấm mà chẳng thấy gì xảy ra. `handlePickEmail` huỷ hẹn giờ này nên không có nhấp nháy.
+   */
+  const handleEmailBlur = () => {
+    markTouched("email")();
+    hideTimerRef.current = setTimeout(
+      () => setEmailFocused(false),
+      SUGGESTION_HIDE_MS
+    );
+  };
+
+  const handlePickEmail = (email) => {
+    closeSuggestions();
+    setField("email")(email);
+    // Email đã xong thì việc còn lại là mật khẩu — đưa con trỏ tới thẳng đó, đỡ một lần chạm
+    passwordRef.current?.focus();
+  };
+
+  const handleForgetEmail = async (email) => {
+    const remaining = await forgetEmail(email);
+    setKnownEmails(remaining);
+  };
+
   const handleSubmit = async () => {
+    closeSuggestions();
     setTouched({ email: true, password: true });
     const nextErrors = runValidation();
     if (Object.keys(nextErrors).length > 0) {
@@ -104,7 +170,11 @@ export default function LoginScreen() {
         label="Địa chỉ E-mail"
         value={form.email}
         onChangeText={setField("email")}
-        onBlur={markTouched("email")}
+        onFocus={() => {
+          if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+          setEmailFocused(true);
+        }}
+        onBlur={handleEmailBlur}
         placeholder="Nhập địa chỉ email"
         error={errors.email}
         touched={touched.email}
@@ -115,7 +185,14 @@ export default function LoginScreen() {
         className="mb-3"
       />
 
+      <EmailSuggestions
+        entries={suggestions}
+        onPick={handlePickEmail}
+        onForget={handleForgetEmail}
+      />
+
       <Input
+        ref={passwordRef}
         label="Mật khẩu"
         value={form.password}
         onChangeText={setField("password")}

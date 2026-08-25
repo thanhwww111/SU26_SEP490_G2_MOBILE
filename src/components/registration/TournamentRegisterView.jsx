@@ -13,6 +13,7 @@ import * as registrationApi from "../../api/playerRegistrationApi";
 import * as authApi from "../../api/authApi";
 import { getProfile } from "../../api/profileApi";
 import { usePayOsCheckout } from "../../hooks/usePayOsCheckout";
+import { useRefresh } from "../../hooks/useRefresh";
 import { useAuthStore } from "../../store/authStore";
 import { fmtCurrency } from "../../utils/format";
 import { iconSize } from "../../theme/tokens";
@@ -97,8 +98,13 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
      kể cả khi họ cố ý sửa tên để đăng ký cho người khác. */
   const prefilledOnce = useRef(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading`: nhánh loading thay cả màn bằng vòng
+   *   quay. Những gì người dùng đã gõ nằm ở state `values`, `load` không đụng tới (`prefilledOnce`
+   *   chặn việc điền hộ lần hai), nên vuốt giữa chừng không mất dữ liệu đang nhập.
+   */
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setLoadError("");
     try {
       // Hỏi song song: đã đăng ký rồi thì khỏi cần dựng form
@@ -149,6 +155,9 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
       };
     }, [load])
   );
+
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   const entryFee = form?.entryFee != null ? Number(form.entryFee) : 0;
   const hasFee = entryFee > 0;
@@ -254,10 +263,10 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
 
   if (loadError) {
     return (
-      <ScrollView className="flex-1 bg-canvas">
+      <ScrollView className="flex-1 bg-canvas" refreshControl={refreshControl}>
         <View className="px-4 pt-6">
           <SectionState error={loadError} />
-          <Button title="Thử lại" onPress={load} />
+          <Button title="Thử lại" onPress={() => load()} />
         </View>
         <AppFooter />
       </ScrollView>
@@ -271,7 +280,7 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
     const rejected = status === "REJECTED";
 
     return (
-      <ScrollView className="flex-1 bg-canvas">
+      <ScrollView className="flex-1 bg-canvas" refreshControl={refreshControl}>
         <View className="items-center px-4 pb-6 pt-10">
           {approved ? (
             <CheckCircle2 size={48} color={colors.success} />
@@ -316,7 +325,11 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
   const busy = phase === "submitting" || phase === "paying";
 
   return (
-    <ScrollView className="flex-1 bg-canvas" keyboardShouldPersistTaps="handled">
+    <ScrollView
+      className="flex-1 bg-canvas"
+      keyboardShouldPersistTaps="handled"
+      refreshControl={refreshControl}
+    >
       <View className="px-4 pb-6 pt-6">
         <Text className="text-2xl font-display uppercase text-content">
           Đăng ký tham dự

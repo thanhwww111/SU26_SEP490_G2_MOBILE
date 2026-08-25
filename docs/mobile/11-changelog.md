@@ -16,6 +16,68 @@ Gác lại vì nhóm đang tập trung hoàn thiện sản phẩm. **Đã chốt
 
 ---
 
+# 2026-08-25 — Gợi ý email ở màn Đăng nhập, vuốt làm mới toàn app, socket nghe nhiều giải
+
+Ba việc trong một lượt, đều xuất phát từ cùng một nhận xét: app chạy đúng nhưng thiếu những cử chỉ
+mà người dùng mobile mặc định là có.
+
+## 1. Màn Đăng nhập gợi ý email đã từng dùng
+
+Key mới `btms_known_emails` giữ tối đa 5 bản ghi `{ email, name, role, lastLoginAt }`, mới nhất lên
+đầu. Ghi trong `authStore.loginFromResponse`; `patchUser` cập nhật lại tên khi người dùng đổi ở màn
+Hồ sơ. Đăng xuất **không** xoá — nhớ được sau khi đăng xuất mới là điểm của tính năng; muốn quên
+thì bấm dấu × trên chính dòng gợi ý.
+
+**Cố ý chỉ lưu email, không lưu mật khẩu.** Đã cân nhắc kiểu "chạm một cái vào thẳng" như các app
+khác: repo vốn đã giữ mật khẩu trong SecureStore (`btms_credentials`, để tự lấy phiên mới khi JWT
+hết hạn) nên về kỹ thuật là làm được ngay. Không làm vì máy ở quán bida hay được chuyền tay giữa
+nhân viên và khách — một chạm là vào thẳng tài khoản người khác thì quá dễ. Đổi lại, key này lưu
+được cả trên bản web, khác `btms_credentials` vốn chỉ dám ghi trên native.
+
+Files: `src/constants/auth.js`, `src/utils/auth.js` (4 hàm mới),
+`src/components/auth/EmailSuggestions.jsx`, `app/(auth)/login.jsx`, `src/components/Input.jsx`
+(nhận `ref` để nhảy con trỏ sang ô mật khẩu — React 19 cho `ref` là prop thường, không cần
+`forwardRef`).
+
+## 2. Vuốt xuống để tải lại ở mọi vùng cuộn
+
+Trước lượt này chỉ 8 màn danh sách có; 10 vùng cuộn khác thì không, gồm cả Trang chủ và toàn bộ màn
+chi tiết. Hook mới `src/hooks/useRefresh.jsx` gói state + `<RefreshControl>` đúng màu theo chế độ
+sáng/tối. Cách dùng và bẫy hay gặp: [08, mục 4](08-reusable-patterns.md).
+
+Đã nối: Trang chủ, Hồ sơ, chi tiết Giải (tab Thông tin), 4 tab còn lại qua `TabScreen`, chi tiết Chi
+nhánh, chi tiết Tin tức, hồ sơ Cơ thủ, màn Đăng ký giải, chi tiết Đăng ký, và bảng Thông báo. 8 danh
+sách sẵn có giữ nguyên logic, chỉ đổi sang `refreshControl` để đồng bộ màu.
+
+Quy tắc rút ra và áp cho tất cả: vuốt làm mới thì **không** bật `loading` (nội dung cũ vẫn đúng), và
+**không** dựng màn lỗi khi hỏng (mạng chập một nhịp không đáng để mất thứ người dùng đang đọc).
+
+## 3. `useTournamentSocket` nghe được nhiều giải
+
+Backend chỉ bắn đúng hai topic — `/topic/tournament/{id}/matches` và `/bracket`
+(`MatchBroadcastService`) — nên mọi thứ ngoài tỷ số trận đều không có nguồn realtime để nghe. Trước
+lượt này mobile dùng hai topic đó ở 3 chỗ: màn chấm điểm, tab Trực tiếp, tab Trận đấu.
+
+Hai màn "trận của tôi" thì không, vì chúng gom trận từ **nhiều** giải mà hook chỉ nhận một id. Nay
+tham số đầu nhận cả mảng: vẫn một kết nối, chỉ nhiều `subscribe` trên đó. Nơi gọi lọc sẵn, chỉ nghe
+giải còn trận chưa xong.
+
+- `app/(app)/staff/matches.jsx` — tỷ số về thẳng thay vì chờ hết nhịp 30 giây. Vòng hỏi lại **vẫn
+  giữ**, chỉ giãn ra 2 phút khi socket đang nối: trận mới được phân công không đi qua hai topic đó,
+  vì lúc quản lý gán trận thì máy này còn chưa đăng ký nghe giải ấy.
+- `src/components/match/MyMatchList.jsx` — trước đây không realtime cũng không polling.
+
+Bản tin gửi về đúng DTO `MatchResponse` mà cả `/staff/matches` lẫn `/player/matches` trả (cùng
+`bracketHelper.toMatchResponse` ở backend), nên vá thẳng vào phần tử trong danh sách được. Cả hai
+màn ngắt socket khi mất tiêu điểm — chúng nằm trong stack nên vẫn còn gắn sau khi người dùng đi
+sang màn khác.
+
+**Còn nợ:** chuông thông báo vẫn dựa vào push + gọi lại khi đổi route; các màn tin tức, xếp hạng,
+chi nhánh, thanh toán, đăng ký đều không realtime. Không phải thiếu sót của client — backend chưa
+bắn gì cho những phần đó.
+
+---
+
 # 2026-08-17 (d) — Tải ảnh trên mobile chưa bao giờ chạy: axios biến FormData thành `"null"`
 
 Triệu chứng: đổi ảnh đại diện trên app không ăn, kể cả khi đã trỏ sang backend deploy. Nghi server

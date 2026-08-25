@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import SectionHeader from "./SectionHeader";
@@ -132,15 +132,29 @@ const PlayerTile = ({ player, accent, onPress }) => {
  * Trước 2026-08-06 khối này đọc mảng cứng `constants/topPlayers.js` vì backend
  * chưa mở endpoint xếp hạng toàn hệ thống. Endpoint đã có, file đó đã xoá.
  */
-export default function RankedSection({ onPressAll, onPressPlayer }) {
+export default function RankedSection({
+  onPressAll,
+  onPressPlayer,
+  refreshKey = 0,
+  onLoaded,
+}) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /* Giữ `onLoaded` trong ref: trang chủ truyền hàm mũi tên mới sau mỗi lần vẽ lại, đưa thẳng
+     vào deps của effect là mỗi lần vẽ lại một lần gọi API. */
+  const onLoadedRef = useRef(onLoaded);
+  onLoadedRef.current = onLoaded;
 
   useEffect(() => {
     let alive = true;
 
     (async () => {
+      // Lần vuốt làm mới không hiện lại khung xương: vòng xoay của RefreshControl đã nói đủ, đổi
+      // nội dung người dùng đang đọc thành khung xám nữa chỉ làm màn hình nháy.
+      if (refreshKey > 0) setError("");
+
       try {
         const page = await getLeaderboard({
           period: "YEAR",
@@ -151,14 +165,18 @@ export default function RankedSection({ onPressAll, onPressPlayer }) {
       } catch (e) {
         if (alive) setError(e.message);
       } finally {
-        if (alive) setLoading(false);
+        if (alive) {
+          setLoading(false);
+          // Trang chủ đếm đủ ba khối báo xong mới tắt vòng xoay — xem `app/(app)/home.jsx`
+          onLoadedRef.current?.();
+        }
       }
     })();
 
     return () => {
       alive = false;
     };
-  }, []);
+  }, [refreshKey]);
 
   const [top, ...rest] = players;
 

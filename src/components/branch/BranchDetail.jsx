@@ -13,6 +13,7 @@ import RemoteImage from "../home/RemoteImage";
 import SectionCard from "../tournament/SectionCard";
 import AppFooter from "../layout/AppFooter";
 import * as publicBranchApi from "../../api/publicBranchApi";
+import { useRefresh } from "../../hooks/useRefresh";
 import { fmtDateShort } from "../../utils/date";
 import { iconSize } from "../../theme/tokens";
 import { useThemeColors } from "../../theme/useThemeColors";
@@ -77,14 +78,19 @@ export default function BranchDetail({ id }) {
 
   const alive = useRef(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading`, và hỏng cũng đừng dựng màn lỗi:
+   *   thông tin chi nhánh đang hiện vẫn đúng cho tới khi có bản mới. Cùng lựa chọn với
+   *   `app/(app)/staff/matches.jsx`.
+   */
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const data = await publicBranchApi.getPublicBranchDetail(id);
       if (alive.current) setBranch(data);
     } catch (e) {
-      if (alive.current) setError(e.message);
+      if (alive.current && !silent) setError(e.message);
     } finally {
       if (alive.current) setLoading(false);
     }
@@ -97,6 +103,9 @@ export default function BranchDetail({ id }) {
       alive.current = false;
     };
   }, [id, load]);
+
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+  const { refreshControl } = useRefresh(refresh);
 
   if (loading) {
     return (
@@ -128,7 +137,7 @@ export default function BranchDetail({ id }) {
   const openedAt = fmtDateShort(branch.createdAt);
 
   return (
-    <ScrollView className="flex-1 bg-canvas">
+    <ScrollView className="flex-1 bg-canvas" refreshControl={refreshControl}>
       <RemoteImage uri={heroImage} className="h-52 w-full" />
 
       <View className="gap-4 p-4">

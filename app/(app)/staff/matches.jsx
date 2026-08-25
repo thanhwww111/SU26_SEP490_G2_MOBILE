@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 
 import ChipRow from "../../../src/components/ChipRow";
@@ -9,11 +15,13 @@ import AppFooter from "../../../src/components/layout/AppFooter";
 import RefereeMatchCard from "../../../src/components/staff/RefereeMatchCard";
 import RefereeMatchSection from "../../../src/components/staff/RefereeMatchSection";
 import { useRequireStaff } from "../../../src/hooks/useRequireStaff";
+import { useTournamentSocket } from "../../../src/hooks/useTournamentSocket";
 import * as staffMatchApi from "../../../src/api/staffMatchApi";
 import {
   countDistinctTournaments,
   filterMatchesByDay,
   groupRefereeMatches,
+  isMatchFinished,
 } from "../../../src/utils/refereeMatch";
 import { useThemeColors } from "../../../src/theme/useThemeColors";
 
@@ -29,9 +37,25 @@ import { useThemeColors } from "../../../src/theme/useThemeColors";
  * - Web tự làm mới mỗi 30 giây khi tab đang hiện (`document.visibilityState`). Mobile không có
  *   API đó; `useFocusEffect` cho biết màn có đang được xem hay không, và interval bị dừng hẳn
  *   khi rời màn — quan trọng hơn trên điện thoại, nơi mỗi lần gọi API là một lần tốn pin và 3G.
+ *
+ * ## Tỷ số về thẳng qua WebSocket (từ 2026-08-25)
+ *
+ * Màn này nghe hai topic `/topic/tournament/{id}/{matches,bracket}` của mọi giải còn trận chưa
+ * xong, nên tỷ số và trạng thái đổi ngay chứ không phải chờ hết một nhịp 30 giây. Bản tin gửi về
+ * đúng DTO `MatchResponse` mà `GET /staff/matches` trả — cùng một `bracketHelper.toMatchResponse`
+ * ở backend — nên vá thẳng vào phần tử trong danh sách được, không sợ lệch shape.
+ *
+ * Vòng hỏi lại vẫn giữ, chỉ giãn ra khi socket đang nối: **trận mới được phân công không đi qua
+ * hai topic đó** — lúc quản lý gán trận, máy này còn chưa đăng ký nghe giải ấy. Bỏ hẳn vòng hỏi
+ * lại là trọng tài không bao giờ thấy trận mới cho tới khi tự tay vuốt.
  */
 
+/** Nhịp kiểm tra, cũng là khoảng cách tối thiểu giữa hai lần hỏi lại khi KHÔNG có socket */
 const AUTO_REFRESH_MS = 30_000;
+
+/** Có socket rồi thì chỉ còn hỏi lại để bắt trận mới được phân công — giãn ra cho đỡ tốn 3G */
+const SOCKET_IDLE_REFRESH_MS = 120_000;
+
 const SEARCH_DEBOUNCE_MS = 350;
 
 const DAY_OPTIONS = [
@@ -52,6 +76,10 @@ export default function StaffMatchesScreen() {
   const [startingId, setStartingId] = useState(null);
   const [startError, setStartError] = useState("");
 
+  /* Màn nằm trong stack nên vẫn còn gắn khi trọng tài đi sang màn chấm điểm. Cờ này để socket
+     ngắt lúc đó — màn chấm điểm đã tự nghe giải của trận nó đang chấm rồi. */
+  const [focused, setFocused] = useState(false);
+
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [dayFilter, setDayFilter] = useState("today");
@@ -59,6 +87,8 @@ export default function StaffMatchesScreen() {
 
   const alive = useRef(true);
   const loadedOnce = useRef(false);
+  /** Mốc lần gọi API gần nhất, để vòng hỏi lại biết khi nào thật sự cần chạy */
+  const lastLoadAtRef = useRef(0);
 
   /* Gõ tới đâu gọi API tới đó là mỗi chữ cái một request trên mạng di động — chờ người dùng
      ngừng gõ rồi mới hỏi backend. `SearchField` cũng gọi `onSubmit` khi bấm nút tìm và khi xoá
@@ -69,6 +99,10 @@ export default function StaffMatchesScreen() {
   }, [query]);
 
   const load = useCallback(async () => {
+    // Ghi mốc ở đây chứ không ở `runLoad`: vuốt tay gọi thẳng `load`, không qua `runLoad` — bỏ
+    // sót thì vòng hỏi lại vẫn nổ ngay sau khi người dùng vừa tự tay tải lại xong.
+    lastLoadAtRef.current = Date.now();
+
     const data = await staffMatchApi.getRefereeMatches({
       tournamentName: submittedQuery || undefined,
     });
@@ -95,16 +129,88 @@ export default function StaffMatchesScreen() {
     [load]
   );
 
+  /* --- Tỷ số trực tiếp qua WebSocket --- */
+
+  /* Chỉ nghe giải còn trận chưa xong. Giải mà mọi trận đã kết thúc thì không bao giờ có bản tin
+     mới, đăng ký nghe nó chỉ tốn thêm một lượt bắt tay và một khoản pin. */
+  const liveTournamentIds = useMemo(
+    () =>
+      matches
+        .filter((m) => !isMatchFinished(m.status))
+        .map((m) => m.tournamentId)
+        .filter((id) => id != null),
+    [matches]
+  );
+
+  /**
+   * Vá một trận trong danh sách khi socket báo tỷ số hoặc trạng thái mới.
+   *
+   * Trải bản tin lên trên bản cũ (`{ ...cũ, ...mới }`) chứ không thay thẳng: hai bên cùng là
+   * `MatchResponse` nên field trùng hết, nhưng cách này an toàn nếu sau này backend thêm field
+   * chỉ có ở REST.
+   *
+   * Trận không có trong danh sách thì bỏ qua — cùng một giải còn trận của trọng tài khác, nhét
+   * vào đây là hiện lên những trận người này không được chấm.
+   */
+  const applyMatchUpdate = useCallback((incoming) => {
+    if (!alive.current || incoming?.id == null) return;
+
+    setMatches((prev) => {
+      const index = prev.findIndex((m) => m.id === incoming.id);
+      if (index === -1) return prev;
+
+      const next = [...prev];
+      next[index] = { ...next[index], ...incoming };
+      return next;
+    });
+  }, []);
+
+  /** Đồng bộ cả bracket: gộp một lượt thay vì gọi `applyMatchUpdate` cho từng trận */
+  const applyBracketSync = useCallback((list) => {
+    if (!alive.current || !Array.isArray(list)) return;
+
+    const byId = new Map(
+      list.filter((m) => m?.id != null).map((m) => [m.id, m])
+    );
+
+    setMatches((prev) =>
+      prev.map((m) => (byId.has(m.id) ? { ...m, ...byId.get(m.id) } : m))
+    );
+  }, []);
+
+  const { isConnected } = useTournamentSocket(liveTournamentIds, {
+    enabled: allowed && focused,
+    onMatchUpdate: applyMatchUpdate,
+    onBracketSync: applyBracketSync,
+    // Lúc đứt kết nối có thể đã lỡ vài bản tin — đọc lại từ REST cho chắc
+    onReconnect: () => runLoad({ silent: true }),
+  });
+
+  /* Vòng hỏi lại đọc qua ref chứ không nhận `isConnected` làm dependency: đưa vào deps là mỗi lần
+     socket nối/đứt lại dựng lại cả `useFocusEffect`, kéo theo một lần gọi API thừa. */
+  const socketConnectedRef = useRef(false);
+  socketConnectedRef.current = isConnected;
+
   useFocusEffect(
     useCallback(() => {
       if (!allowed) return undefined;
       alive.current = true;
+      setFocused(true);
       runLoad();
 
-      const id = setInterval(() => runLoad({ silent: true }), AUTO_REFRESH_MS);
+      const tick = () => {
+        const minGap = socketConnectedRef.current
+          ? SOCKET_IDLE_REFRESH_MS
+          : AUTO_REFRESH_MS;
+        if (Date.now() - lastLoadAtRef.current < minGap) return;
+        runLoad({ silent: true });
+      };
+
+      const id = setInterval(tick, AUTO_REFRESH_MS);
 
       return () => {
         alive.current = false;
+        setFocused(false);
         clearInterval(id);
       };
     }, [allowed, runLoad])
@@ -261,8 +367,15 @@ export default function StaffMatchesScreen() {
           <AppFooter />
         </View>
       }
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colors.brand}
+          colors={[colors.brand]}
+          progressBackgroundColor={colors.surface}
+        />
+      }
     />
   );
 }

@@ -142,22 +142,62 @@ Màn không có màn con sửa dữ liệu thì cứ dùng `useEffect` như mụ
 
 # 4. Kéo để làm mới
 
+**Mọi vùng cuộn có dữ liệu từ API đều phải nhận cử chỉ này.** Người dùng mobile không có nút F5; nghi dữ liệu cũ là họ vuốt xuống theo phản xạ, màn nào không đáp lại thì trông như treo.
+
+Bản gốc: `src/hooks/useRefresh.jsx`.
+
 ```jsx
-const [refreshing, setRefreshing] = useState(false);
+import { useRefresh } from "../../hooks/useRefresh";
 
-const handleRefresh = async () => {
-  setRefreshing(true);
-  try {
-    await loadPage(0);
-  } finally {
-    setRefreshing(false);
-  }
-};
+const refresh = useCallback(() => load({ silent: true }), [load]);
+const { refreshControl } = useRefresh(refresh);
 
-<FlatList refreshing={refreshing} onRefresh={handleRefresh} ... />
+<ScrollView refreshControl={refreshControl}>…</ScrollView>
 ```
 
-Với `ScrollView` thì dùng prop `refreshControl` kèm `<RefreshControl />`.
+Hook lo ba việc: state `refreshing`, nuốt lỗi để một promise bị từ chối không bật màn đỏ, và đặt màu vòng xoay theo `colors.brand` — ba prop màu của `RefreshControl` tên khác nhau giữa iOS và Android nên rất dễ quên một nửa.
+
+**Hàm `load` phải nhận cờ `silent`:**
+
+```jsx
+const load = useCallback(async ({ silent = false } = {}) => {
+  if (!silent) setLoading(true);   // nhánh loading thay CẢ màn bằng vòng quay
+  setError("");
+  try {
+    const data = await api.getSomething(id);
+    if (alive.current) setData(data);
+  } catch (e) {
+    if (alive.current && !silent) setError(e.message);   // hỏng thì giữ nội dung cũ
+  } finally {
+    if (alive.current) setLoading(false);
+  }
+}, [id]);
+```
+
+Hai chỗ `!silent` đều quan trọng. Thiếu chỗ đầu: vuốt xong nội dung biến mất, thay bằng vòng quay — hai vòng quay chồng nhau. Thiếu chỗ sau: mạng chập một nhịp là bài đang đọc bị thay bằng trang lỗi. Cùng lựa chọn với `app/(app)/staff/matches.jsx` từ trước.
+
+Nút "Thử lại" trong nhánh lỗi phải gọi `onPress={() => load()}`, **không** phải `onPress={load}` — truyền thẳng thì `load` nhận object sự kiện chạm làm tham số đầu.
+
+**`FlatList` / `SectionList`** đã có state `refreshing` riêng thì giữ nguyên logic, chỉ đổi cặp prop sang `refreshControl` để lấy đúng màu:
+
+```jsx
+<FlatList
+  refreshControl={
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
+      tintColor={colors.brand}
+      colors={[colors.brand]}
+      progressBackgroundColor={colors.surface}
+    />
+  }
+  ...
+/>
+```
+
+**Màn nhiều tab** (`TabScreen`) nhận `onRefresh` làm prop; tab nào không truyền thì không nhận cử chỉ — kéo ra một vòng xoay chớp rồi tắt mà dữ liệu y nguyên là lời hứa suông.
+
+**Trang chủ** là ca riêng: dữ liệu nằm ở ba khối con, mỗi khối một endpoint. `app/(app)/home.jsx` tăng `refreshKey` cho cả ba chạy lại, rồi đếm đủ ba tiếng `onLoaded` mới tắt vòng xoay (kèm hẹn giờ 20 giây làm lưới an toàn).
 
 ---
 

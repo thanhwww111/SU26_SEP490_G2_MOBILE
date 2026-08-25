@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import { Client } from "@stomp/stompjs";
 
@@ -30,7 +30,17 @@ import {
  * Hermes có sẵn `TextEncoder`, còn `TextDecoder` do Expo cài vào global
  * (`expo/src/winter/runtime.native.ts`). Đã kiểm ở SDK 54 — nâng SDK thì kiểm lại.
  *
- * @param {number|string|null} tournamentId
+ * ## Nghe nhiều giải cùng lúc
+ *
+ * Tham số đầu nhận cả một id lẫn một mảng id. Cần vậy vì hai màn "trận của tôi" — của trọng tài
+ * và của cơ thủ — gom trận từ nhiều giải vào một danh sách; nghe từng giải một là phải dựng từng
+ * ấy kết nối. Ở đây vẫn chỉ một kết nối, chỉ nhiều `subscribe` trên đó, đúng cách STOMP sinh ra
+ * để dùng.
+ *
+ * Nơi gọi nên lọc bớt trước khi truyền: giải chỉ còn trận đã kết thúc thì chẳng bao giờ có bản
+ * tin mới, đăng ký nghe nó là tốn một khung tin bắt tay để nhận về con số không.
+ *
+ * @param {number|string|Array<number|string>|null} tournamentIds — một id, hoặc danh sách id
  * @param {{
  *   onMatchUpdate?: (match: object) => void,
  *   onBracketSync?: (matches: object[]) => void,
@@ -39,8 +49,26 @@ import {
  * }} [options]
  * @returns {{ connectionState: string, isConnected: boolean }}
  */
-export function useTournamentSocket(tournamentId, options = {}) {
+export function useTournamentSocket(tournamentIds, options = {}) {
   const { onMatchUpdate, onBracketSync, onReconnect, enabled = true } = options;
+
+  /**
+   * Rút danh sách id về một chuỗi khoá đã sắp xếp, bỏ trùng.
+   *
+   * Effect bên dưới phụ thuộc vào chuỗi này chứ không phải mảng gốc: component cha dựng mảng mới
+   * sau mỗi lần render, mà mảng mới nghĩa là deps đổi, nghĩa là đóng rồi mở lại cả kết nối
+   * WebSocket sau từng lần vẽ lại màn. Chuỗi thì chỉ đổi khi tập id thật sự đổi.
+   */
+  const idsKey = useMemo(() => {
+    const list = Array.isArray(tournamentIds) ? tournamentIds : [tournamentIds];
+    const clean = [
+      ...new Set(
+        list.filter((id) => id != null && id !== "").map((id) => String(id))
+      ),
+    ];
+    clean.sort();
+    return clean.join(",");
+  }, [tournamentIds]);
 
   const [connectionState, setConnectionState] = useState("disconnected");
   // Xuống nền thì ngắt hẳn; state riêng để hiệu ứng nối lại chạy khi quay lại
@@ -101,7 +129,9 @@ export function useTournamentSocket(tournamentId, options = {}) {
   }, []);
 
   useEffect(() => {
-    if (!enabled || !foreground || tournamentId == null || tournamentId === "") {
+    const ids = idsKey ? idsKey.split(",") : [];
+
+    if (!enabled || !foreground || ids.length === 0) {
       setConnectionState("disconnected");
       return undefined;
     }
@@ -145,10 +175,10 @@ export function useTournamentSocket(tournamentId, options = {}) {
         setConnectionState("connected");
 
         cleanupSubscriptions();
-        subsRef.current = [
-          client.subscribe(tournamentMatchesTopic(tournamentId), handleMessage),
-          client.subscribe(tournamentBracketTopic(tournamentId), handleMessage),
-        ];
+        subsRef.current = ids.flatMap((id) => [
+          client.subscribe(tournamentMatchesTopic(id), handleMessage),
+          client.subscribe(tournamentBracketTopic(id), handleMessage),
+        ]);
 
         // Lúc mất kết nối có thể đã lỡ vài bản tin — bảo màn tải lại từ REST
         if (isReconnect) onReconnectRef.current?.();
@@ -169,13 +199,7 @@ export function useTournamentSocket(tournamentId, options = {}) {
       client.deactivate();
       setConnectionState("disconnected");
     };
-  }, [
-    tournamentId,
-    enabled,
-    foreground,
-    cleanupSubscriptions,
-    handleMessage,
-  ]);
+  }, [idsKey, enabled, foreground, cleanupSubscriptions, handleMessage]);
 
   return {
     connectionState,

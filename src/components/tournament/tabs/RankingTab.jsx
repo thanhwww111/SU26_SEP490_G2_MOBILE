@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
@@ -33,28 +33,42 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    let alive = true;
+  const alive = useRef(true);
 
-    (async () => {
+  /**
+   * @param silent — vuốt để làm mới thì đừng bật `loading` và hỏng cũng đừng dựng màn lỗi: bảng
+   *   xếp hạng đang hiện vẫn đúng cho tới khi có bản mới.
+   */
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
+      setError("");
       try {
         const data =
           await publicTournamentApi.getPublicTournamentRankings(tournamentId);
-        if (alive) {
+        if (alive.current) {
           setEntries(data.entries);
           setIsOfficial(data.isOfficial);
         }
       } catch (e) {
-        if (alive) setError(e.message);
+        if (alive.current && !silent) setError(e.message);
       } finally {
-        if (alive) setLoading(false);
+        if (alive.current) setLoading(false);
       }
-    })();
+    },
+    [tournamentId]
+  );
+
+  useEffect(() => {
+    alive.current = true;
+    load();
 
     return () => {
-      alive = false;
+      alive.current = false;
     };
-  }, [tournamentId]);
+  }, [load]);
+
+  const refresh = useCallback(() => load({ silent: true }), [load]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -64,7 +78,7 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
 
   if (loading || error || entries.length === 0) {
     return (
-      <TabScreen>
+      <TabScreen onRefresh={refresh}>
         <SectionState
           loading={loading}
           error={error}
@@ -82,6 +96,7 @@ export default function RankingTab({ tournamentId, onPressParticipant }) {
 
   return (
     <TabScreen
+      onRefresh={refresh}
       filters={
         <>
           <View className="flex-row items-center justify-between gap-3">
