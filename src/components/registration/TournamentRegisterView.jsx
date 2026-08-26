@@ -206,7 +206,18 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
     }
   }, [tournamentId]);
 
-  const { pay } = usePayOsCheckout({ onSettled: refreshResult });
+  const { pay, paying } = usePayOsCheckout({ onSettled: refreshResult });
+  const [payNowError, setPayNowError] = useState("");
+
+  const handlePayNow = async () => {
+    if (!result?.id) return;
+    setPayNowError("");
+    try {
+      await pay(result.id);
+    } catch (e) {
+      if (alive.current) setPayNowError(e.message);
+    }
+  };
 
   const handleSubmit = async () => {
     if (phase === "submitting" || phase === "paying") return;
@@ -226,24 +237,16 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
         body
       );
 
-      if (!hasFee) {
-        // Giải miễn phí: backend đã xét duyệt ngay trong lời gọi trên
-        if (alive.current) {
-          setResult(registration);
-          setPhase("done");
-        }
-        return;
+      // Giải miễn phí: backend đã xét duyệt ngay trong lời gọi trên. Giải có phí:
+      // dừng ở màn "Chờ thanh toán" để người đăng ký TỰ bấm thanh toán ngay hay để
+      // sau (nút "Thanh toán ngay qua PayOS" ở màn done bên dưới gọi `pay` trực
+      // tiếp) — không tự động mở PayOS ngay sau khi submit như trước. Trước đây
+      // gọi `pay` liền ở đây: PayOS chỉ cần lỗi mạng một nhịp là rơi vào catch bên
+      // dưới, quay thẳng về form trống dù đăng ký đã lưu thành công.
+      if (alive.current) {
+        setResult(registration);
+        setPhase("done");
       }
-
-      setPhase("paying");
-
-      // Đặt kết quả trước khi mở PayOS: `pay` gọi `refreshResult` để ghi đè bằng bản mới
-      // nhất, nhưng nếu request đó hỏng thì màn vẫn còn đăng ký vừa tạo để hiện
-      if (alive.current) setResult(registration);
-
-      await pay(registration.id);
-
-      if (alive.current) setPhase("done");
     } catch (e) {
       if (!alive.current) return;
       setSubmitError(e.message);
@@ -308,11 +311,27 @@ export default function TournamentRegisterView({ tournamentId, onDone, onBack })
               : rejected
                 ? result.rejectedReason ||
                   "Giải đã hết suất hoặc đã đóng đăng ký."
-                : "Đăng ký của bạn đã được ghi nhận nhưng chưa nhận được thanh toán. Bạn có thể trả tiền sau ở mục Đăng ký của tôi."}
+                : "Đăng ký của bạn đã được ghi nhận. Chọn thanh toán ngay để xác nhận tham gia liền, hoặc để sau cũng được."}
           </Text>
 
+          {payNowError ? (
+            <Text className="mt-3 text-center text-sm text-danger">{payNowError}</Text>
+          ) : null}
+
           <View className="mt-6 w-full gap-2">
-            <Button title="Xem đăng ký của tôi" onPress={onDone} />
+            {!approved && !rejected ? (
+              <Button
+                title="Thanh toán ngay qua PayOS"
+                onPress={handlePayNow}
+                loading={paying}
+                disabled={paying}
+              />
+            ) : null}
+            <Button
+              title="Xem đăng ký của tôi"
+              variant={!approved && !rejected ? "outline" : "primary"}
+              onPress={onDone}
+            />
             <Button title="Quay lại giải đấu" variant="outline" onPress={onBack} />
           </View>
         </View>
