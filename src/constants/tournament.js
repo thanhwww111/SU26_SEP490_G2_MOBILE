@@ -1,8 +1,19 @@
-/** Nhãn và màu badge trạng thái giải đấu — lấy từ trang /event của FE web. */
+/**
+ * Nhãn và màu badge trạng thái giải đấu — lấy từ trang /event của FE web.
+ *
+ * Phải phủ **đủ** TournamentStatus của backend: thiếu key nào thì giải ở trạng
+ * thái đó rơi vào nhánh dự phòng của `getTournamentBadge` và in thẳng tên enum
+ * ra màn hình (đã từng xảy ra với DRAW_PREVIEW ở màn chủ).
+ *
+ * Nền đặc + chữ trắng nên dùng tông đậm hơn chấm màu bên web một bậc.
+ */
 export const TOURNAMENT_STATUS_BADGE = {
+  DRAFT: { label: "Nháp", bg: "#475569" },
   OPEN_FOR_REGISTRATION: { label: "Mở đăng ký", bg: "#16a34a" },
   REGISTRATION_CLOSED: { label: "Đóng đăng ký", bg: "#1e293b" },
+  DRAW_PREVIEW: { label: "Xem trước bốc thăm", bg: "#ca8a04" },
   DRAW_DONE: { label: "Đã bốc thăm", bg: "#7c3aed" },
+  FINAL_BRACKET_READY: { label: "Sẵn sàng chung kết", bg: "#0891b2" },
   IN_PROGRESS: { label: "Đang diễn ra", bg: "#ef342a" },
   COMPLETED: { label: "Kết quả", bg: "#0f172a" },
   CANCELLED: { label: "Đã hủy", bg: "#64748b" },
