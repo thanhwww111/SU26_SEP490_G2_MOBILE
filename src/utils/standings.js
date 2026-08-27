@@ -213,8 +213,14 @@ export const buildMergedStanding = (stages) => {
   for (let i = perStage.length - 1; i >= 0; i -= 1) {
     // Tập người còn trụ lại ở bước ngay sau giai đoạn này
     let nextPlayerIds = null;
-    if (i < perStage.length - 1) nextPlayerIds = perStage[i + 1].playerIds;
-    else if (playoffFilled) nextPlayerIds = playoffPlayerIds;
+    if (i < perStage.length - 1) {
+      // Giai đoạn kế có thể đã được tạo sẵn nhưng chưa gán cơ thủ (đang chờ
+      // giai đoạn này đá xong) — tập rỗng đó KHÔNG phải mốc cắt, coi như chưa có
+      const next = perStage[i + 1].playerIds;
+      if (next.size > 0) nextPlayerIds = next;
+    } else if (playoffFilled) {
+      nextPlayerIds = playoffPlayerIds;
+    }
 
     perStage[i].standings.forEach((row) => {
       if (seen.has(row.id)) return;

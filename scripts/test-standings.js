@@ -176,6 +176,23 @@ eq(
   ]
 );
 
+// GĐ2 đã được tạo sẵn nhưng chưa gán cơ thủ (đang chờ GĐ1 đá xong) → chưa cắt ai
+const nextStagePending = buildMergedStanding([
+  stage(1, 1, "PROGRESSIVE_ROUND", [
+    match(A, B, 5, 3),
+    match(A, C, 5, 1),
+    match(B, C, 5, 4),
+  ]),
+  stage(2, 2, "PROGRESSIVE_ROUND", [
+    { player1: null, player2: null, status: "PENDING" },
+  ]),
+]);
+eq(
+  "giai đoạn kế chưa gán cơ thủ thì chưa cắt ai",
+  nextStagePending.map((r) => r.eliminated),
+  [false, false, false]
+);
+
 // Giai đoạn cuối chưa có mốc cắt nào thì không ai bị đánh dấu loại
 const single = buildMergedStanding([
   stage(1, 1, "PROGRESSIVE_ROUND", [match(A, B, 5, 3)]),
