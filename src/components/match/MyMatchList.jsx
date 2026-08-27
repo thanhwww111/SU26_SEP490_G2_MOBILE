@@ -120,6 +120,8 @@ const MatchCard = ({ item, onPress, onOpenTournament }) => {
 };
 
 export default function MyMatchList({ onOpenTournament }) {
+  const colors = useThemeColors();
+
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
